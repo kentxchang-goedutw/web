@@ -242,6 +242,7 @@
     position: absolute;
     bottom: 10px;
     left: 50%;
+	width: 150px; /* 新增這行設置寬度 */
     transform: translateX(-50%);
     padding: 10px 20px;
     background-color: #4CAF50;
@@ -254,6 +255,7 @@
   }
   #backToHome:hover {
     background-color: #45a049;
+
   }
   #quizResults {
     position: absolute;
@@ -324,8 +326,8 @@
   #quizMarkersContainer {
     position: absolute;
     bottom: 5px;
-    left: 15px;
-    width: calc(100% - 30px);
+    left: 10px;
+    width: calc(100% - 20px);
     height: 10px;
     pointer-events: none;
   }
@@ -379,8 +381,8 @@ let questionBank = [];
 let currentQuizTime;
 let quizResults = [];
 
-// 預設的 JSON 文件 URL，可以修改此 URL 以預設匯入其他 JSON 文件
-const defaultJsonUrl = "https://filedn.com/laMtL9jmKf7JrDEQG0A6OPy/html/test/youtube%E5%95%8F%E7%AD%94/demo.json";
+// 預設的 JSON 文件 URL，可以修改此 URL 以預設匯入其他 JSON 文件 相對路徑範例 ./demo.json
+const defaultJsonUrl = "https://filedn.com/laMtL9jmKf7JrDEQG0A6OPy/html/test/youtubequiz/demo.json";
 
 function onYouTubeIframeAPIReady() {
   // YouTube API 準備就緒
