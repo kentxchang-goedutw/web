@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 內容複製工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 3em; /* 放大3倍 */
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+            position: relative;
+        }
+        #json-content {
+            display: none; /* 隱藏內容框 */
+        }
+        input[type="file"] {
+            display: block;
+            margin: 30px auto;
+            font-size: 1em;
+            padding: 10px;
+        }
+        button {
+            font-size: 1em;
+            padding: 20px 40px;
+            margin: 20px;
+            border: none;
+            border-radius: 10px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #footer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.5em;
+        }
+        #footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        #footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>JSON 內容複製工具</h1>
+    <input type="file" id="json-upload" accept=".json">
+    <div id="json-content">請上傳一個 JSON 文件。</div>
+    <div id="controls">
+        <button id="copy-btn">複製 JSON 到剪貼簿</button>
+        <button id="download-html">下載 HTML</button>
+    </div>
+
+    <div id="footer">
+        Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+    </div>
+
+    <script>
+        let jsonData = ''; // 用於儲存上傳的 JSON 資料
+
+        document.getElementById('json-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    jsonData = e.target.result;
+                    document.getElementById('json-content').textContent = jsonData;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', function() {
+            navigator.clipboard.writeText(jsonData).then(() => {
+                alert('JSON 內容已複製到剪貼簿！');
+            }, () => {
+                alert('複製內容到剪貼簿失敗。');
+            });
+        });
+
+        document.getElementById('download-html').addEventListener('click', function() {
+            const tempContent = `
+                <html lang="zh-Hant">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>下載的 JSON 內容</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            font-size: 3em;
+                            text-align: center;
+                            padding: 50px;
+                            position: relative;
+                        }
+                        button {
+                            font-size: 1em;
+                            padding: 20px 40px;
+                            margin: 20px;
+                            border: none;
+                            border-radius: 10px;
+                            background-color: #007bff;
+                            color: #fff;
+                            cursor: pointer;
+                            transition: background-color 0.3s ease;
+                        }
+                        button:hover {
+                            background-color: #0056b3;
+                        }
+                        #footer {
+                            position: absolute;
+                            bottom: 20px;
+                            right: 20px;
+                            font-size: 0.5em;
+                        }
+                        #footer a {
+                            color: #007bff;
+                            text-decoration: none;
+                        }
+                        #footer a:hover {
+                            text-decoration: underline;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <button id="copy-btn" style="font-size: 1em; padding: 20px 40px; margin: 20px; border: none; border-radius: 10px; background-color: #007bff; color: #fff; cursor: pointer; transition: background-color 0.3s ease;">複製 JSON 到剪貼簿</button>
+                    <button id="download-json" style="font-size: 1em; padding: 20px 40px; margin: 20px; border: none; border-radius: 10px; background-color: #007bff; color: #fff; cursor: pointer; transition: background-color 0.3s ease;">下載 JSON</button>
+                    <div id="footer">
+                        Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+                    </div>
+                    <script>
+                        let jsonData = \`${jsonData.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/<\/script>/g, '<\\/script>')}\`;
+                        document.getElementById('copy-btn').addEventListener('click', function() {
+                            navigator.clipboard.writeText(jsonData).then(() => {
+                                alert('JSON 內容已複製到剪貼簿！');
+                            }, () => {
+                                alert('複製內容到剪貼簿失敗。');
+                            });
+                        });
+
+                        document.getElementById('download-json').addEventListener('click', function() {
+                            const blob = new Blob([jsonData], {type: 'application/json'});
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'downloaded.json';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `;
+            const blob = new Blob([tempContent], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'json_content.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
