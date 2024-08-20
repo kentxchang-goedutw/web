@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英語單字卡清單</title>
+    <title>英文單字卡清單</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -75,15 +75,75 @@
         .footer a:hover {
             text-decoration: underline;
         }
+        .qrcode-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4b0082;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease-in-out;
+        }
+        .qrcode-button:hover {
+            background-color: #7b4397;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .qrcode-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .qrcode-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-    <h1>英語單字卡清單</h1>
+    <h1>英文單字卡清單</h1>
     <table id="file-buttons">
         <!-- 按鈕會在這裡生成 -->
     </table>
 
+    <button class="qrcode-button" onclick="showQRCode()">QRcode</button>
+
+    <div id="qrcode-modal" class="qrcode-modal" onclick="hideQRCode()">
+        <div class="qrcode-content" id="qrcode"></div>
+    </div>
+
     <script>
+        function showQRCode() {
+            const qrcodeModal = document.getElementById('qrcode-modal');
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            const qrcode = new QRCode(qrcodeContainer, {
+                text: window.location.href,
+                width: 200,
+                height: 200
+            });
+            qrcodeModal.style.display = 'flex';
+        }
+
+        function hideQRCode() {
+            const qrcodeModal = document.getElementById('qrcode-modal');
+            qrcodeModal.style.display = 'none';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const fileContainer = document.getElementById('file-buttons');
             let fileIndex = 1; // 從 1 開始
@@ -120,7 +180,7 @@
 
                         const button = document.createElement('button');
                         button.textContent = title; // 使用 <title> 作為按鈕文字
-                        button.onclick = () => window.location.href = file; // 點擊後跳轉
+                        button.onclick = () => window.open(file, '_blank'); // 按下按鈕後開啟新視窗
                         button.title = file; // 滑鼠移動到按鈕上時顯示檔名
 
                         // 將序號和按鈕添加到單元格
