@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英打練習-自訂英文單字版本生成器</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #66ccff, #ff99cc);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #fff;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        #textArea {
+            width: 90%;
+            height: 200px;
+            margin-top: 20px;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #fff;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            overflow-y: scroll;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #fileLabel, #reloadButton {
+            font-size: 1.2em;
+            padding: 10px 30px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 30px;
+            background: #fff;
+            color: #333;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        #fileLabel:hover, #reloadButton:hover {
+            background: #ff99cc;
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            font-size: 1.2em;
+            padding: 10px 30px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 30px;
+            background: #fff;
+            color: #333;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background: #66ccff;
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 1em;
+            color: #fff;
+        }
+
+        #footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #footer a:hover {
+            color: #ffcc33;
+            text-decoration: underline;
+        }
+
+        /* 新增的彈出圖層樣式 */
+        #popupLayer {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        #popupLayer textarea {
+            width: 95%;
+            height: 200px;
+            padding: 10px;
+            font-size: 1.2em;
+            border: 2px solid #333;
+            border-radius: 10px;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+        }
+
+        #closePopup, #submitPopup {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            background: #66ccff;
+            color: #fff;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        #closePopup:hover, #submitPopup:hover {
+            background: #ff99cc;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <h1>英打練習-自訂英文單字版本生成器</h1>
+    <button id="reloadButton">手動載入原始程式碼</button>
+    <textarea id="textArea"></textarea>
+    <br>
+    <button id="fileLabel">貼上自訂英文單字</button>
+    <button id="submitButton">生成自訂英文單字英打練習html</button>
+
+    <div id="footer">
+        Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+    </div>
+
+    <!-- 彈出圖層 -->
+    <div id="overlay"></div>
+    <div id="popupLayer">
+        <textarea id="popupTextArea"></textarea>
+        <button id="submitPopup">送出</button>
+        <button id="closePopup">取消</button>
+    </div>
+
+    <script>
+        // Function to load the text file
+        function loadTextFile() {
+            fetch('英打練習-自訂單字版.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('textArea').value = data;
+                });
+        }
+
+        // Automatically load the text file on page load
+        window.onload = loadTextFile;
+
+        // Reload button functionality
+        document.getElementById('reloadButton').addEventListener('click', loadTextFile);
+
+        // Function to extract text between <textarea id="customWordInput"> tags
+        function extractCustomWordInput(content) {
+            const regex = /<textarea id="customWordInput">([\s\S]*?)<\/textarea>/;
+            const match = content.match(regex);
+            return match ? match[1] : '';
+        }
+
+        // Function to replace text between <textarea id="customWordInput"> tags
+        function replaceCustomWordInput(content, newText) {
+            return content.replace(/<textarea id="customWordInput">([\s\S]*?)<\/textarea>/, `<textarea id="customWordInput">${newText}</textarea>`);
+        }
+
+        // 貼上自訂英文單字按鈕功能
+        document.getElementById('fileLabel').addEventListener('click', function() {
+            const textAreaContent = document.getElementById('textArea').value;
+            const customWordContent = extractCustomWordInput(textAreaContent);
+            document.getElementById('popupTextArea').value = customWordContent;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('popupLayer').style.display = 'block';
+        });
+
+        // 取消按鈕功能
+        document.getElementById('closePopup').addEventListener('click', function() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('popupLayer').style.display = 'none';
+        });
+
+        // 送出按鈕功能
+        document.getElementById('submitPopup').addEventListener('click', function() {
+            const modifiedContent = document.getElementById('popupTextArea').value;
+            let textAreaContent = document.getElementById('textArea').value;
+            textAreaContent = replaceCustomWordInput(textAreaContent, modifiedContent);
+            document.getElementById('textArea').value = textAreaContent;
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('popupLayer').style.display = 'none';
+        });
+
+        // 生成自訂英文單字英打練習html按鈕功能
+        document.getElementById('submitButton').addEventListener('click', function() {
+            const modifiedContent = document.getElementById('textArea').value;
+
+            const blob = new Blob([modifiedContent], { type: 'text/html' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'English_type.html';
+            link.click();
+        });
+    </script>
+</body>
+</html>
