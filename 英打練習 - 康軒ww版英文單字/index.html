@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英打練習(康軒WW版)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3e9ff;
+            color: #4b0082;
+            text-align: center;
+            padding: 50px;
+            margin: 0;
+            position: relative;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #7b4397;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(123, 67, 151, 0.5);
+        }
+        table {
+            margin: 0 auto;
+            border-spacing: 20px;
+            width: 1000px;
+        }
+        td {
+            text-align: center;
+            vertical-align: top;
+        }
+        button {
+            background: linear-gradient(45deg, #b39ddb, #9575cd);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease-in-out;
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 10px auto 0;
+        }
+        button:hover {
+            background: linear-gradient(45deg, #9575cd, #7b4397);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        .button-number {
+            font-size: 1.2em;
+            color: #4b0082;
+        }
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 1em;
+            color: #4b0082;
+        }
+        .footer a {
+            color: #4b0082;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .qrcode-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #4b0082;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease-in-out;
+        }
+        .qrcode-button:hover {
+            background-color: #7b4397;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .qrcode-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .qrcode-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <h1>英打練習(康軒WW版)</h1>
+    <table id="file-buttons">
+        <!-- 按鈕會在這裡生成 -->
+    </table>
+
+    <button class="qrcode-button" onclick="showQRCode()">QRcode</button>
+
+    <div id="qrcode-modal" class="qrcode-modal" onclick="hideQRCode()">
+        <div class="qrcode-content" id="qrcode"></div>
+    </div>
+
+    <script>
+        function showQRCode() {
+            const qrcodeModal = document.getElementById('qrcode-modal');
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            const qrcode = new QRCode(qrcodeContainer, {
+                text: window.location.href,
+                width: 200,
+                height: 200
+            });
+            qrcodeModal.style.display = 'flex';
+        }
+
+        function hideQRCode() {
+            const qrcodeModal = document.getElementById('qrcode-modal');
+            qrcodeModal.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileContainer = document.getElementById('file-buttons');
+            let fileIndex = 1; // 從 1 開始
+            let maxTries = 1000; // 設置最大嘗試次數，以防無限循環
+            let rowIndex = 0;
+            let colIndex = 0;
+
+            function checkAndCreateButton(file) {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            return response.text(); // 取得 HTML 內容
+                        } else {
+                            throw new Error(`檔案 ${file} 不存在或無法訪問`);
+                        }
+                    })
+                    .then(htmlText => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const title = doc.querySelector('title').textContent; // 取得 <title> 內容
+
+                        if (colIndex === 0) {
+                            // 新增一行
+                            const newRow = fileContainer.insertRow(rowIndex);
+                            rowIndex++;
+                        }
+                        const cell = fileContainer.rows[rowIndex - 1].insertCell(colIndex);
+                        colIndex = (colIndex + 1) % 4; // 每4個按鈕後換行
+
+                        // 創建按鈕和序號
+                        const buttonNumber = document.createElement('div');
+                        buttonNumber.textContent = `${fileIndex}.`;
+                        buttonNumber.className = 'button-number';
+
+                        const button = document.createElement('button');
+                        button.textContent = title; // 使用 <title> 作為按鈕文字
+                        button.onclick = () => window.open(file, '_blank'); // 按下按鈕後開啟新視窗
+                        button.title = file; // 滑鼠移動到按鈕上時顯示檔名
+
+                        // 將序號和按鈕添加到單元格
+                        cell.appendChild(buttonNumber);
+                        cell.appendChild(button);
+
+                        fileIndex++;
+                        generateNextFile(); // 檢查下一個檔案
+                    })
+                    .catch(error => {
+                        console.error(error.message);
+                    });
+            }
+
+            function generateNextFile() {
+                if (fileIndex <= maxTries) {
+                    const file = `page${fileIndex}.html`;
+                    checkAndCreateButton(file);
+                }
+            }
+
+            // 開始檢查第一個檔案
+            generateNextFile();
+        });
+    </script>
+
+    <div class="footer">
+        Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+    </div>
+</body>
+</html>
