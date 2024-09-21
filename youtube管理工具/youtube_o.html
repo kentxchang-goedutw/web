@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 管理程式</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f3f3; /* 更加柔和的背景色 */
+            color: #333; /* 深色文字 */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            color: #FF0000; /* YouTube 红色 */
+            margin: 20px 0;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+        h1:hover {
+            transform: scale(1.05);
+            color: #cc0000; /* 深红色 */
+        }
+
+        /* 顶部控制面板 */
+        #top-panel {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 15px;
+            background-color: #ffffff; /* 白色背景 */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* 按钮样式 */
+        .button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #FF0000; /* YouTube 红色 */
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .button:hover {
+            background-color: #cc0000; /* 深红色 */
+            transform: translateY(-3px);
+        }
+
+        /* 新增區域 */
+        #add-container {
+            display: none; /* 默认隐藏 */
+            background-color: #ffffff;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex; /* 改为水平排列 */
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        /* 新增标签和新增影片的区域 */
+        .add-section {
+            width: 48%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .add-section h3 {
+            color: #FF0000; /* YouTube 红色 */
+            margin-bottom: 10px;
+        }
+        .add-section input[type="text"] {
+            width: calc(100% - 20px);
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .add-section input[type="text"]:focus {
+            border-color: #FF0000; /* YouTube 红色 */
+        }
+
+        /* 主内容区域 */
+        #main-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        /* 标签和影片列表 */
+        .content-section {
+            margin: 0 10px;
+            flex: 1 1 45%;
+        }
+        .tags-section {
+            flex-basis: 30%; /* 侧栏宽度 */
+            max-width: 300px; /* 限制最大宽度 */
+        }
+        .videos-section {
+            flex-basis: 65%; /* 主内容宽度 */
+        }
+
+        .content-title {
+            color: #FF0000; /* YouTube 红色 */
+            font-size: 1.5em;
+            margin: 10px 0;
+            text-align: center;
+            border-bottom: 2px solid #FF0000; /* 红色底线 */
+            padding-bottom: 5px;
+        }
+
+        .content-box {
+            background-color: #ffffff; /* 白色背景 */
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            min-height: 400px;
+            max-height: 600px; /* 限制高度，增加滚动 */
+            overflow-y: auto;
+        }
+
+        /* 标签样式 */
+        .tag-item {
+            padding: 10px;
+            margin: 5px;
+            background-color: #f0f0f0; /* 淡灰色 */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            user-select: none;
+            display: inline-block; /* 使标签方块自动调整宽度 */
+        }
+        .tag-item:hover {
+            transform: translateY(-3px);
+        }
+
+        /* 视频项目样式 */
+        .video-item {
+            padding: 10px;
+            margin: 5px;
+            background-color: #f0f0f0; /* 淡灰色 */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            user-select: none;
+            display: inline-block;
+            width: calc(48% - 10px); /* 两栏布局 */
+            box-sizing: border-box;
+            position: relative;
+        }
+        .video-item:hover {
+            transform: translateY(-3px);
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            display: none;
+            position: absolute;
+            top: -30px; /* 显示在上方 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+        .video-item:hover .tooltip {
+            display: block;
+        }
+
+        /* 新增影片标签选择 */
+        #tag-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .tag-selection-item {
+            padding: 5px;
+            background-color: #e0e0e0; /* 淡灰色 */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        .tag-selection-item:hover {
+            background-color: #d0d0d0;
+        }
+        .tag-selection-item.selected-tag {
+            border: 2px solid #FF0000; /* YouTube 红色 */
+            font-weight: bold;
+        }
+
+        /* 弹出层样式 */
+        #video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #video-modal-content {
+            width: 80%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 右键菜单样式 */
+        .context-menu {
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            width: 160px; /* 适应 5x3 网格 */
+        }
+        .color-option {
+            width: 30px;
+            height: 30px;
+            margin: 2px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        /* 署名 */
+        #made-by {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            font-size: 1em;
+            color: #666;
+            opacity: 0.8;
+        }
+        #made-by a {
+            color: #FF0000; /* YouTube 红色 */
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        #made-by a:hover {
+            color: #cc0000; /* 深红色 */
+        }
+
+        /* 红色提示样式 */
+        .start-time {
+            color: #FF0000; /* 红色 */
+            font-weight: bold;
+        }
+
+        /* 提示图层 */
+        #import-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        #import-overlay-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 300px;
+        }
+        #import-overlay-content .button {
+            margin: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1 onclick="importFromFile()">YouTube 管理程式</h1> <!-- 绑定点击事件 -->
+
+    <!-- 顶部控制面板 -->
+    <div id="top-panel">
+        <button class="button" onclick="toggleAddContainer()">新增</button>
+        <div style="margin-left: auto;"> <!-- 向右对齐 -->
+            <button class="button" onclick="exportData()">匯出</button>
+            <button class="button" onclick="importData()">匯入</button>
+            <button class="button" onclick="resetData()">重置</button>
+            <input type="file" id="file-input" style="display: none;" onchange="handleFileImport(event)">
+        </div>
+    </div>
+    
+    <!-- 新增區域 -->
+    <div id="add-container" style="display: none;"> <!-- 默认隐藏 -->
+        <!-- 新增標籤區塊 -->
+        <div class="add-section">
+            <h3>新增標籤</h3>
+            <input type="text" id="new-tag-name" placeholder="輸入新標籤名稱">
+            <button class="button" onclick="addTag()">新增標籤</button>
+        </div>
+        <!-- 新增影片區塊 -->
+        <div class="add-section">
+            <h3>新增影片</h3>
+            <input type="text" id="youtube-url" placeholder="貼上YouTube影片連結">
+            <input type="text" id="youtube-title" placeholder="影片標題">
+            <div id="tag-selection"></div>
+            <button class="button" onclick="addVideo()">新增影片</button>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div id="main-content">
+        <div class="content-section tags-section">
+            <h2 class="content-title">標籤</h2> <!-- 在区块外部添加标题 -->
+            <div id="tags-container" class="content-box"></div>
+        </div>
+        <div class="content-section videos-section">
+            <h2 class="content-title">影片列表</h2> <!-- 在区块外部添加标题 -->
+            <div id="videos-list" class="content-box"></div>
+        </div>
+    </div>
+
+    <!-- 弹出层 -->
+    <div id="video-modal">
+        <div id="video-modal-content"></div>
+    </div>
+    
+    <!-- 提示图层 -->
+    <div id="import-overlay">
+        <div id="import-overlay-content">
+            <h3>選擇匯入方式</h3>
+            <button class="button" onclick="mergeData()">合併</button>
+            <button class="button" onclick="replaceData()">替換</button>
+            <button class="button" onclick="cancelImport()">取消</button>
+        </div>
+    </div>
+
+    <!-- 署名 -->
+    <div id="made-by">
+        Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+    </div>
+
+    <script>
+        // 淡色系颜色数组 (5x3网格，共15种颜色)
+        const presetColors = ['#FFC1CC', '#FFD1A4', '#FFF9B0', '#B2F1A6', '#A0D4FF', 
+                              '#FFB2F5', '#D5B2FF', '#FFD6E7', '#C1EFFF', '#C8D7FF', 
+                              '#FFF7C1', '#C1FFD6', '#D6FFC1', '#FFC1E4', '#E4C1FF'];
+
+        let dragSrcElement = null; // 记录拖拽的源元素
+        let currentVideoIndex = 0; // 记录当前播放视频的索引
+        let player; // YouTube 播放器实例
+        let titleClicked = false; // 标题是否已经被点击
+        let fetchedData = null; // 存储从远程文件获取的数据
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        // 点击标题从远程文件导入数据
+        function importFromFile() {
+            if (titleClicked) return; // 防止多次点击
+            titleClicked = true;
+
+            fetch('youtube_data.json')
+                .then(response => {
+                    if (!response.ok) throw new Error('File not found');
+                    return response.json();
+                })
+                .then(data => {
+                    fetchedData = data; // 存储获取到的数据
+                    showImportOverlay(); // 显示提示图层
+                })
+                .catch(error => {
+                    // 文件不存在时不呈现任何信息
+                });
+        }
+
+        // 显示提示图层
+        function showImportOverlay() {
+            const overlay = document.getElementById('import-overlay');
+            overlay.style.display = 'flex';
+        }
+
+        // 隐藏提示图层
+        function hideImportOverlay() {
+            const overlay = document.getElementById('import-overlay');
+            overlay.style.display = 'none';
+        }
+
+        // 合并数据
+        function mergeData() {
+            if (!fetchedData) return;
+            
+            const currentTags = JSON.parse(localStorage.getItem('tags')) || [];
+            const currentVideos = JSON.parse(localStorage.getItem('videos')) || [];
+
+            // 合并标签和视频
+            const mergedTags = [...currentTags, ...fetchedData.tags];
+            const mergedVideos = [...currentVideos, ...fetchedData.videos];
+
+            // 移除重复标签（根据名称）
+            const uniqueTags = Array.from(new Set(mergedTags.map(tag => tag.name))).map(name => {
+                return mergedTags.find(tag => tag.name === name);
+            });
+
+            localStorage.setItem('tags', JSON.stringify(uniqueTags));
+            localStorage.setItem('videos', JSON.stringify(mergedVideos));
+            
+            loadData();
+            hideImportOverlay(); // 隐藏图层
+            alert('合併匯入成功');
+        }
+
+        // 替换数据
+        function replaceData() {
+            if (!fetchedData) return;
+
+            if (fetchedData.tags) localStorage.setItem('tags', JSON.stringify(fetchedData.tags));
+            if (fetchedData.videos) localStorage.setItem('videos', JSON.stringify(fetchedData.videos));
+            
+            loadData();
+            hideImportOverlay(); // 隐藏图层
+            alert('替換匯入成功');
+        }
+
+        // 取消导入
+        function cancelImport() {
+            hideImportOverlay(); // 隐藏图层
+            titleClicked = false; // 允许再次点击标题
+        }
+
+        // 切换"新增"区域的显示状态
+        function toggleAddContainer() {
+            const addContainer = document.getElementById('add-container');
+            addContainer.style.display = addContainer.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // 添加標籤
+        function addTag() {
+            var tagName = document.getElementById('new-tag-name').value.trim();
+            if (!tagName) {
+                alert('請輸入標籤名稱。');
+                return;
+            }
+
+            // 保存標籤到本地存儲
+            var tags = JSON.parse(localStorage.getItem('tags')) || [];
+            if (!tags.some(tag => tag.name === tagName)) {
+                tags.push({ name: tagName });
+                localStorage.setItem('tags', JSON.stringify(tags));
+            }
+
+            // 清除輸入框
+            document.getElementById('new-tag-name').value = '';
+
+            // 更新显示
+            loadTags();
+            updateTagSelection();
+        }
+
+        // 添加影片
+        function addVideo() {
+            var url = document.getElementById('youtube-url').value;
+            var title = document.getElementById('youtube-title').value.trim();
+            var selectedTags = Array.from(document.querySelectorAll('#tag-selection .tag-selection-item.selected-tag')).map(div => div.textContent);
+
+            if (!url || !title || selectedTags.length === 0) {
+                alert('請輸入有效的YouTube連結、影片標題並選擇至少一個標籤。');
+                return;
+            }
+
+            // 正则表达式提取视频ID和时间码
+            var match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[?&]t=(\d+))?/);
+            if (!match) {
+                alert('請輸入有效的YouTube連結。');
+                return;
+            }
+            var videoId = match[1];
+            var startTime = match[2] || 0;
+
+            // 保存视频信息到本地存储
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            videos.push({ id: videoId, title: title, tags: selectedTags, startTime: startTime });
+            localStorage.setItem('videos', JSON.stringify(videos));
+
+            // 清除输入框
+            document.getElementById('youtube-url').value = '';
+            document.getElementById('youtube-title').value = '';
+
+            // 更新显示
+            loadVideos();
+        }
+
+        // 载入标签和视频数据
+        function loadData() {
+            loadTags();
+            loadVideos();
+        }
+
+        // 载入标签
+        function loadTags() {
+            var tags = JSON.parse(localStorage.getItem('tags')) || [];
+            var tagsContainer = document.getElementById('tags-container');
+            tagsContainer.innerHTML = '';
+
+            tags.forEach((tag, index) => {
+                var tagElement = document.createElement('div');
+                tagElement.innerText = tag.name;
+                tagElement.classList.add('tag-item');
+                tagElement.draggable = true;
+                tagElement.dataset.index = index; // 设置索引数据
+                tagElement.dataset.type = 'tag'; // 设置类型
+                tagElement.ondragstart = handleDragStart;
+                tagElement.ondragover = allowDrop;
+                tagElement.ondrop = handleDrop;
+                tagElement.oncontextmenu = function(event) { showContextMenu(event, tagElement, tag.name, 'tag'); return false; }; // 标签右键菜单
+                tagElement.onclick = function() { showVideosByTag(tag.name); };
+                tagsContainer.appendChild(tagElement);
+
+                // 保持设置的背景色
+                if (tag.backgroundColor) {
+                    tagElement.style.backgroundColor = tag.backgroundColor;
+                }
+            });
+
+            // 更新标签选择区域
+            updateTagSelection();
+        }
+
+        // 更新标签选择区域
+        function updateTagSelection() {
+            var tags = JSON.parse(localStorage.getItem('tags')) || [];
+            var tagSelection = document.getElementById('tag-selection');
+            tagSelection.innerHTML = ''; // 清除当前的多选框
+
+            tags.forEach(tag => {
+                var tagDiv = document.createElement('div');
+                tagDiv.classList.add('tag-selection-item'); // 使用新的样式
+                tagDiv.innerText = tag.name;
+
+                // 添加点击事件，用于选择/取消选择
+                tagDiv.onclick = function() {
+                    if (tagDiv.classList.contains('selected-tag')) {
+                        tagDiv.classList.remove('selected-tag');
+                    } else {
+                        tagDiv.classList.add('selected-tag');
+                    }
+                };
+
+                // 右键菜单修改标签文字
+                tagDiv.oncontextmenu = function(event) {
+                    event.preventDefault();
+                    var newTagName = prompt('修改標籤名稱：', tagDiv.innerText);
+                    if (newTagName && newTagName.trim() !== '') {
+                        var oldTagName = tagDiv.innerText;
+                        updateTagName(oldTagName, newTagName.trim());
+                    }
+                };
+
+                tagSelection.appendChild(tagDiv);
+            });
+        }
+
+        // 更新标签名称
+        function updateTagName(oldName, newName) {
+            var tags = JSON.parse(localStorage.getItem('tags')) || [];
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+
+            // 更新标签列表
+            tags.forEach(tag => {
+                if (tag.name === oldName) {
+                    tag.name = newName;
+                }
+            });
+
+            // 更新视频中的标签
+            videos.forEach(video => {
+                video.tags = video.tags.map(tag => (tag === oldName ? newName : tag));
+            });
+
+            // 保存更新后的数据
+            localStorage.setItem('tags', JSON.stringify(tags));
+            localStorage.setItem('videos', JSON.stringify(videos));
+
+            // 重新加载数据
+            loadData();
+        }
+
+        // 载入视频
+        function loadVideos() {
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            var videosList = document.getElementById('videos-list');
+            videosList.innerHTML = '';
+
+            videos.forEach((video, index) => {
+                var videoElement = document.createElement('div');
+
+                // 生成时间码的提示文字
+                var timeTooltip = video.startTime > 0 ? ` 開始時間：${formatTime(video.startTime)}` : '';
+
+                // 将"開始時間"移到影片标题前并用红色呈现
+                videoElement.innerHTML = `<span title="${video.title}">${index + 1}. 影片 ID: ${video.id}</span>
+                                          <div class="tooltip">${video.title}</div>
+                                          <div><span class="start-time">${timeTooltip}</span> ${video.title.substring(0, 20)}</div>`; // 增加字数
+                videoElement.classList.add('video-item');
+                videoElement.draggable = true;
+                videoElement.dataset.index = index; // 设置索引数据
+                videoElement.dataset.type = 'video'; // 设置类型
+                videoElement.ondragstart = handleDragStart;
+                videoElement.ondragover = allowDrop;
+                videoElement.ondrop = handleDrop;
+                videoElement.oncontextmenu = function(event) { showContextMenu(event, videoElement, video.id, 'video'); return false; }; // 视频右键菜单
+                videoElement.onclick = function() { showModalVideo(video.id, video.startTime); };
+
+                // 设置保存的背景色
+                if (video.backgroundColor) {
+                    videoElement.style.backgroundColor = video.backgroundColor;
+                }
+
+                videosList.appendChild(videoElement);
+            });
+        }
+
+        // 显示指定标签的影片
+        function showVideosByTag(tag) {
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            var filteredVideos = videos.filter(video => video.tags.includes(tag));
+            var videosList = document.getElementById('videos-list');
+            videosList.innerHTML = '';
+
+            filteredVideos.forEach((video, index) => {
+                var videoElement = document.createElement('div');
+
+                // 生成时间码的提示文字
+                var timeTooltip = video.startTime > 0 ? ` 開始時間：${formatTime(video.startTime)}` : '';
+
+                // 将"開始時間"移到影片标题前并用红色呈现
+                videoElement.innerHTML = `<span title="${video.title}">${index + 1}. 影片 ID: ${video.id}</span>
+                                          <div class="tooltip">${video.title}</div>
+                                          <div><span class="start-time">${timeTooltip}</span> ${video.title.substring(0, 20)}</div>`; // 增加字数
+                videoElement.classList.add('video-item');
+                videoElement.draggable = true;
+                videoElement.dataset.index = index; // 设置索引数据
+                videoElement.dataset.type = 'video'; // 设置类型
+                videoElement.ondragstart = handleDragStart;
+                videoElement.ondragover = allowDrop;
+                videoElement.ondrop = handleDrop;
+                videoElement.oncontextmenu = function(event) { showContextMenu(event, videoElement, video.id, 'video'); return false; }; // 视频右键菜单
+                videoElement.onclick = function() { showModalVideo(video.id, video.startTime); };
+
+                // 设置保存的背景色
+                if (video.backgroundColor) {
+                    videoElement.style.backgroundColor = video.backgroundColor;
+                }
+
+                videosList.appendChild(videoElement);
+            });
+        }
+
+        // 格式化时间，将秒转换为 mm:ss 格式
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        }
+
+        // 处理拖拽开始
+        function handleDragStart(event) {
+            dragSrcElement = event.target;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/html', event.target.outerHTML);
+            event.target.classList.add('dragging');
+        }
+
+        // 允许拖放
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        // 处理放下
+        function handleDrop(event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            if (dragSrcElement !== this) {
+                // 获取拖拽的元素类型
+                var type = dragSrcElement.dataset.type;
+                
+                if (type === 'tag') {
+                    // 标签拖放交换位置
+                    const tagsData = JSON.parse(localStorage.getItem('tags')) || [];
+                    const draggedIndex = parseInt(dragSrcElement.dataset.index);
+                    const droppedIndex = Array.from(this.parentNode.children).indexOf(this);
+
+                    // 交换标签位置
+                    if (draggedIndex !== droppedIndex) {
+                        [tagsData[draggedIndex], tagsData[droppedIndex]] = [tagsData[droppedIndex], tagsData[draggedIndex]];
+                        
+                        // 更新标签数据
+                        localStorage.setItem('tags', JSON.stringify(tagsData));
+                        loadTags();
+                    }
+                } else if (type === 'video') {
+                    // 视频拖放交换位置
+                    const videos = JSON.parse(localStorage.getItem('videos')) || [];
+                    const draggedIndex = parseInt(dragSrcElement.dataset.index);
+                    const droppedIndex = Array.from(this.parentNode.children).indexOf(this);
+
+                    // 交换视频位置
+                    if (draggedIndex !== droppedIndex) {
+                        [videos[draggedIndex], videos[droppedIndex]] = [videos[droppedIndex], videos[draggedIndex]];
+
+                        // 更新视频数据
+                        localStorage.setItem('videos', JSON.stringify(videos));
+                        loadVideos();
+                    }
+                }
+            }
+            dragSrcElement.classList.remove('dragging');
+        }
+
+        // 弹出层显示视频
+        function showModalVideo(videoId, startTime = 0) {
+            currentVideoIndex = getCurrentVideoIndex(videoId); // 更新当前播放的视频索引
+            var embedUrl = 'https://www.youtube-nocookie.com/embed/' + videoId + '?start=' + startTime + '&controls=1&rel=0&enablejsapi=1';
+            var iframe = '<iframe id="youtube-iframe" width="100%" height="100%" src="' + embedUrl + '" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+            var modalContent = document.getElementById('video-modal-content');
+            modalContent.innerHTML = iframe;
+
+            // 显示弹出层
+            var modal = document.getElementById('video-modal');
+            modal.style.display = 'flex';
+
+            // 单击弹出层外部关闭弹出层
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModalVideo();
+                }
+            };
+
+            // 初始化YouTube播放器API
+            setTimeout(() => {
+                player = new YT.Player('youtube-iframe', {
+                    events: {
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }, 500);
+        }
+
+        // 获取当前播放视频的索引
+        function getCurrentVideoIndex(videoId) {
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            return videos.findIndex(video => video.id === videoId);
+        }
+
+        // 播放下一个视频
+        function playNextVideo() {
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            currentVideoIndex = (currentVideoIndex + 1) % videos.length;
+            var nextVideo = videos[currentVideoIndex];
+            showModalVideo(nextVideo.id, nextVideo.startTime);
+        }
+
+        // 关闭弹出层并停止视频播放
+        function closeModalVideo() {
+            var modal = document.getElementById('video-modal');
+            var modalContent = document.getElementById('video-modal-content');
+
+            // 清除 iframe 来停止视频播放
+            modalContent.innerHTML = '';
+
+            // 隐藏弹出层
+            modal.style.display = 'none';
+        }
+
+        // YouTube 播放器状态更改回调
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                checkForEnd(); // 检查视频是否接近结束
+            }
+        }
+
+        // 检查视频是否接近结束
+        function checkForEnd() {
+            if (player && player.getDuration) {
+                var duration = player.getDuration();
+                var currentTime = player.getCurrentTime();
+
+                // 检查是否接近视频的最后3秒
+                if (duration - currentTime <= 3) {
+                    playNextVideo();
+                } else {
+                    setTimeout(checkForEnd, 1000); // 每秒检查一次
+                }
+            }
+        }
+
+        // 右键菜单
+        function showContextMenu(event, element, id, type) {
+            // 阻止默认右键菜单
+            event.preventDefault();
+
+            // 移除现有的右键菜单
+            const existingContextMenu = document.querySelector('.context-menu');
+            if (existingContextMenu) existingContextMenu.remove();
+
+            var contextMenu = document.createElement('div');
+            contextMenu.classList.add('context-menu');
+            contextMenu.style.left = `${event.pageX}px`;
+            contextMenu.style.top = `${event.pageY}px`;
+
+            // 创建颜色选择
+            presetColors.forEach(color => {
+                var colorOption = document.createElement('div');
+                colorOption.classList.add('color-option');
+                colorOption.style.backgroundColor = color;
+                colorOption.onclick = function() { changeBackgroundColor(id, color, element, type); };
+                contextMenu.appendChild(colorOption);
+            });
+
+            // 添加还原背景色选项
+            var resetOption = document.createElement('div');
+            resetOption.innerHTML = '還原背景色';
+            resetOption.style.marginTop = '10px';
+            resetOption.style.cursor = 'pointer';
+            resetOption.onclick = function() { resetBackgroundColor(id, element, type); };
+            contextMenu.appendChild(resetOption);
+
+            // 添加删除选项（仅对视频有效）
+            if (type === 'video') {
+                var deleteOption = document.createElement('div');
+                deleteOption.innerHTML = '刪除';
+                deleteOption.style.marginTop = '10px';
+                deleteOption.style.cursor = 'pointer';
+                deleteOption.style.color = '#FF0000'; // 将删除选项的文字改为红色
+                deleteOption.onclick = function() { deleteVideo(id); };
+                contextMenu.appendChild(deleteOption);
+            } 
+            // 检查是否是标签，并且该标签没有关联任何视频
+            else if (type === 'tag') {
+                if (!isTagAssociatedWithAnyVideo(id)) {
+                    var deleteTagOption = document.createElement('div');
+                    deleteTagOption.innerHTML = '刪除標籤';
+                    deleteTagOption.style.marginTop = '10px';
+                    deleteTagOption.style.cursor = 'pointer';
+                    deleteTagOption.style.color = '#FF0000'; // 将删除选项的文字改为红色
+                    deleteTagOption.onclick = function() { deleteTag(id); };
+                    contextMenu.appendChild(deleteTagOption);
+                }
+            }
+
+            document.body.appendChild(contextMenu);
+
+            // 点击其他地方时移除菜单
+            document.addEventListener('click', function removeContextMenu() {
+                contextMenu.remove();
+                document.removeEventListener('click', removeContextMenu);
+            });
+        }
+
+        // 检查标签是否与任何视频关联
+        function isTagAssociatedWithAnyVideo(tagName) {
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            return videos.some(video => video.tags.includes(tagName));
+        }
+
+        // 删除标签
+        function deleteTag(tagName) {
+            if (confirm(`你確定要刪除標籤「${tagName}」嗎？`)) {
+                var tags = JSON.parse(localStorage.getItem('tags')) || [];
+                tags = tags.filter(tag => tag.name !== tagName);
+                localStorage.setItem('tags', JSON.stringify(tags));
+                loadTags();
+            }
+        }
+
+        // 更改背景色
+        function changeBackgroundColor(id, color, element, type) {
+            if (type === 'video') {
+                var videos = JSON.parse(localStorage.getItem('videos')) || [];
+                var video = videos.find(v => v.id === id);
+                if (video) {
+                    video.backgroundColor = color;
+                    localStorage.setItem('videos', JSON.stringify(videos));
+                    element.style.backgroundColor = color; // 立即更新背景颜色
+                }
+            } else if (type === 'tag') {
+                var tags = JSON.parse(localStorage.getItem('tags')) || [];
+                var tag = tags.find(t => t.name === id);
+                if (tag) {
+                    tag.backgroundColor = color;
+                    localStorage.setItem('tags', JSON.stringify(tags));
+                    element.style.backgroundColor = color; // 立即更新标签背景颜色
+                }
+            }
+        }
+
+        // 还原背景色
+        function resetBackgroundColor(id, element, type) {
+            if (type === 'video') {
+                var videos = JSON.parse(localStorage.getItem('videos')) || [];
+                var video = videos.find(v => v.id === id);
+                if (video) {
+                    delete video.backgroundColor;
+                    localStorage.setItem('videos', JSON.stringify(videos));
+                    element.style.backgroundColor = ''; // 立即还原背景颜色
+                }
+            } else if (type === 'tag') {
+                var tags = JSON.parse(localStorage.getItem('tags')) || [];
+                var tag = tags.find(t => t.name === id);
+                if (tag) {
+                    delete tag.backgroundColor;
+                    localStorage.setItem('tags', JSON.stringify(tags));
+                    element.style.backgroundColor = ''; // 立即还原标签背景颜色
+                }
+            }
+        }
+
+        // 删除视频
+        function deleteVideo(videoId) {
+            var videos = JSON.parse(localStorage.getItem('videos')) || [];
+            var filteredVideos = videos.filter(v => v.id !== videoId);
+            localStorage.setItem('videos', JSON.stringify(filteredVideos));
+            loadVideos();
+        }
+
+        // 重置
+        function resetData() {
+            if (confirm('你確定要清除所有資料嗎？')) {
+                localStorage.clear(); // 清除所有数据，包括标签
+                document.getElementById('videos-list').innerHTML = '';
+                document.getElementById('tags-container').innerHTML = '';
+                document.getElementById('tag-selection').innerHTML = '';
+            }
+        }
+
+        // 匯出資料
+        function exportData() {
+            const tags = localStorage.getItem('tags');
+            const videos = localStorage.getItem('videos');
+            if (!tags && !videos) {
+                alert('沒有可匯出的資料');
+                return;
+            }
+
+            const data = JSON.stringify({ tags: tags ? JSON.parse(tags) : [], videos: videos ? JSON.parse(videos) : [] });
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'youtube_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 匯入資料
+        function importData() {
+            document.getElementById('file-input').click();
+        }
+
+        // 處理匯入文件
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // 提示用户选择合并还是替换
+                        const action = confirm('要合併現有內容還是刪除全部內容重新匯入？\n按確定進行合併，按取消進行替換。');
+
+                        if (action) {
+                            // 合并数据
+                            const currentTags = JSON.parse(localStorage.getItem('tags')) || [];
+                            const currentVideos = JSON.parse(localStorage.getItem('videos')) || [];
+
+                            // 合并标签和视频
+                            const mergedTags = [...currentTags, ...importedData.tags];
+                            const mergedVideos = [...currentVideos, ...importedData.videos];
+
+                            // 移除重复标签（根据名称）
+                            const uniqueTags = Array.from(new Set(mergedTags.map(tag => tag.name))).map(name => {
+                                return mergedTags.find(tag => tag.name === name);
+                            });
+
+                            localStorage.setItem('tags', JSON.stringify(uniqueTags));
+                            localStorage.setItem('videos', JSON.stringify(mergedVideos));
+                        } else {
+                            // 替换数据
+                            if (importedData.tags) localStorage.setItem('tags', JSON.stringify(importedData.tags));
+                            if (importedData.videos) localStorage.setItem('videos', JSON.stringify(importedData.videos));
+                        }
+                        
+                        loadData();
+                        alert('匯入成功');
+                    } catch (error) {
+                        alert('匯入失敗：文件格式不正確');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // 加载YouTube Iframe API
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    </script>
+</body>
+</html>
