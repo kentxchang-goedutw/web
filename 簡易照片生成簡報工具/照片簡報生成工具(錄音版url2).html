@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>照片簡報簡易製作工具</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        .title-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .title-overlay .title-text {
+            font-size: 10vw;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .title-overlay .start-button {
+            margin-top: 20px;
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        .title-overlay .start-button:hover {
+            background-color: #555;
+        }
+
+        .slideshow-container {
+            position: relative;
+            width: 100vw;
+            height: calc(100vw * 3 / 4);
+            max-height: 100vh;
+            margin: auto;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1) translateX(0);
+        }
+
+        .slide.next {
+            opacity: 0;
+            transform: scale(1.2) translateX(100%);
+        }
+
+        .slide.prev {
+            opacity: 0;
+            transform: scale(0.8) translateX(-100%);
+        }
+
+        .content-container {
+            display: flex;
+            width: 100%;
+            height: 75%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-container {
+            flex: 1;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .input-container {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            font-size: 40px;
+        }
+
+        .slide img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 20px;
+            transition: border-radius 0.3s ease;
+        }
+
+        .input-container textarea {
+            width: 80%;
+            height: 100px;
+            font-size: 40px;
+            color: #fff;
+            background: transparent;
+            border: 1px solid #fff;
+            text-align: center;
+            outline: none;
+            resize: none;
+        }
+
+        .page-number {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .submitted-text {
+            color: #fff;
+            font-size: 40px;
+            margin-top: 10px;
+            word-break: break-all;
+            cursor: pointer;
+        }
+
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .nav-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .prev {
+            left: 0;
+        }
+
+        .next {
+            right: 0;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 24px;
+            z-index: 9999;
+        }
+
+        .loading-animation {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-right: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .help-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .help-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #e0f7fa;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px #000;
+            display: none;
+            z-index: 10000;
+            max-width: 85%;
+            max-height: 85%;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        .fullscreen .help-button {
+            display: none;
+        }
+
+        .slider-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .upload-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        .upload-overlay input[type="file"],
+        .upload-overlay textarea {
+            margin-bottom: 20px;
+            font-size: 18px;
+            padding: 10px;
+            width: 80%;
+            box-sizing: border-box;
+        }
+
+        .upload-overlay input[type="text"] {
+            margin-bottom: 20px;
+            font-size: 24px;
+            padding: 10px;
+            width: 80%;
+            box-sizing: border-box;
+        }
+
+        .upload-overlay button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .upload-overlay .paste-url-area {
+            display: none;
+        }
+
+        .text-upload-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            padding: 20px;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        .text-upload-overlay textarea {
+            width: 80%;
+            height: 200px;
+            font-size: 18px;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .order-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000;
+            color: white;
+            padding: 20px;
+        }
+
+        .order-overlay ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .order-overlay li {
+            background-color: #444;
+            margin: 10px 0;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+            cursor: grab;
+        }
+
+        .help-popup button {
+            padding: 8px 16px;
+            font-size: 75%;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            margin: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .help-popup .start-button {
+            background-color: #ff0000;
+            color: white;
+        }
+
+        .help-popup .start-button:hover {
+            background-color: #cc0000;
+        }
+
+        .help-popup .export-import-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .help-popup .export-import-button:hover {
+            background-color: #218838;
+        }
+
+        .help-popup .fullscreen-close-button {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .help-popup .fullscreen-close-button:hover {
+            background-color: #5a6268;
+        }
+
+        .help-popup h2 {
+            font-size: 24px;
+            color: #007BFF;
+            text-align: center;
+        }
+
+        .help-popup ul {
+            padding-left: 20px;
+        }
+
+        /* 新增錄音按鈕樣式 */
+        .record-button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff5722;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .record-button.recording {
+            background-color: #f44336;
+        }
+
+        .audio-player {
+            margin-top: 10px;
+        }
+
+        /* 使用說明圖層樣式 */
+        .instruction-overlay {
+            position: fixed;
+            top: 50%;
+            left: 65%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 100001;
+            color: white;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        /* 新增錄音開關樣式 */
+        .toggle-switch {
+            margin-top: 20px;
+        }
+
+        .toggle-switch label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            display: none;
+        }
+
+        .toggle-switch .slider {
+            width: 60px;
+            height: 30px;
+            background-color: #ccc;
+            position: relative;
+            border-radius: 15px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch .slider::before {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background-color: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch input:checked + .slider {
+            background-color: #66bb6a;
+        }
+
+        .toggle-switch input:checked + .slider::before {
+            transform: translateX(30px);
+        }
+
+        /* 將關閉按鈕移動到右下角 */
+        .help-popup .close-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 16px;
+            font-size: 75%;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .help-popup .close-button:hover {
+            background-color: #5a6268;
+        }
+
+        /* 新增投影片版型切換樣式 */
+        .switch-layout-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .layout-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .layout-button:hover {
+            background-color: #0056b3;
+        }
+
+        .fullscreen-slide .content-container {
+            display: block;
+        }
+
+        .fullscreen-slide .image-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .fullscreen-slide .image-container img {
+            height: 100%;
+            width: auto;
+            max-width: none;
+        }
+
+        .fullscreen-slide .input-container {
+            position: absolute;
+            bottom: -30%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            text-align: center;
+            background-color: transparent;
+        }
+
+        .fullscreen-slide .input-container textarea {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .fullscreen-slide .record-button {
+            background-color: #ff5722;
+            color: white;
+        }
+
+        .fullscreen-slide .record-button.recording {
+            background-color: #f44336;
+        }
+
+        .fullscreen-slide .submitted-text {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .fullscreen-slide .audio-player {
+            background-color: transparent;
+        }
+
+        /* 當隱藏錄音功能時，隱藏相關元素 */
+        .hide-recording .toggle-switch,
+        .hide-recording .record-button,
+        .hide-recording .audio-player {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="upload-overlay" id="upload-overlay">
+    <h2>上傳圖片或貼上圖片網址並輸入標題</h2>
+    <div>
+        <input type="file" id="imageUploadInput" accept="image/*" multiple />
+    </div>
+    <textarea id="pasteUrlInput" placeholder="每行一個圖片網址"></textarea>
+    <input type="text" id="titleInput" placeholder="請輸入簡報標題" />
+    <div>
+        <button onclick="handleImageUpload()">開始製作簡報</button>
+        <button onclick="closeUploadOverlay()">取消</button>
+    </div>
+</div>
+
+<div class="text-upload-overlay" id="text-upload-overlay">
+    <h2>上傳文字</h2>
+    <textarea id="textUploadInput" placeholder="每行對應一個投影片文字"></textarea>
+    <div>
+        <button onclick="handleTextUpload()">確認</button>
+        <button onclick="closeTextUploadOverlay()">取消</button>
+    </div>
+</div>
+
+<div class="order-overlay" id="order-overlay">
+    <h2>調整投影片順序</h2>
+    <ul id="slides-list">
+    </ul>
+    <button onclick="closeOrderOverlay()">完成</button>
+</div>
+
+<div class="title-overlay" id="title-overlay">
+    <div class="title-text" id="title-text"></div>
+    <button class="start-button" onclick="startSlideshow()">開始簡報</button>
+</div>
+
+<div class="slideshow-container" id="slideshow-container">
+</div>
+
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-animation"></div>
+    匯入中...
+</div>
+
+<button id="help-button" class="help-button" onclick="toggleHelp()">編輯工具</button>
+
+<div id="help-popup" class="help-popup">
+    <h2>編輯工具</h2>
+
+    <div style="text-align: center;">
+        <button onclick="showUploadOverlay();" class="start-button" style="padding: 10px 20px;">上傳圖片</button>
+        <button onclick="showTextUploadOverlay();" class="start-button" style="padding: 10px 20px;">上傳文字</button>
+        <button onclick="excelFileInput.click();" class="export-import-button" style="padding: 10px 20px;">匯入 Excel</button>
+        <button onclick="showOrderOverlay();" class="start-button" style="padding: 10px 20px;">調整順序</button>
+    </div>
+    <div style="text-align: center; margin-top: 10px;">
+        <button onclick="exportData();" class="export-import-button" style="padding: 10px 20px;">匯出簡報</button>
+        <button onclick="importFileInput.click();" class="export-import-button" style="padding: 10px 20px;">匯入簡報</button>
+    </div>
+    <div style="text-align: center; margin-top: 10px;">
+        <button onclick="resetPresentationAndCloseHelp();" class="fullscreen-close-button" style="padding: 10px 20px;">播放簡報</button>
+        <button onclick="enterFullscreen();" class="fullscreen-close-button" style="padding: 10px 20px;">全螢幕</button>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <label for="border-radius-slider">設定圖片圓角：</label>
+        <input type="range" id="border-radius-slider" min="0" max="50" value="20">
+    </div>
+
+    <!-- 新增錄音開關 -->
+    <div class="toggle-switch">
+        <label>
+            錄音
+            <input type="checkbox" id="recordingToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <!-- 新增投影片版型切換 -->
+    <div class="switch-layout-container">
+        <button onclick="switchToFullscreenLayout();" class="layout-button">切換至圖片最大化</button>
+        <button onclick="switchToDefaultLayout();" class="layout-button">切換至預設版型</button>
+    </div>
+
+    <!-- 新增使用說明按鈕 -->
+    <button onclick="toggleInstructionOverlay();" style="position: absolute; top: 10px; right: 10px; padding: 10px; cursor: pointer;">使用說明</button>
+
+    <!-- 將關閉按鈕移動到右下角 -->
+    <button onclick="toggleHelp();" class="close-button">關閉</button>
+</div>
+
+<div id="instruction-overlay" class="instruction-overlay">
+    <h2>基礎使用說明</h2>
+    <ul>
+        <li><strong>上傳圖片：</strong>
+            <ol>
+                <li>點擊「上傳圖片」按鈕，選擇多張圖片作為投影片內容。</li>
+                <li>或者使用「貼上圖片網址」功能，將圖片網址逐行貼入輸入框。</li>
+                <li>再為每一頁投影片手動輸入對應文字，即完成投影片。</li>
+            </ol>
+        </li>
+        <li><strong>設定簡報標題：</strong> 在上傳圖片頁面中輸入簡報標題。</li>
+        <li><strong>播放簡報：</strong> 點擊「播放簡報」按鈕開始簡報。</li>
+        <li><strong>導航投影片：</strong> 點擊左、右方向鍵導航投影片。</li>
+        <li><strong>匯出簡報：</strong> 點擊「匯出簡報」將簡報內容匯出為 `.json` 檔案。</li>
+        <li><strong>匯入簡報：</strong> 點擊「匯入簡報」載入 `.json` 簡報檔案。</li>
+        <li><strong>全螢幕模式：</strong> 點擊「全螢幕」按鈕將簡報切換至全螢幕顯示。</li>
+    </ul>
+
+    <h2>進階使用說明</h2>
+    <ul>
+        <li><strong>上傳 Excel 檔案：</strong> 點擊「匯入 Excel」上傳 Excel 檔案並生成投影片。</li>
+        <li><strong>調整投影片順序：</strong> 點擊「調整順序」可調整投影片的順序。</li>
+        <li><strong>上傳文字：</strong> 點擊「上傳文字」上傳文字，每行對應一個投影片。</li>
+        <li><strong>播放簡報快捷鍵：</strong> 按下 P 鍵可快速進入播放模式。</li>
+    </ul>
+    <button onclick="toggleInstructionOverlay();" class="fullscreen-close-button" style="margin-top: 20px;">關閉</button>
+</div>
+
+<button class="nav-button prev" onclick="changeSlide(-1)">&#10094;</button>
+<button class="nav-button next" onclick="changeSlide(1)">&#10095;</button>
+
+<input type="file" id="importFileInput" style="display: none;" accept=".json" />
+<input type="file" id="excelFileInput" style="display: none;" accept=".xlsx" />
+
+<!-- 引入外部库 -->
+<script src="https://cdn.jsdelivr.net/npm/recordrtc@5.6.2/RecordRTC.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+
+<script>
+    let slideIndex = 0;
+    let slideElements = [];
+    let slideshowTitle = document.title;
+    let sortableInstance;
+    let isRecordingEnabled = false; // 錄音開關狀態
+    let isFullscreenLayout = false; // 版型切換狀態
+
+    // 解析網址參數
+    let urlParams = new URLSearchParams(window.location.search);
+    let hideRecording = urlParams.get('hideRecording') === 'true';
+    let jsonURL = urlParams.get('jsonURL');
+
+    function init() {
+        slideElements = [];
+        document.getElementById('slideshow-container').innerHTML = '';
+        initTitleOverlay();
+
+        if (hideRecording) {
+            // 隱藏錄音開關
+            let recordingToggleElement = document.querySelector('.toggle-switch');
+            if (recordingToggleElement) {
+                recordingToggleElement.style.display = 'none';
+            }
+            // 將錄音功能設定為禁用
+            isRecordingEnabled = false;
+            // 添加 CSS 類別以隱藏錄音相關元素
+            document.body.classList.add('hide-recording');
+        }
+
+        if (jsonURL) {
+            // 如果提供了 jsonURL 參數，則從指定的 URL 匯入 JSON
+            importDataFromURL(jsonURL);
+        } else {
+            checkForDataFile();
+        }
+    }
+
+    function importDataFromURL(url) {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        fetch(url)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('無法從指定的 URL 獲取 JSON 檔案');
+                }
+            })
+            .then(data => {
+                importDataFromObject(data);
+                document.getElementById('loading-overlay').style.display = 'none';
+            })
+            .catch(error => {
+                console.error('匯入 JSON 時發生錯誤:', error);
+                document.getElementById('loading-overlay').style.display = 'none';
+                alert('無法匯入指定的 JSON 檔案。');
+            });
+    }
+
+    function checkForDataFile() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        fetch('https://kentxchang-goedutw.github.io/web/%E7%B0%A1%E6%98%93%E7%85%A7%E7%89%87%E7%94%9F%E6%88%90%E7%B0%A1%E5%A0%B1%E5%B7%A5%E5%85%B7/recode-test.json')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('No data.json found');
+                }
+            })
+            .then(data => {
+                importDataFromObject(data);
+                document.getElementById('loading-overlay').style.display = 'none';
+            })
+            .catch(error => {
+                console.log('No data.json file found or an error occurred:', error);
+                document.getElementById('loading-overlay').style.display = 'none';
+            });
+    }
+
+    function importDataFromObject(importObject) {
+        slideshowTitle = importObject.title || "簡報";
+        const slidesData = importObject.slides || [];
+
+        slideElements = [];
+        document.getElementById('slideshow-container').innerHTML = '';
+
+        slidesData.forEach((slideData, index) => {
+            const { imageDataURL, imageURL, textContent, audioData } = slideData;
+
+            addSlide(index + 1, imageURL || imageDataURL);
+            const slide = slideElements[index];
+            const inputContainer = slide.querySelector('.input-container');
+
+            if (textContent) {
+                const textContainer = inputContainer.querySelector('.text-container');
+                addSubmittedText(textContainer, textContent);
+            }
+
+            if (!hideRecording) {
+                // 確保錄音按鈕存在
+                const recordButton = inputContainer.querySelector('.record-button');
+                if (!recordButton) {
+                    addRecordingFeatures(slide, inputContainer);
+                }
+            }
+
+            const audioPlayer = slide.querySelector('.audio-player');
+            if (audioData && audioPlayer) {
+                audioPlayer.src = audioData;
+                slide.audioBase64 = audioData;
+            }
+        });
+
+        initTitleOverlay();
+        showSlides(0);
+        updatePageNumbers();
+
+        // 更新錄音按鈕
+        toggleRecordingButtons(isRecordingEnabled);
+    }
+
+    function startSlideshow() {
+        const overlay = document.getElementById('title-overlay');
+        overlay.style.display = 'none';
+        showSlides(0);
+    }
+
+    function resetPresentationAndCloseHelp() {
+        document.getElementById('help-popup').style.display = 'none';
+        resetPresentation();
+        initTitleOverlay();
+    }
+
+    function initTitleOverlay() {
+        document.getElementById('title-text').innerText = slideshowTitle;
+        document.getElementById('title-overlay').style.display = 'flex';
+    }
+
+    function addSlide(index, imagePath, imageFile = null) {
+        const slideshowContainer = document.getElementById('slideshow-container');
+
+        const slide = document.createElement('div');
+        slide.classList.add('slide');
+
+        const contentContainer = document.createElement('div');
+        contentContainer.classList.add('content-container');
+
+        const imageContainer = document.createElement('div');
+        imageContainer.classList.add('image-container');
+
+        const image = document.createElement('img');
+
+        if (imageFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                image.src = e.target.result;
+                image.dataURL = e.target.result;
+                imageContainer.appendChild(image);
+            };
+            reader.readAsDataURL(imageFile);
+        } else if (imagePath) {
+            image.src = imagePath;
+            if (image.src) {
+                image.imageURL = imagePath;
+                imageContainer.appendChild(image);
+            }
+        }
+
+        const inputContainer = document.createElement('div');
+        inputContainer.classList.add('input-container');
+
+        const textContainer = document.createElement('div');
+        textContainer.classList.add('text-container');
+        inputContainer.appendChild(textContainer);
+
+        const textArea = document.createElement('textarea');
+        textArea.placeholder = '在此輸入文字';
+        textContainer.appendChild(textArea);
+
+        textArea.addEventListener('blur', function() {
+            if (textArea.value.trim() !== '') {
+                addSubmittedText(textContainer, textArea.value);
+            }
+        });
+
+        if (!hideRecording) {
+            // 添加錄音功能
+            addRecordingFeatures(slide, inputContainer);
+        }
+
+        if (index % 2 === 1) {
+            contentContainer.appendChild(imageContainer);
+            contentContainer.appendChild(inputContainer);
+        } else {
+            contentContainer.appendChild(inputContainer);
+            contentContainer.appendChild(imageContainer);
+        }
+
+        slide.appendChild(contentContainer);
+
+        const pageNumber = document.createElement('div');
+        pageNumber.classList.add('page-number');
+        slide.appendChild(pageNumber);
+
+        slideshowContainer.appendChild(slide);
+        slideElements.push(slide);
+    }
+
+    function addRecordingFeatures(slide, inputContainer) {
+        if (hideRecording) {
+            return; // 如果需要隱藏錄音功能，則不添加錄音相關元素
+        }
+
+        // 新增錄音按鈕
+        const recordButton = document.createElement('button');
+        recordButton.classList.add('record-button');
+        recordButton.textContent = '開始錄音';
+        if (!isRecordingEnabled) {
+            recordButton.style.display = 'none';
+        }
+        inputContainer.appendChild(recordButton);
+
+        // 新增音訊播放器
+        const audioPlayer = document.createElement('audio');
+        audioPlayer.controls = true;
+        audioPlayer.classList.add('audio-player');
+        inputContainer.appendChild(audioPlayer);
+
+        let recorder;
+        let audioBlob;
+        let isRecording = false;
+        let stream;
+
+        recordButton.addEventListener('click', async function() {
+            if (isRecording) {
+                recorder.stopRecording(function() {
+                    audioBlob = recorder.getBlob();
+                    const audioURL = URL.createObjectURL(audioBlob);
+                    audioPlayer.src = audioURL;
+
+                    // 將音訊資料保存到 slide 元素
+                    slide.audioData = audioURL;
+
+                    // 將音訊 Blob 轉換為 Base64 編碼，以便匯出
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        slide.audioBase64 = reader.result;
+                    };
+                    reader.readAsDataURL(audioBlob);
+
+                    // 停止音訊串流
+                    stream.getTracks().forEach(track => track.stop());
+
+                    recorder = null;
+                    stream = null;
+                    isRecording = false;
+                    recordButton.textContent = '開始錄音';
+                    recordButton.classList.remove('recording');
+                });
+            } else {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('您的瀏覽器不支援錄音功能。');
+                    return;
+                }
+
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                    // 根據瀏覽器特性設置參數
+                    let options = {
+                        type: 'audio',
+                        mimeType: 'audio/webm',
+                        recorderType: StereoAudioRecorder,
+                        numberOfAudioChannels: 1
+                    };
+
+                    // 如果是 Safari，需要使用 'audio/mp4' 格式
+                    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+                    if (isSafari) {
+                        options.mimeType = 'audio/mp4';
+                    }
+
+                    // 如果是 Edge 或 IE，使用 'MediaRecorderWrapper'
+                    const isEdge = /Edge/.test(navigator.userAgent);
+                    if (isEdge) {
+                        options.recorderType = MediaRecorderWrapper;
+                        options.mimeType = 'audio/wav';
+                    }
+
+                    recorder = new RecordRTC(stream, options);
+
+                    recorder.startRecording();
+                    isRecording = true;
+                    recordButton.textContent = '停止錄音';
+                    recordButton.classList.add('recording');
+                } catch (error) {
+                    console.error('錄音失敗:', error);
+                    alert('無法開始錄音，請檢查麥克風權限或更換瀏覽器。');
+                }
+            }
+        });
+    }
+
+    function updatePageNumbers() {
+        slideElements.forEach((slide, i) => {
+            const pageNumber = slide.querySelector('.page-number');
+            pageNumber.textContent = `第 ${i + 1} 頁 / 共 ${slideElements.length} 頁`;
+        });
+    }
+
+    function addSubmittedText(container, text) {
+        const submittedText = document.createElement('div');
+        submittedText.classList.add('submitted-text');
+        submittedText.innerHTML = text.replace(/\n/g, '<br>');
+
+        submittedText.addEventListener('click', function() {
+            editSubmittedText(container, submittedText);
+        });
+
+        container.innerHTML = '';
+        container.appendChild(submittedText);
+    }
+
+    function editSubmittedText(container, submittedTextElement) {
+        const editArea = document.createElement('textarea');
+        editArea.value = submittedTextElement.innerHTML.replace(/<br>/g, '\n');
+        editArea.style.fontSize = '40px';
+        container.innerHTML = '';
+        container.appendChild(editArea);
+
+        editArea.addEventListener('blur', function() {
+            if (editArea.value.trim() !== '') {
+                addSubmittedText(container, editArea.value);
+            } else {
+                container.innerHTML = '';
+                container.appendChild(editArea);
+            }
+        });
+
+        editArea.focus();
+    }
+
+    function showSlides(n) {
+        if (slideElements.length === 0) return;
+
+        slideElements.forEach((slide, i) => {
+            slide.classList.remove('active', 'next', 'prev');
+
+            if (i === n) {
+                slide.classList.add('active');
+            } else if (i < n) {
+                slide.classList.add('prev');
+            } else {
+                slide.classList.add('next');
+            }
+        });
+
+        slideIndex = n;
+        updatePageNumbers();
+    }
+
+    function changeSlide(n) {
+        const newIndex = slideIndex + n;
+        if (newIndex >= 0 && newIndex < slideElements.length) {
+            showSlides(newIndex);
+        }
+    }
+
+    function handleExcelUpload(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+            if (slideElements.length === 0) {
+                const numberOfSlides = worksheet.length - 1;
+                for (let i = 0; i < numberOfSlides; i++) {
+                    const row = worksheet[i];
+                    addSlide(i + 1, row[1]);
+                    const slide = slideElements[i];
+                    const inputContainer = slide.querySelector('.input-container');
+                    const textContainer = inputContainer.querySelector('.text-container');
+                    addSubmittedText(textContainer, row[0]);
+                }
+                slideshowTitle = worksheet[numberOfSlides][0];
+                initTitleOverlay();
+            } else {
+                for (let i = 0; i < slideElements.length && i < worksheet.length - 1; i++) {
+                    const row = worksheet[i];
+                    const slide = slideElements[i];
+                    const inputContainer = slide.querySelector('.input-container');
+                    const textContainer = inputContainer.querySelector('.text-container');
+                    addSubmittedText(textContainer, row[0]);
+                }
+                slideshowTitle = worksheet[worksheet.length - 1][0];
+                initTitleOverlay();
+            }
+
+            if (!hideRecording) {
+                // 確保每個投影片都有錄音功能
+                slideElements.forEach((slide) => {
+                    const inputContainer = slide.querySelector('.input-container');
+                    const recordButton = inputContainer.querySelector('.record-button');
+                    if (!recordButton) {
+                        addRecordingFeatures(slide, inputContainer);
+                    }
+                });
+            }
+
+            // 更新錄音按鈕
+            toggleRecordingButtons(isRecordingEnabled);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function handleImageUpload() {
+        const files = document.getElementById('imageUploadInput').files;
+        const urls = document.getElementById('pasteUrlInput').value.trim().split('\n');
+        const title = document.getElementById('titleInput').value.trim();
+
+        if (files.length === 0 && urls.length === 0 && title === '') {
+            alert('請至少上傳一張圖片或貼上圖片網址，或輸入簡報標題。');
+            return;
+        }
+
+        if (title !== '') {
+            slideshowTitle = title;
+        }
+
+        if (files.length > 0) {
+            slideElements = [];
+            document.getElementById('slideshow-container').innerHTML = '';
+
+            Array.from(files).forEach((file, index) => {
+                addSlide(index + 1, null, file);
+            });
+        } else if (urls.length > 0 && urls[0] !== '') {
+            slideElements = [];
+            document.getElementById('slideshow-container').innerHTML = '';
+
+            urls.forEach((url, index) => {
+                addSlide(index + 1, url.trim());
+            });
+        }
+
+        closeUploadOverlay();
+        initTitleOverlay();
+        showSlides(0);
+        updatePageNumbers();
+
+        // 更新錄音按鈕
+        toggleRecordingButtons(isRecordingEnabled);
+    }
+
+    function closeUploadOverlay() {
+        document.getElementById('upload-overlay').style.display = 'none';
+    }
+
+    function showUploadOverlay() {
+        slideElements = [];
+        document.getElementById('slideshow-container').innerHTML = '';
+
+        document.getElementById('title-overlay').style.display = 'none';
+        document.getElementById('help-popup').style.display = 'none';
+
+        document.getElementById('upload-overlay').style.display = 'flex';
+    }
+
+    function showTextUploadOverlay() {
+        if (slideElements.length === 0) {
+            alert('請先上傳圖片後再上傳文字');
+            return;
+        }
+        document.getElementById('text-upload-overlay').style.display = 'flex';
+    }
+
+    function closeTextUploadOverlay() {
+        document.getElementById('text-upload-overlay').style.display = 'none';
+    }
+
+    function handleTextUpload() {
+        const textInput = document.getElementById('textUploadInput').value.trim();
+        if (textInput === '') {
+            alert('請輸入文字');
+            return;
+        }
+
+        const textLines = textInput.split('\n');
+        for (let i = 0; i < textLines.length && i < slideElements.length; i++) {
+            const slide = slideElements[i];
+            const inputContainer = slide.querySelector('.input-container');
+            const textContainer = inputContainer.querySelector('.text-container');
+            addSubmittedText(textContainer, textLines[i].trim());
+
+            if (!hideRecording) {
+                // 確保錄音按鈕存在
+                const recordButton = inputContainer.querySelector('.record-button');
+                if (!recordButton) {
+                    addRecordingFeatures(slide, inputContainer);
+                }
+            }
+        }
+
+        closeTextUploadOverlay();
+        updatePageNumbers();
+
+        // 更新錄音按鈕
+        toggleRecordingButtons(isRecordingEnabled);
+    }
+
+    function showOrderOverlay() {
+        const orderOverlay = document.getElementById('order-overlay');
+        const slidesList = document.getElementById('slides-list');
+        slidesList.innerHTML = '';
+
+        slideElements.forEach((slide, index) => {
+            const listItem = document.createElement('li');
+            listItem.innerText = `投影片 ${index + 1}`;
+            listItem.setAttribute('data-index', index);
+            slidesList.appendChild(listItem);
+        });
+
+        orderOverlay.style.display = 'flex';
+
+        if (sortableInstance) {
+            sortableInstance.destroy();
+        }
+
+        sortableInstance = new Sortable(slidesList, {
+            animation: 150,
+            onEnd: function(evt) {
+                const oldIndex = evt.oldIndex;
+                const newIndex = evt.newIndex;
+
+                if (oldIndex !== newIndex) {
+                    const slide = slideElements.splice(oldIndex, 1)[0];
+                    slideElements.splice(newIndex, 0, slide);
+                    showSlides(slideIndex);
+                }
+            }
+        });
+    }
+
+    function closeOrderOverlay() {
+        document.getElementById('order-overlay').style.display = 'none';
+        showSlides(0);
+    }
+
+    function resetPresentation() {
+        showSlides(0);
+        initTitleOverlay();
+    }
+
+    async function exportData() {
+        const slidesData = [];
+
+        for (let index = 0; index < slideElements.length; index++) {
+            const slide = slideElements[index];
+            const image = slide.querySelector('.image-container img');
+            const textContainer = slide.querySelector('.text-container');
+            const text = textContainer.querySelector('.submitted-text') || textContainer.querySelector('textarea');
+            const textContent = text.value || text.innerHTML.replace(/<br>/g, '\n');
+
+            let imageDataURL = null;
+            let imageURL = image?.imageURL || null;
+
+            if (image?.dataURL) {
+                imageDataURL = image.dataURL;
+            } else if (image?.src && !image?.imageURL) {
+                imageDataURL = image.src;
+            }
+
+            let audioData = slide.audioBase64 || null;
+
+            slidesData.push({
+                imageDataURL: imageDataURL,
+                imageURL: imageURL,
+                textContent: textContent,
+                audioData: audioData
+            });
+        }
+
+        const exportObject = {
+            title: slideshowTitle,
+            slides: slidesData
+        };
+
+        const dataStr = JSON.stringify(exportObject);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "presentation.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function importData(file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const dataStr = e.target.result;
+            const importObject = JSON.parse(dataStr);
+
+            importDataFromObject(importObject);
+        };
+
+        reader.readAsText(file);
+    }
+
+    function toggleHelp() {
+        const helpPopup = document.getElementById('help-popup');
+        helpPopup.style.display = helpPopup.style.display === 'none' || helpPopup.style.display === '' ? 'block' : 'none';
+    }
+
+    function enterFullscreen() {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+            document.documentElement.msRequestFullscreen();
+        }
+    }
+
+    function toggleInstructionOverlay() {
+        const instructionOverlay = document.getElementById('instruction-overlay');
+        instructionOverlay.style.display = instructionOverlay.style.display === 'none' || instructionOverlay.style.display === '' ? 'block' : 'none';
+    }
+
+    // 錄音開關事件監聽
+    document.getElementById('recordingToggle').addEventListener('change', function(event) {
+        isRecordingEnabled = event.target.checked;
+        toggleRecordingButtons(isRecordingEnabled);
+    });
+
+    function toggleRecordingButtons(show) {
+        slideElements.forEach(slide => {
+            const recordButton = slide.querySelector('.record-button');
+            if (recordButton) {
+                recordButton.style.display = show ? 'block' : 'none';
+            }
+        });
+    }
+
+    // 切換至圖片最大化版型
+    function switchToFullscreenLayout() {
+        slideElements.forEach(slide => {
+            slide.classList.add('fullscreen-slide');
+        });
+        isFullscreenLayout = true;
+    }
+
+    // 切換至預設版型
+    function switchToDefaultLayout() {
+        slideElements.forEach(slide => {
+            slide.classList.remove('fullscreen-slide');
+        });
+        isFullscreenLayout = false;
+    }
+
+    init();
+
+    const excelFileInput = document.getElementById('excelFileInput');
+    excelFileInput.addEventListener('change', function(event) {
+        handleExcelUpload(event.target.files[0]);
+    });
+
+    const importFileInput = document.getElementById('importFileInput');
+    importFileInput.addEventListener('change', function(event) {
+        importData(event.target.files[0]);
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        if (event.key === 'i' || event.key === 'I') {
+            excelFileInput.click();
+        } else if (event.key === 'p' || event.key === 'P') {
+            resetPresentationAndCloseHelp();
+        } else if (event.key === 'ArrowRight') {
+            changeSlide(1);
+        } else if (event.key === 'ArrowLeft') {
+            changeSlide(-1);
+        }
+    });
+
+    document.addEventListener('fullscreenchange', function() {
+        if (document.fullscreenElement) {
+            document.body.classList.add('fullscreen');
+        } else {
+            document.body.classList.remove('fullscreen');
+        }
+    });
+
+    document.getElementById('border-radius-slider').addEventListener('input', function(event) {
+        const borderRadiusValue = event.target.value + 'px';
+        document.querySelectorAll('.slide img').forEach(img => {
+            img.style.borderRadius = borderRadiusValue;
+        });
+    });
+
+</script>
+
+</body>
+</html>
