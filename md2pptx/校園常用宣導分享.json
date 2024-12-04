@@ -1,38 +1,38 @@
 {
   "title": "中小學校園常用各式宣導線上簡報分享",
-  "description": "使用我自製的markdown語法轉線上簡報工具預載內容所生成的簡報，簡報內容由chatgpt協助生成。",
+  "description": "使用我自製的markdown語法轉線上簡報工具預載內容所生成的簡報，簡報內容由chatgpt協助生成。\n",
   "links": [
     {
-      "name": "反霸凌",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E5%8F%8D%E9%9C%B8%E5%87%8C.md"
+      "name": "反霸凌.md",
+      "url": "md2pptx.html?data=反霸凌.md"
     },
     {
-      "name": "水域安全",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E6%B0%B4%E5%9F%9F%E5%AE%89%E5%85%A8.md"
+      "name": "水域安全.md",
+      "url": "md2pptx.html?data=水域安全.md"
     },
     {
-      "name": "交通安全",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E4%BA%A4%E9%80%9A%E5%AE%89%E5%85%A8.md"
+      "name": "交通安全.md",
+      "url": "md2pptx.html?data=交通安全.md"
     },
     {
-      "name": "安全教育",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E5%AE%89%E5%85%A8%E6%95%99%E8%82%B2.md"
+      "name": "安全教育.md",
+      "url": "md2pptx.html?data=安全教育.md"
     },
     {
-      "name": "兒童及青少年性剝削防制教育",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E5%85%92%E7%AB%A5%E5%8F%8A%E9%9D%92%E5%B0%91%E5%B9%B4%E6%80%A7%E5%89%9D%E5%89%8A%E9%98%B2%E5%88%B6%E6%95%99%E8%82%B2.md"
+      "name": "兒童及青少年性剝削防制教育.md",
+      "url": "md2pptx.html?data=兒童及青少年性剝削防制教育.md"
     },
     {
-      "name": "兒童權利公約介紹",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E5%85%92%E7%AB%A5%E6%AC%8A%E5%88%A9%E5%85%AC%E7%B4%84%E4%BB%8B%E7%B4%B9.md"
+      "name": "兒童權利公約介紹.md",
+      "url": "md2pptx.html?data=兒童權利公約介紹.md"
     },
     {
-      "name": "居家防火",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E5%B1%85%E5%AE%B6%E9%98%B2%E7%81%AB.md"
+      "name": "居家防火.md",
+      "url": "md2pptx.html?data=居家防火.md"
     },
     {
-      "name": "性侵害防治教育",
-      "url": "file:///P:/Public%20Folder/html/list/md2pptx.html?data=%E6%80%A7%E4%BE%B5%E5%AE%B3%E9%98%B2%E6%B2%BB%E6%95%99%E8%82%B2.md"
+      "name": "性侵害防治教育.md",
+      "url": "md2pptx.html?data=性侵害防治教育.md"
     }
   ],
   "background": "linear-gradient(to right, #00c9ff, #92fe9d)",
