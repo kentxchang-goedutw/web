@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>排序遊戲</title>
+  <style>
+    /* ────────────────────────────────────────────── */
+    /* 全新華麗 CSS 風格 + 新增設定單字槽寬度配置 (僅修改 CSS 與部份 HTML 結構，不改功能) */
+    /* ────────────────────────────────────────────── */
+
+    /* 載入注音字型 */
+    @font-face {
+      font-family: 'ㄅ注音芫荽 Regular';
+      src: url('https://kentxchang.github.io/web/BpmfIansui-Regular_0.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    
+    :root {
+      --primary-color: #8a2be2;
+      --secondary-color: #4b0082;
+      --accent-color: #ff69b4;
+      --background-gradient1: linear-gradient(135deg, #f0e6f6, #ffffff);
+      --background-gradient2: linear-gradient(135deg, #e6f7ff, #ffffff);
+      --background-gradient3: linear-gradient(135deg, #e6ffe6, #ffffff);
+      --text-color: #222;
+      --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* 基本重置與全局樣式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: var(--font-main);
+      background: var(--background-gradient1);
+      background-size: 200% 200%;
+      animation: randomBackground 15s ease infinite;
+      color: var(--text-color);
+      overflow-x: hidden;
+    }
+    @keyframes randomBackground {
+      0% { background: var(--background-gradient1); }
+      33% { background: var(--background-gradient2); }
+      66% { background: var(--background-gradient3); }
+      100% { background: var(--background-gradient1); }
+    }
+    
+    /* 主容器 */
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: rgba(255,255,255,0.95);
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      animation: fadeInScale 1s ease-out;
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Header 與題號提示 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 2px solid var(--secondary-color);
+      margin-bottom: 1.5rem;
+    }
+    .question-info {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--secondary-color);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* 按鈕樣式 */
+    button {
+      background: linear-gradient(145deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    /* 設定按鈕 */
+    #settingsBtn {
+      background: transparent;
+      padding: 0.5rem;
+    }
+    #settingsBtn svg {
+      filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    }
+    
+    /* Modal (加入淡入效果) */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1100;
+      animation: modalFade 0.5s ease;
+    }
+    @keyframes modalFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 10px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 600px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: slideDown 0.5s ease;
+    }
+    @keyframes slideDown {
+      from { transform: translate(-50%, -60%); opacity: 0; }
+      to { transform: translate(-50%, -50%); opacity: 1; }
+    }
+    
+    /* 設定圖層內所有輸入元件寬度 90% */
+    .modal-content input,
+    .modal-content textarea,
+    .modal-content select {
+      width: 90%;
+    }
+    
+    /* Textarea */
+    textarea {
+      resize: vertical;
+      font-family: var(--font-main);
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      transition: border-color 0.3s;
+      padding: 1rem;
+      font-size: 1rem;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+    
+    /* 設定視窗新增項目 */
+    .setting-option {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem 0;
+    }
+    .setting-option label {
+      margin-left: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    /* 下拉選單與數字輸入 */
+    .setting-option select,
+    .setting-option input[type="number"] {
+      padding: 0.4rem;
+      border: 1px solid var(--secondary-color);
+      border-radius: 5px;
+      font-size: 1rem;
+      margin-left: 0.5rem;
+    }
+    .setting-option .hint {
+      margin-left: 0.5rem;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    
+    /* 新增單字槽高度設定 */
+    .setting-option.slot-height {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem 0;
+    }
+    .setting-option.slot-height label {
+      margin-right: 0.5rem;
+      font-size: 1rem;
+    }
+    .setting-option.slot-height input {
+      width: 60px;
+      padding: 0.3rem;
+      font-size: 1rem;
+    }
+    
+    /* 新增單字槽寬度設定，改為一欄，不換行 */
+    .setting-option.slot-width {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem 0;
+    }
+    .setting-option.slot-width label {
+      margin-right: 0.5rem;
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+    .setting-option.slot-width select {
+      padding: 0.4rem;
+      border: 1px solid var(--secondary-color);
+      border-radius: 5px;
+      font-size: 1rem;
+      margin-right: 0.3rem;
+    }
+    
+    /* 將注音開關、答錯鎖定時間、單字槽高度及寬度排列在同一列 */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    /* 圖示開關 */
+    .toggle-switch {
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      position: relative;
+      cursor: pointer;
+      background: #ccc;
+      border-radius: 15px;
+      transition: background 0.3s;
+    }
+    .toggle-switch::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      top: 2px;
+      left: 2px;
+      background: white;
+      border-radius: 50%;
+      transition: left 0.3s;
+    }
+    .toggle-switch.on {
+      background: var(--primary-color);
+    }
+    .toggle-switch.on::after {
+      left: 26px;
+    }
+    .toggle-label {
+      margin-left: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    /* 設定按鈕區 */
+    .setting-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
+    }
+    .setting-actions button {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: #000;
+      transition: transform 0.2s;
+    }
+    .setting-actions button:hover {
+      transform: scale(1.1);
+    }
+    
+    /* 遊戲區域 */
+    #timer {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    #wordContainer {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      position: relative;
+    }
+    .word-slots {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    /* 單字槽：寬度依設定 (預設 150px)，高度依設定 (預設 150px) */
+    .word-slot {
+      width: 150px;
+      height: 60px;
+      border: 2px dashed var(--primary-color);
+      border-radius: 10px;
+      position: relative;
+      background: rgba(255,255,255,0.8);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .word-slot:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    /* 序號：使用 ::before 顯示，答對時隱藏 */
+    .word-slot::before {
+      content: attr(data-index);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      color: #555;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .word-slot.correct::before {
+      display: none;
+    }
+    /* 正確與錯誤圖示均透過 ::after 呈現，位置固定於上方 -25px */
+    .word-slot.correct::after,
+    .word-slot.incorrect::after {
+      display: block;
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .word-slot.correct::after {
+      content: '⭕';
+      color: red;
+    }
+    .word-slot.incorrect::after {
+      content: '✖️';
+      color: green;
+    }
+    
+    /* 可拖曳單字區 */
+    #draggableWords {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .word-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      background: #fff;
+      border-radius: 10px;
+      cursor: move;
+      user-select: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .word-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    .word-item.sortable-ghost {
+      opacity: 0.4;
+    }
+    .word-item.sortable-chosen {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    /* 結果顯示區 (#result) - 絕對定位，置於遊戲區左右置中、向下對齊 */
+    #result {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      z-index: 99999;
+      padding: 1rem;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      animation: fadeInScale 0.5s ease-out;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    /* 右下角製作者資訊 */
+    .credit {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      font-size: 0.9rem;
+      z-index: 1500;
+    }
+    .credit a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    .credit a:hover {
+      text-decoration: underline;
+    }
+    
+    /* 倒數數字 (僅在鎖定時間非0時動態加入) */
+    .lock-countdown {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      color: red;
+      pointer-events: none;
+    }
+    
+    /* 隱藏檔案輸入 */
+    #importFile {
+      display: none;
+    }
+    
+    /* RWD 調整 */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+      }
+      .word-slot {
+        width: 120px;
+        height: 120px;
+      }
+      .word-item {
+        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+      }
+      #timer {
+        font-size: 1.3rem;
+      }
+    }
+    
+    /* ────────────────────────────────────────────── */
+    /* 全新 CSS 結束 */
+    /* ────────────────────────────────────────────── */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- 題號提示 -->
+      <div class="question-info" id="questionInfo">第 0 題，共 0 題</div>
+      <h1>排出正確順序吧!</h1>
+      <button id="settingsBtn">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- 設定進入密碼模組 (分列呈現) -->
+    <div id="passwordModal" class="modal">
+      <div class="modal-content">
+        <h2>請輸入密碼</h2>
+        <input type="password" id="passwordInput" placeholder="密碼">
+        <br>
+        <button id="passwordSubmit">確認</button>
+      </div>
+    </div>
+    
+    <!-- 設定視窗 -->
+    <div id="settingsModal" class="modal">
+      <div class="modal-content">
+        <h2>設定</h2>
+        <textarea id="wordSets" rows="10" placeholder="請輸入單字組（每組一行，單字以空格分隔）：
+範例：
+B o o k
+阿剛 老師 超級 帥"></textarea>
+        <!-- 將注音開關、答錯鎖定時間、單字槽高度及寬度排列在同一列 -->
+        <div class="settings-row">
+          <div class="setting-option">
+            <div class="toggle-switch" id="bpmfToggle"></div>
+            <span class="toggle-label" id="bpmfLabel">注音：OFF</span>
+          </div>
+          <div class="setting-option lock-time">
+            <label for="lockTime">答錯鎖定時間:</label>
+            <select id="lockTime">
+              <option value="0">0秒</option>
+              <option value="5">5秒</option>
+              <option value="10">10秒</option>
+              <option value="15">15秒</option>
+            </select>
+          </div>
+          <div class="setting-option slot-height">
+            <label for="slotHeight">單字槽高度:</label>
+            <input type="number" id="slotHeight" value="60" min="50">
+            <span class="hint">(如果題目字多時，可加大數字)</span>
+          </div>
+          <div class="setting-option slot-width">
+            <label for="slotWidth">單字槽寬度:</label>
+            <select id="slotWidth">
+              <option value="150" selected>150</option>
+              <option value="60">60 (英文字母時使用)</option>
+            </select>
+          </div>
+        </div>
+        <!-- 匯出／匯入及下載 HTML 按鈕 -->
+        <div class="setting-actions">
+          <button id="exportConfig">📤 匯出</button>
+          <button id="importConfig">📥 匯入</button>
+          <button id="downloadHtml">💾 下載 HTML</button>
+          <input type="file" id="importFile" accept="application/json">
+        </div>
+        <button id="startGame">開始遊戲</button>
+      </div>
+    </div>
+    
+    <!-- alli 輸入 modal -->
+    <div id="alliModal" class="modal">
+      <div class="modal-content">
+        <h2>輸入 JSON 設定</h2>
+        <textarea id="alliInput" rows="10" placeholder="請貼上 JSON 內容">{
+  "wordSets": "今天 天氣 很好\n成功國小的 紫斑蝶 課程 很有名",
+  "useBpmf": true,
+  "lockTime": "0",
+  "slotHeight": "60",
+  "slotWidth": "150"
+}</textarea>
+        <button id="alliImport">導入</button>
+      </div>
+    </div>
+    
+    <div id="gameArea">
+      <div id="timer">時間：0:00</div>
+      <!-- wordContainer 內依序加入單字槽區與可拖曳單字區 -->
+      <div id="wordContainer"></div>
+      <!-- 結果顯示區 (#result) 絕對定位於遊戲區左右置中，向下對齊 -->
+      <div id="result" class="hidden">
+        <p>完成時間：<span id="completionTime"></span></p>
+        <button id="nextSet" class="hidden">下一組</button>
+        <button id="restart" class="hidden">重新開始遊戲</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 右下角製作者資訊 -->
+  <div id="credit" class="credit">
+    Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+  </div>
+  
+  <!-- 載入 SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+  
+  <script>
+    class WordSortingGame {
+      constructor() {
+        this.wordSets = [];
+        this.currentSetIndex = 0;
+        this.startTime = 0;
+        this.timerInterval = null;
+        this.originalOrder = [];
+        this.pastelColors = [
+          '#FFE5E5', '#E5FFE5', '#E5E5FF', '#FFE5FF', '#FFFFE5',
+          '#E5FFFF', '#F5E6E8', '#E6F5E8', '#E6E8F5', '#F5E6F5'
+        ];
+        this.useBpmf = false;
+        this.initializeElements();
+        this.setupEventListeners();
+        if (this.alliInput.value.trim() !== "") {
+          this.alliImport();
+        }
+      }
+    
+      initializeElements() {
+        this.settingsBtn = document.getElementById('settingsBtn');
+        this.passwordModal = document.getElementById('passwordModal');
+        this.passwordInput = document.getElementById('passwordInput');
+        this.passwordSubmit = document.getElementById('passwordSubmit');
+        this.settingsModal = document.getElementById('settingsModal');
+        this.wordSetsInput = document.getElementById('wordSets');
+        this.bpmfToggle = document.getElementById('bpmfToggle');
+        this.bpmfLabel = document.getElementById('bpmfLabel');
+        this.lockTimeSelect = document.getElementById('lockTime');
+        this.exportConfigBtn = document.getElementById('exportConfig');
+        this.importConfigBtn = document.getElementById('importConfig');
+        this.downloadHtmlBtnSettings = document.getElementById('downloadHtml');
+        this.importFileInput = document.getElementById('importFile');
+        this.startGameBtn = document.getElementById('startGame');
+        this.alliModal = document.getElementById('alliModal');
+        this.alliInput = document.getElementById('alliInput');
+        this.alliImportBtn = document.getElementById('alliImport');
+        this.gameArea = document.getElementById('gameArea');
+        this.wordContainer = document.getElementById('wordContainer');
+        this.timerElement = document.getElementById('timer');
+        this.resultElement = document.getElementById('result');
+        this.completionTimeElement = document.getElementById('completionTime');
+        this.nextSetBtn = document.getElementById('nextSet');
+        this.restartBtn = document.getElementById('restart');
+        this.questionInfo = document.getElementById('questionInfo');
+      }
+    
+      setupEventListeners() {
+        this.settingsBtn.addEventListener('click', () => {
+          this.passwordModal.style.display = 'block';
+        });
+    
+        this.passwordInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            this.passwordSubmit.click();
+          }
+        });
+    
+        this.passwordSubmit.addEventListener('click', () => {
+          if (this.passwordInput.value === 'tpet') {
+            this.passwordModal.style.display = 'none';
+            this.settingsModal.style.display = 'block';
+            this.passwordInput.value = '';
+          } else {
+            alert('密碼錯誤！');
+          }
+        });
+    
+        this.startGameBtn.addEventListener('click', () => this.startGame());
+        this.nextSetBtn.addEventListener('click', () => this.loadNextSet());
+        this.restartBtn.addEventListener('click', () => this.restartGame());
+    
+        this.exportConfigBtn.addEventListener('click', () => {
+          const configJson = this.exportConfig();
+          const blob = new Blob([configJson], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'config.json';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+    
+        this.importConfigBtn.addEventListener('click', () => this.importFileInput.click());
+        this.importFileInput.addEventListener('change', (e) => this.importConfig(e));
+    
+        this.downloadHtmlBtnSettings.addEventListener('click', () => this.prepareDownloadHtml());
+    
+        this.alliImportBtn.addEventListener('click', () => this.alliImport());
+    
+        window.addEventListener('click', (e) => {
+          if (e.target === this.settingsModal) {
+            this.settingsModal.style.display = 'none';
+          }
+          if (e.target === this.alliModal) {
+            this.alliModal.style.display = 'none';
+          }
+          if (e.target === this.passwordModal) {
+            this.passwordModal.style.display = 'none';
+          }
+        });
+    
+        this.bpmfToggle.addEventListener('click', () => {
+          this.useBpmf = !this.useBpmf;
+          if (this.useBpmf) {
+            this.bpmfToggle.classList.add('on');
+            this.bpmfLabel.textContent = '注音：ON';
+          } else {
+            this.bpmfToggle.classList.remove('on');
+            this.bpmfLabel.textContent = '注音：OFF';
+          }
+          this.updateFont();
+        });
+    
+        document.addEventListener('keydown', (e) => {
+          if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'i') {
+            this.alliModal.style.display = 'block';
+          }
+        });
+      }
+    
+      updateFont() {
+        if (this.useBpmf) {
+          document.body.style.fontFamily = "'ㄅ注音芫荽 Regular', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        } else {
+          document.body.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        }
+      }
+    
+      startGame() {
+        const input = this.wordSetsInput.value.trim();
+        if (!input) return;
+        this.wordSets = this.wordSetsInput.value.split('\n').map(line => line.trim());
+        this.currentSetIndex = 0;
+        this.useBpmf = this.bpmfToggle.classList.contains('on');
+        this.updateFont();
+        this.settingsModal.style.display = 'none';
+        this.loadCurrentSet();
+      }
+    
+      loadCurrentSet() {
+        if (this.currentSetIndex >= this.wordSets.length) return;
+        const words = this.wordSets[this.currentSetIndex].split(' ');
+        this.originalOrder = [...words];
+        const shuffledWords = this.shuffleArray([...words]);
+        this.questionInfo.textContent = `第 ${this.currentSetIndex + 1} 題，共 ${this.wordSets.length} 題`;
+    
+        const slotsContainer = document.createElement('div');
+        slotsContainer.className = 'word-slots';
+        words.forEach((word, index) => {
+          const slot = document.createElement('div');
+          slot.className = 'word-slot';
+          slot.setAttribute('data-index', index + 1);
+          const height = document.getElementById('slotHeight').value;
+          const width = document.getElementById('slotWidth').value;
+          slot.style.height = height + 'px';
+          slot.style.width = width + 'px';
+          slotsContainer.appendChild(slot);
+        });
+    
+        const wordsContainer = document.createElement('div');
+        wordsContainer.id = 'draggableWords';
+        wordsContainer.style.display = 'flex';
+        wordsContainer.style.gap = '1rem';
+        wordsContainer.style.justifyContent = 'center';
+        wordsContainer.style.flexWrap = 'wrap';
+    
+        shuffledWords.forEach(word => {
+          const wordElement = document.createElement('div');
+          wordElement.className = 'word-item';
+          wordElement.textContent = word;
+          wordElement.style.backgroundColor = this.getRandomPastelColor();
+          wordsContainer.appendChild(wordElement);
+        });
+    
+        this.wordContainer.innerHTML = '';
+        this.wordContainer.appendChild(slotsContainer);
+        this.wordContainer.appendChild(wordsContainer);
+    
+        this.setupSortable();
+        this.startTimer();
+        this.resultElement.classList.add('hidden');
+        this.nextSetBtn.classList.add('hidden');
+        this.restartBtn.classList.add('hidden');
+      }
+    
+      setupSortable() {
+        const slots = document.querySelectorAll('.word-slot');
+        const draggableWords = document.getElementById('draggableWords');
+        if (this.sortable) { this.sortable.destroy(); }
+        this.sortable = new Sortable(draggableWords, {
+          animation: 150,
+          group: 'shared',
+        });
+        slots.forEach((slot, index) => {
+          new Sortable(slot, {
+            group: 'shared',
+            animation: 150,
+            onAdd: (evt) => {
+              if (slot.classList.contains('locked')) {
+                draggableWords.appendChild(evt.item);
+                return;
+              }
+              const droppedText = evt.item.textContent;
+              const expectedText = this.originalOrder[index];
+              let lockTime = parseInt(this.lockTimeSelect.value);
+              if (lockTime === 0) { lockTime = 2; }
+              if (droppedText !== expectedText) {
+                draggableWords.appendChild(evt.item);
+                if (!slot.classList.contains('locked')) {
+                  this.lockSlot(slot, lockTime);
+                }
+                return;
+              }
+              if (slot.children.length > 1) {
+                draggableWords.appendChild(slot.children[0]);
+              }
+              slot.classList.add('correct');
+              this.checkAllSlots();
+            },
+            onRemove: (evt) => {
+              if (!slot.classList.contains('locked')) {
+                slot.classList.remove('correct', 'incorrect');
+              }
+            }
+          });
+        });
+      }
+    
+      checkAllSlots() {
+        const slots = document.querySelectorAll('.word-slot');
+        const allCorrect = Array.from(slots).every((slot, index) => {
+          if (slot.children.length === 0) return false;
+          return slot.children[0].textContent === this.originalOrder[index];
+        });
+        if (allCorrect) {
+          this.handleSuccess();
+        }
+      }
+    
+      lockSlot(slot, seconds) {
+        slot.classList.add('locked');
+        slot.classList.add('incorrect');
+        if (parseInt(this.lockTimeSelect.value) === 0) {
+          setTimeout(() => {
+            slot.classList.remove('incorrect');
+            slot.classList.remove('locked');
+          }, 2000);
+        } else {
+          const countdownElem = document.createElement('div');
+          countdownElem.className = 'lock-countdown';
+          countdownElem.textContent = seconds + 's';
+          slot.appendChild(countdownElem);
+          const intervalId = setInterval(() => {
+            seconds--;
+            if (seconds <= 0) {
+              clearInterval(intervalId);
+              slot.classList.remove('incorrect');
+              slot.classList.remove('locked');
+              countdownElem.remove();
+            } else {
+              countdownElem.textContent = seconds + 's';
+            }
+          }, 1000);
+        }
+      }
+    
+      handleSuccess() {
+        clearInterval(this.timerInterval);
+        const timeTaken = this.formatTime((Date.now() - this.startTime) / 1000);
+        this.resultElement.classList.remove('hidden');
+        this.completionTimeElement.textContent = timeTaken;
+        if (this.currentSetIndex < this.wordSets.length - 1) {
+          this.nextSetBtn.classList.remove('hidden');
+        } else {
+          this.restartBtn.classList.remove('hidden');
+        }
+      }
+    
+      loadNextSet() {
+        this.currentSetIndex++;
+        this.loadCurrentSet();
+      }
+    
+      restartGame() {
+        this.currentSetIndex = 0;
+        this.loadCurrentSet();
+      }
+    
+      startTimer() {
+        clearInterval(this.timerInterval);
+        this.startTime = Date.now();
+        this.updateTimer();
+        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+      }
+    
+      updateTimer() {
+        const seconds = Math.floor((Date.now() - this.startTime) / 1000);
+        this.timerElement.textContent = `時間：${this.formatTime(seconds)}`;
+      }
+    
+      formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+      }
+    
+      shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+    
+      getRandomPastelColor() {
+        return this.pastelColors[Math.floor(Math.random() * this.pastelColors.length)];
+      }
+    
+      exportConfig() {
+        const config = {
+          wordSets: this.wordSetsInput.value,
+          useBpmf: this.bpmfToggle.classList.contains('on'),
+          lockTime: this.lockTimeSelect.value,
+          slotHeight: document.getElementById('slotHeight').value,
+          slotWidth: document.getElementById('slotWidth').value
+        };
+        return JSON.stringify(config, null, 2);
+      }
+    
+      importConfig(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const config = JSON.parse(e.target.result);
+            if (config.wordSets !== undefined) {
+              this.wordSetsInput.value = config.wordSets;
+            }
+            if (config.useBpmf !== undefined) {
+              if (config.useBpmf) {
+                this.bpmfToggle.classList.add('on');
+                this.bpmfLabel.textContent = '注音：ON';
+              } else {
+                this.bpmfToggle.classList.remove('on');
+                this.bpmfLabel.textContent = '注音：OFF';
+              }
+              this.useBpmf = config.useBpmf;
+              this.updateFont();
+            }
+            if (config.lockTime !== undefined) {
+              this.lockTimeSelect.value = config.lockTime;
+            }
+            if (config.slotHeight !== undefined) {
+              document.getElementById('slotHeight').value = config.slotHeight;
+            }
+            if (config.slotWidth !== undefined) {
+              document.getElementById('slotWidth').value = config.slotWidth;
+            }
+          } catch (err) {
+            alert('匯入設定失敗，請檢查檔案格式。');
+          }
+        };
+        reader.readAsText(file);
+      }
+    
+      alliImport() {
+        const jsonText = this.alliInput.value.trim();
+        if (!jsonText) return;
+        try {
+          const config = JSON.parse(jsonText);
+          if (config.wordSets !== undefined) {
+            this.wordSetsInput.value = config.wordSets;
+          }
+          if (config.useBpmf !== undefined) {
+            if (config.useBpmf) {
+              this.bpmfToggle.classList.add('on');
+              this.bpmfLabel.textContent = '注音：ON';
+            } else {
+              this.bpmfToggle.classList.remove('on');
+              this.bpmfLabel.textContent = '注音：OFF';
+            }
+            this.useBpmf = config.useBpmf;
+            this.updateFont();
+          }
+          if (config.lockTime !== undefined) {
+            this.lockTimeSelect.value = config.lockTime;
+          }
+          if (config.slotHeight !== undefined) {
+            document.getElementById('slotHeight').value = config.slotHeight;
+          }
+          if (config.slotWidth !== undefined) {
+            document.getElementById('slotWidth').value = config.slotWidth;
+          }
+          this.alliModal.style.display = 'none';
+          this.startGame();
+        } catch (err) {
+          alert('匯入設定失敗，請檢查 JSON 格式。');
+        }
+      }
+    
+      prepareDownloadHtml() {
+        const url = 'https://filedn.com/laMtL9jmKf7JrDEQG0A6OPy/html/%E6%8E%92%E5%BA%8F%E9%81%8A%E6%88%B2/%E6%8E%92%E5%BA%8F%E9%81%8A%E6%88%B2.html';
+        fetch(url)
+          .then(response => response.text())
+          .then(htmlText => {
+            const configJson = this.exportConfig();
+            const newHtml = htmlText.replace(/(<textarea\s+id="alliInput"[^>]*>)[\s\S]*?(<\/textarea>)/, `$1${configJson}$2`);
+            const blob = new Blob([newHtml], { type: 'text/html' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = '排序遊戲(已自訂).html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+          })
+          .catch(err => {
+            alert('載入 HTML 失敗：' + err);
+          });
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      new WordSortingGame();
+    });
+  </script>
+</body>
+</html>
