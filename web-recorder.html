@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>錄音下載</title>
+  <style>
+    /* 整體佈局 */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #e0f7ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+    /* 錄音區塊 */
+    .recording-section {
+      background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .recording-section h1 {
+      margin-top: 0;
+      color: #004d80;
+    }
+    button {
+      background-color: #007acc;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 10px 20px;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #005f99;
+    }
+    .record-button {
+      background-color: #ff5722;
+      margin-top: 20px;
+    }
+    .record-button.recording {
+      background-color: #f44336;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #004d80;
+    }
+    /* 圖片區塊 */
+    .image-section {
+      text-align: center;
+    }
+    .image-section img {
+      max-width: 100%;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .audio-preview {
+      margin-top: 10px;
+    }
+  </style>
+  <!-- 引入 RecordRTC 外部庫 -->
+  <script src="https://cdn.jsdelivr.net/npm/recordrtc@5.6.2/RecordRTC.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- 錄音下載區塊 -->
+    <div class="recording-section">
+      <h1>錄音下載</h1>
+      <!-- 錄音按鈕：點選後切換開始/停止錄音 -->
+      <button id="recordBtn" class="record-button">開始錄音</button>
+      <!-- 音訊播放區 -->
+      <div class="audio-preview">
+        <audio id="audioPlayback" controls style="width:100%; max-width:500px;"></audio>
+      </div>
+      <!-- 檔名輸入與下載按鈕 -->
+      <div id="downloadSection" style="display:none; margin-top:15px;">
+        <label for="filenameInput">檔案名稱：</label>
+        <input type="text" id="filenameInput" placeholder="例如：recording.webm" required>
+        <div>
+          <button id="downloadBtn">下載錄音</button>
+        </div>
+      </div>
+      <div id="status"></div>
+    </div>
+    <!-- 背景圖片區塊 -->
+    <div class="image-section">
+      <img id="backgroundImage" src="recoderbg.jpg" alt="背景圖片">
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------
+    // 錄音功能（使用 RecordRTC 版）
+    // -------------------------------
+    let recorder;         // RecordRTC 錄音物件
+    let audioBlob;        // 錄音結束後的 Blob 物件
+    let isRecording = false;
+    let stream;           // 錄音用的媒體串流
+
+    const recordBtn = document.getElementById('recordBtn');
+    const audioPlayback = document.getElementById('audioPlayback');
+    const statusDiv = document.getElementById('status');
+    const downloadSection = document.getElementById('downloadSection');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const filenameInput = document.getElementById('filenameInput');
+
+    recordBtn.addEventListener('click', async function() {
+      if (isRecording) {
+        // 如果正在錄音，按下按鈕則停止錄音
+        recorder.stopRecording(function() {
+          audioBlob = recorder.getBlob();
+          const audioURL = URL.createObjectURL(audioBlob);
+          audioPlayback.src = audioURL;
+          statusDiv.innerText = '錄音完成，請檢查或下載錄音。';
+
+          // 停止所有串流軌道
+          stream.getTracks().forEach(track => track.stop());
+
+          recorder = null;
+          stream = null;
+          isRecording = false;
+          recordBtn.textContent = '開始錄音';
+          recordBtn.classList.remove('recording');
+
+          // 顯示下載區塊，並設定預設檔名
+          downloadSection.style.display = 'block';
+          if (!filenameInput.value) {
+            filenameInput.value = 'recording.webm';
+          }
+        });
+      } else {
+        // 開始錄音
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert('您的瀏覽器不支援錄音功能。');
+          return;
+        }
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          let options = {
+            type: 'audio',
+            mimeType: 'audio/webm',
+            recorderType: StereoAudioRecorder,
+            numberOfAudioChannels: 1
+          };
+
+          // 若為 Safari，使用 audio/mp4 格式
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          if (isSafari) {
+            options.mimeType = 'audio/mp4';
+          }
+          // 若為 Edge 或 IE，使用 MediaRecorderWrapper 與 audio/wav
+          const isEdge = /Edge/.test(navigator.userAgent);
+          if (isEdge) {
+            options.recorderType = MediaRecorderWrapper;
+            options.mimeType = 'audio/wav';
+          }
+
+          recorder = new RecordRTC(stream, options);
+          recorder.startRecording();
+          isRecording = true;
+          recordBtn.textContent = '停止錄音';
+          recordBtn.classList.add('recording');
+          statusDiv.innerText = '錄音中...';
+          // 隱藏下載區塊
+          downloadSection.style.display = 'none';
+        } catch (error) {
+          console.error('錄音失敗:', error);
+          alert('無法開始錄音，請檢查麥克風權限或更換瀏覽器。');
+        }
+      }
+    });
+
+    // -------------------------------
+    // 下載錄音處理
+    // -------------------------------
+    downloadBtn.addEventListener('click', function() {
+      if (!audioBlob) {
+        alert('請先錄音再下載');
+        return;
+      }
+      const filename = filenameInput.value.trim();
+      if (!filename) {
+        alert('請輸入檔案名稱');
+        return;
+      }
+      // 建立一個隱藏的連結來觸發下載
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(audioBlob);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      statusDiv.innerText = '下載完成！';
+    });
+
+    // -------------------------------
+    // 背景圖片載入及備援邏輯
+    // -------------------------------
+    const bgImage = document.getElementById('backgroundImage');
+    let triedPng = false;
+    bgImage.onerror = function() {
+      if (!triedPng) {
+        triedPng = true;
+        bgImage.src = 'recoderbg.png';
+      } else {
+        const randomNumber = Math.floor(Math.random() * 999) + 1;
+        bgImage.src = 'https://picsum.photos/800/600?random=' + randomNumber;
+      }
+    };
+  </script>
+</body>
+</html>
