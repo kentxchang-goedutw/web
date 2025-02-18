@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>線上錄音下載工具</title>
+  <title>線上錄音下載工具(Made by 阿剛老師)</title>
   <style>
     /* 整體佈局 */
     body {
@@ -110,7 +110,7 @@
   <div class="container">
     <!-- 錄音下載區塊 -->
     <div class="recording-section">
-      <h1>錄音下載</h1>
+      <h1>線上錄音下載工具</h1>
       <!-- 錄音按鈕：點選後切換開始/停止錄音 -->
       <button id="recordBtn" class="record-button">開始錄音</button>
       <!-- 音訊播放區 -->
@@ -120,7 +120,7 @@
       <!-- 檔名輸入與下載按鈕 -->
       <div id="downloadSection" style="display:none; margin-top:15px;">
         <label for="filenameInput">檔案名稱：</label>
-        <input type="text" id="filenameInput" placeholder="例如：recording.webm">
+        <input type="text" id="filenameInput" placeholder="例如：錄音檔">
         <div>
           <button id="downloadBtn">下載錄音</button>
         </div>
@@ -141,6 +141,9 @@
     let audioBlob;        // 錄音結束後的 Blob 物件
     let isRecording = false;
     let stream;           // 錄音用的媒體串流
+
+    // 記錄目前所用的 MIME 類型
+    let currentMime = "audio/webm";
 
     const recordBtn = document.getElementById('recordBtn');
     const audioPlayback = document.getElementById('audioPlayback');
@@ -167,7 +170,7 @@
           recordBtn.textContent = '開始錄音';
           recordBtn.classList.remove('recording');
 
-          // 顯示下載區塊，不預設任何檔名
+          // 顯示下載區塊，並清空檔名輸入框
           downloadSection.style.display = 'block';
           filenameInput.value = "";
         });
@@ -179,23 +182,29 @@
         }
         try {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          // 設定錄音選項
           let options = {
             type: 'audio',
-            mimeType: 'audio/webm',
+            mimeType: "audio/webm",
             recorderType: StereoAudioRecorder,
             numberOfAudioChannels: 1
           };
 
-          // 若為 Safari，使用 audio/mp4 格式
+          // 檢查是否為 Safari
           const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
           if (isSafari) {
-            options.mimeType = 'audio/mp4';
+            options.mimeType = "audio/mp4"; // Safari 使用 m4a 格式
+            currentMime = "audio/mp4";
+          } else {
+            currentMime = "audio/webm";
           }
           // 若為 Edge 或 IE，使用 MediaRecorderWrapper 與 audio/wav
           const isEdge = /Edge/.test(navigator.userAgent);
           if (isEdge) {
             options.recorderType = MediaRecorderWrapper;
-            options.mimeType = 'audio/wav';
+            options.mimeType = "audio/wav";
+            currentMime = "audio/wav";
           }
 
           recorder = new RecordRTC(stream, options);
@@ -224,7 +233,17 @@
       // 如果使用者未輸入檔名，預設為「錄音檔」
       let filename = filenameInput.value.trim();
       if (!filename) {
-        filename = '錄音檔';
+        filename = "錄音檔";
+      }
+      // 若檔名沒有副檔名，自動加上依據錄音格式的副檔名
+      if (filename.indexOf('.') === -1) {
+        if (currentMime === "audio/mp4") {
+          filename += ".m4a";
+        } else if (currentMime === "audio/webm") {
+          filename += ".webm";
+        } else if (currentMime === "audio/wav") {
+          filename += ".wav";
+        }
       }
       // 建立一個隱藏的連結來觸發下載
       const a = document.createElement('a');
