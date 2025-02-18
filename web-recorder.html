@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>錄音下載</title>
+  <title>線上錄音下載工具</title>
   <style>
     /* 整體佈局 */
     body {
@@ -120,7 +120,7 @@
       <!-- 檔名輸入與下載按鈕 -->
       <div id="downloadSection" style="display:none; margin-top:15px;">
         <label for="filenameInput">檔案名稱：</label>
-        <input type="text" id="filenameInput" placeholder="例如：recording.webm" required>
+        <input type="text" id="filenameInput" placeholder="例如：recording.webm">
         <div>
           <button id="downloadBtn">下載錄音</button>
         </div>
@@ -167,11 +167,9 @@
           recordBtn.textContent = '開始錄音';
           recordBtn.classList.remove('recording');
 
-          // 顯示下載區塊，並設定預設檔名
+          // 顯示下載區塊，不預設任何檔名
           downloadSection.style.display = 'block';
-          if (!filenameInput.value) {
-            filenameInput.value = 'recording.webm';
-          }
+          filenameInput.value = "";
         });
       } else {
         // 開始錄音
@@ -223,10 +221,10 @@
         alert('請先錄音再下載');
         return;
       }
-      const filename = filenameInput.value.trim();
+      // 如果使用者未輸入檔名，預設為「錄音檔」
+      let filename = filenameInput.value.trim();
       if (!filename) {
-        alert('請輸入檔案名稱');
-        return;
+        filename = '錄音檔';
       }
       // 建立一個隱藏的連結來觸發下載
       const a = document.createElement('a');
