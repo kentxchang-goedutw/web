@@ -1,257 +1,1223 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>線上錄音下載工具(Made by 阿剛老師)</title>
-  <style>
-    /* 整體佈局 */
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #e0f7ff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #333;
-    }
-    .container {
-      max-width: 800px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-    /* 錄音區塊 */
-    .recording-section {
-      background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-      border-radius: 10px;
-      padding: 25px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .recording-section h1 {
-      margin-top: 0;
-      color: #004d80;
-    }
-    button {
-      background-color: #007acc;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      padding: 10px 20px;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
-      margin: 5px;
-    }
-    button:hover {
-      background-color: #005f99;
-    }
-    .record-button {
-      background-color: #ff5722;
-      margin-top: 20px;
-    }
-    .record-button.recording {
-      background-color: #f44336;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-    #status {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #004d80;
-    }
-    /* 背景圖片區塊 */
-    .image-section {
-      text-align: center;
-    }
-    .image-section img {
-      max-width: 100%;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .audio-preview {
-      margin-top: 10px;
-    }
-    /* 右上角華麗角落方框 */
-    #cornerBox {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-      border: 2px solid #fff;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-weight: bold;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-    #cornerBox a {
-      color: #fff;
-      text-decoration: none;
-    }
-    #cornerBox a:hover {
-      text-decoration: underline;
-    }
-  </style>
-  <!-- 引入 RecordRTC 外部庫 -->
-  <script src="https://cdn.jsdelivr.net/npm/recordrtc@5.6.2/RecordRTC.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>淡藍色系錄音機</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #67C8FF;
+            --accent-color: #56CCF2;
+            --bg-color: #E6F4F1;
+            --text-color: #2D3748;
+            --light-color: #BBDEFB;
+            --shadow-color: rgba(74, 144, 226, 0.2);
+            --border-radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #F0F9FF;
+            background-image: 
+                radial-gradient(#4A90E2 1px, transparent 1px),
+                radial-gradient(#67C8FF 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .recorder-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px var(--shadow-color),
+                        0 0 0 15px #BBDEFB;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .recorder-header {
+            text-align: center;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .recorder-title {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 0 #BBDEFB;
+            letter-spacing: 1px;
+        }
+
+        .recorder-subtitle {
+            font-size: 14px;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        .character {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #56CCF2;
+            border-radius: 50%;
+            top: -5px;
+            left: -10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 4px solid white;
+        }
+
+        .character::before { /* 耳朵 */
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #56CCF2;
+            border-radius: 50%;
+            top: -10px;
+            left: 10px;
+            transform: rotate(-45deg);
+            border: 4px solid white;
+            border-bottom: none;
+            border-right: none;
+        }
+
+        .character::after { /* 耳朵 */
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #56CCF2;
+            border-radius: 50%;
+            top: -10px;
+            right: 10px;
+            transform: rotate(45deg);
+            border: 4px solid white;
+            border-bottom: none;
+            border-left: none;
+        }
+
+        .face {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .eyes {
+            display: flex;
+            justify-content: space-between;
+            width: 40px;
+        }
+
+        .eye {
+            width: 10px;
+            height: 15px;
+            background: var(--text-color);
+            border-radius: 50%;
+        }
+
+        .mouth {
+            width: 20px;
+            height: 10px;
+            background: var(--text-color);
+            border-radius: 0 0 10px 10px;
+            margin: 5px auto 0;
+        }
+
+        .mouth.happy {
+            border-radius: 0 0 10px 10px;
+            height: 10px;
+        }
+
+        .mouth.surprised {
+            border-radius: 50%;
+            height: 15px;
+        }
+
+        .tape-character {
+            position: absolute;
+            right: -10px;
+            top: -5px;
+            width: 80px;
+            height: 80px;
+            background: #67C8FF;
+            border-radius: 50%;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            border: 4px solid white;
+            overflow: hidden;
+        }
+
+        .tape-character::before { /* 耳朵 */
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: #67C8FF;
+            border-radius: 50% 50% 0 50%;
+            top: 5px;
+            left: 5px;
+            transform: rotate(-45deg);
+            border: 4px solid white;
+            border-bottom: none;
+            border-right: none;
+        }
+
+        .tape-character::after { /* 耳朵 */
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: #67C8FF;
+            border-radius: 50% 50% 50% 0;
+            top: 5px;
+            right: 5px;
+            transform: rotate(45deg);
+            border: 4px solid white;
+            border-bottom: none;
+            border-left: none;
+        }
+
+        .tape-face {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .recorder-main {
+            background: #BBDEFB;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            position: relative;
+            overflow: visible;
+            margin-top: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .recorder-main::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 60px;
+            background: #A1C4FD;
+            top: -30px;
+            left: -25%;
+            border-radius: 50%;
+            box-shadow: 0 5px 5px rgba(0, 0, 0, 0.05);
+            z-index: 1;
+        }
+
+        .recorder-main::after {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 60px;
+            background: #A1C4FD;
+            bottom: -30px;
+            left: -25%;
+            border-radius: 50%;
+            box-shadow: 0 -5px 5px rgba(0, 0, 0, 0.05);
+            z-index: 1;
+        }
+
+        .cassette {
+            width: 100%;
+            height: 120px;
+            background: #A1C4FD;
+            border-radius: 15px;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 3px dashed white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: visible;
+        }
+
+        .cassette::before {
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #E6F4F1;
+            border: 5px dotted white;
+            top: 50%;
+            left: 25%;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .cassette::after {
+            content: '';
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #E6F4F1;
+            border: 5px dotted white;
+            top: 50%;
+            right: 25%;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .label {
+            position: absolute;
+            width: 50%;
+            height: 40px;
+            background: white;
+            border-radius: 15px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            font-size: 18px;
+            color: var(--primary-color);
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 3px solid #A1C4FD;
+        }
+
+        .time-display {
+            width: 80%;
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            text-align: center;
+            margin: 15px auto;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            border: 3px solid #A1C4FD;
+            position: relative;
+        }
+
+        .time-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .time-text::before {
+            content: '🕒';
+            margin-right: 5px;
+            font-size: 20px;
+        }
+
+        .visual-indicator {
+            width: 100%;
+            height: 30px;
+            background: white;
+            border-radius: 15px;
+            margin-top: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sound-wave {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            height: 5px;
+            background: var(--secondary-color);
+            border-radius: 2px;
+            margin: 0 2px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #E6F4F1;
+            border-radius: var(--border-radius);
+            position: relative;
+        }
+
+        .control-button {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 0;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1),
+                        0 0 0 5px white;
+            position: relative;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-button:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1),
+                        0 0 0 5px white;
+        }
+
+        .record-button {
+            background: #FF5252;
+        }
+
+        .record-button::before {
+            content: '';
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .record-button.recording::before {
+            animation: pulse 1s infinite;
+        }
+
+        .play-button {
+            background: var(--primary-color);
+        }
+
+        .play-button::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 15px 0 15px 25px;
+            border-color: transparent transparent transparent white;
+        }
+
+        .play-button.playing::before {
+            width: 10px;
+            height: 30px;
+            border: none;
+            background: white;
+            border-radius: 2px;
+            box-shadow: 15px 0 0 white;
+        }
+
+        .stop-button {
+            background: #64B5F6;
+        }
+
+        .stop-button::before {
+            content: '';
+            width: 25px;
+            height: 25px;
+            background: white;
+            border-radius: 3px;
+        }
+
+        .download-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .download-button {
+            background: white;
+            border: 3px solid;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .download-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-button:active {
+            transform: translateY(0);
+        }
+
+        .download-mp3 {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .download-wav {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .download-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Clouds decoration */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .cloud-1 {
+            width: 100px;
+            height: 30px;
+            bottom: 20px;
+            left: -50px;
+            opacity: 0.5;
+        }
+
+        .cloud-1::before,
+        .cloud-1::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .cloud-1::before {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            left: 15px;
+        }
+
+        .cloud-1::after {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            right: 15px;
+        }
+
+        .cloud-2 {
+            width: 80px;
+            height: 25px;
+            top: 40px;
+            right: -40px;
+            opacity: 0.5;
+        }
+
+        .cloud-2::before,
+        .cloud-2::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .cloud-2::before {
+            width: 30px;
+            height: 30px;
+            top: -15px;
+            left: 10px;
+        }
+
+        .cloud-2::after {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            right: 10px;
+        }
+
+        /* 作者信息 */
+        .made-by {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--text-color);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--primary-color);
+            z-index: 100;
+        }
+
+        .made-by a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .made-by a:hover {
+            text-decoration: underline;
+        }
+        
+        /* 輸入檔名對話框 */
+        .filename-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .filename-dialog-content {
+            background-color: var(--bg-color);
+            width: 300px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 5px solid #BBDEFB;
+            text-align: center;
+            position: relative;
+        }
+        
+        .filename-dialog-title {
+            font-size: 20px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .filename-input {
+            width: 100%;
+            padding: 10px;
+            border: 3px solid #A1C4FD;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            background-color: white;
+            color: var(--text-color);
+        }
+        
+        .filename-dialog-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .filename-dialog-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        
+        .filename-dialog-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filename-dialog-button.cancel {
+            background-color: #ccc;
+        }
+        
+        .filename-dialog-button.download {
+            background-color: var(--primary-color);
+        }
+        
+        .dialog-decoration {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .dialog-decoration.top-left {
+            top: -20px;
+            left: -20px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+        
+        .dialog-decoration.top-right {
+            top: -20px;
+            right: -20px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+        
+        .dialog-decoration.bottom-left {
+            bottom: -20px;
+            left: -20px;
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+        
+        .dialog-decoration.bottom-right {
+            bottom: -20px;
+            right: -20px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .recorder-container {
+                padding: 15px;
+            }
+
+            .character,
+            .tape-character {
+                width: 60px;
+                height: 60px;
+            }
+
+            .control-button {
+                width: 60px;
+                height: 60px;
+            }
+
+            .cassette::before,
+            .cassette::after {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- 右上角角落方框 -->
-  <div id="cornerBox">
-    Made by <a href="https://kentxchang.blogspot.tw" target="_blank" rel="noopener noreferrer">阿剛老師</a>
-  </div>
-
-  <div class="container">
-    <!-- 錄音下載區塊 -->
-    <div class="recording-section">
-      <h1>線上錄音下載工具</h1>
-      <!-- 錄音按鈕：點選後切換開始/停止錄音 -->
-      <button id="recordBtn" class="record-button">開始錄音</button>
-      <!-- 音訊播放區 -->
-      <div class="audio-preview">
-        <audio id="audioPlayback" controls style="width:100%; max-width:500px;"></audio>
-      </div>
-      <!-- 檔名輸入與下載按鈕 -->
-      <div id="downloadSection" style="display:none; margin-top:15px;">
-        <label for="filenameInput">檔案名稱：</label>
-        <input type="text" id="filenameInput" placeholder="例如：recording.webm">
-        <div>
-          <button id="downloadBtn">下載錄音</button>
+    <div class="recorder-container">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+        
+        <div class="recorder-header">
+            <div class="character">
+                <div class="face">
+                    <div class="eyes">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                    </div>
+                    <div class="mouth happy"></div>
+                </div>
+            </div>
+            
+            <h1 class="recorder-title">趣味錄音機</h1>
+            <div class="recorder-subtitle">錄下你的聲音吧！</div>
+            
+            <div class="tape-character">
+                <div class="tape-face">
+                    <div class="eyes">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                    </div>
+                    <div class="mouth happy"></div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div id="status"></div>
+        
+        <div class="recorder-main">
+            <div class="cassette">
+                <div class="label" id="status-label">準備錄音</div>
+            </div>
+            
+            <div class="time-display">
+                <div class="time-text" id="time-display">00:00</div>
+            </div>
+            
+            <div class="visual-indicator">
+                <div class="sound-wave" id="sound-wave">
+                    <!-- 波形圖將由JavaScript動態生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-button record-button" id="record-button" title="錄音">錄音</button>
+            <button class="control-button play-button" id="play-button" title="播放">播放</button>
+            <button class="control-button stop-button" id="stop-button" title="停止">停止</button>
+        </div>
+        
+        <div class="download-panel">
+            <button class="download-button download-mp3" id="download-mp3" disabled>
+                下載 MP3 🎵
+            </button>
+            <button class="download-button download-wav" id="download-wav" disabled>
+                下載 WAV 🎶
+            </button>
+        </div>
     </div>
-    <!-- 背景圖片區塊 -->
-    <div class="image-section">
-      <img id="backgroundImage" src="recoderbg.jpg" alt="背景圖片">
+    
+    <div class="made-by">
+        Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
     </div>
-  </div>
+    
+    <!-- 輸入檔名對話框 -->
+    <div class="filename-dialog" id="filename-dialog">
+        <div class="filename-dialog-content">
+            <div class="dialog-decoration top-left"></div>
+            <div class="dialog-decoration top-right"></div>
+            <div class="dialog-decoration bottom-left"></div>
+            <div class="dialog-decoration bottom-right"></div>
+            
+            <div class="filename-dialog-title">請輸入檔案名稱</div>
+            <input type="text" class="filename-input" id="filename-input" placeholder="我的錄音">
+            <div class="filename-dialog-buttons">
+                <button class="filename-dialog-button cancel" id="cancel-download">取消</button>
+                <button class="filename-dialog-button download" id="confirm-download">下載</button>
+            </div>
+        </div>
+    </div>
+<script>
+        // 獲取DOM元素
+        const recordButton = document.getElementById('record-button');
+        const playButton = document.getElementById('play-button');
+        const stopButton = document.getElementById('stop-button');
+        const downloadMp3Button = document.getElementById('download-mp3');
+        const downloadWavButton = document.getElementById('download-wav');
+        const timeDisplay = document.getElementById('time-display');
+        const soundWave = document.getElementById('sound-wave');
+        const statusLabel = document.getElementById('status-label');
+        
+        // 角色表情元素
+        const characterFace = document.querySelector('.character .mouth');
+        const tapeCharacterFace = document.querySelector('.tape-character .mouth');
 
-  <script>
-    // -------------------------------
-    // 錄音功能（使用 RecordRTC 版）
-    // -------------------------------
-    let recorder;         // RecordRTC 錄音物件
-    let audioBlob;        // 錄音結束後的 Blob 物件
-    let isRecording = false;
-    let stream;           // 錄音用的媒體串流
+        // 獲取對話框相關元素
+        const filenameDialog = document.getElementById('filename-dialog');
+        const filenameInput = document.getElementById('filename-input');
+        const confirmDownloadButton = document.getElementById('confirm-download');
+        const cancelDownloadButton = document.getElementById('cancel-download');
+        
+        // 當前要下載的格式
+        let currentDownloadFormat = '';
 
-    const recordBtn = document.getElementById('recordBtn');
-    const audioPlayback = document.getElementById('audioPlayback');
-    const statusDiv = document.getElementById('status');
-    const downloadSection = document.getElementById('downloadSection');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const filenameInput = document.getElementById('filenameInput');
+        // 錄音相關變數
+        let mediaRecorder;
+        let audioChunks = [];
+        let audioBlob = null;
+        let audioUrl = null;
+        let audioElement = new Audio();
+        let startTime;
+        let timerInterval;
+        let analyser;
+        let isRecording = false;
+        let isPlaying = false;
+        let stream = null;
+        let animationFrameId = null;
 
-    recordBtn.addEventListener('click', async function() {
-      if (isRecording) {
-        // 如果正在錄音，按下按鈕則停止錄音
-        recorder.stopRecording(function() {
-          audioBlob = recorder.getBlob();
-          const audioURL = URL.createObjectURL(audioBlob);
-          audioPlayback.src = audioURL;
-          statusDiv.innerText = '錄音完成，請檢查或下載錄音。';
+        // 初始化波形圖
+        function initializeSoundWave() {
+            // 清空現有波形條
+            soundWave.innerHTML = '';
+            
+            // 創建波形條
+            for (let i = 0; i < 25; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                soundWave.appendChild(bar);
+            }
+        }
 
-          // 停止所有串流軌道
-          stream.getTracks().forEach(track => track.stop());
+        // 初始化頁面
+        function initializePage() {
+            initializeSoundWave();
+            
+            // 禁用下載按鈕
+            downloadMp3Button.disabled = true;
+            downloadWavButton.disabled = true;
+        }
 
-          recorder = null;
-          stream = null;
-          isRecording = false;
-          recordBtn.textContent = '開始錄音';
-          recordBtn.classList.remove('recording');
+        // 初始化音訊分析器
+        function setupAudioAnalyzer(stream) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            const waveBars = document.querySelectorAll('.wave-bar');
+            
+            function updateSoundWave() {
+                if (isRecording) {
+                    animationFrameId = requestAnimationFrame(updateSoundWave);
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // 更新波形圖
+                    const barCount = waveBars.length;
+                    for (let i = 0; i < barCount; i++) {
+                        const barIndex = Math.floor(i * bufferLength / barCount);
+                        const barHeight = Math.min(dataArray[barIndex] / 4, 20); // 限制最大高度
+                        waveBars[i].style.height = `${barHeight}px`;
+                    }
+                }
+            }
+            
+            updateSoundWave();
+        }
 
-          // 顯示下載區塊，不預設任何檔名
-          downloadSection.style.display = 'block';
-          filenameInput.value = "";
-        });
-      } else {
+        // 更新播放時的波形圖
+        function updatePlaybackWave() {
+            if (isPlaying) {
+                const waveBars = document.querySelectorAll('.wave-bar');
+                
+                // 隨機模擬波形
+                waveBars.forEach(bar => {
+                    const randomHeight = Math.random() * 15 + 5;
+                    bar.style.height = `${randomHeight}px`;
+                });
+                
+                animationFrameId = requestAnimationFrame(updatePlaybackWave);
+            } else {
+                // 重置波形圖
+                const waveBars = document.querySelectorAll('.wave-bar');
+                waveBars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+            }
+        }
+
+        // 更新時間顯示
+        function updateTimer() {
+            const now = new Date();
+            const elapsed = Math.floor((now - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            timeDisplay.textContent = `${minutes}:${seconds}`;
+        }
+
+        // 改變角色表情
+        function changeCharacterMood(mood) {
+            if (mood === 'happy') {
+                characterFace.className = 'mouth happy';
+                tapeCharacterFace.className = 'mouth happy';
+            } else if (mood === 'surprised') {
+                characterFace.className = 'mouth surprised';
+                tapeCharacterFace.className = 'mouth surprised';
+            } else {
+                characterFace.className = 'mouth';
+                tapeCharacterFace.className = 'mouth';
+            }
+        }
+
+        // 打開檔名輸入對話框
+        function openFilenameDialog(format) {
+            currentDownloadFormat = format;
+            filenameDialog.style.display = 'flex';
+            filenameInput.focus();
+            filenameInput.value = ''; // 清空之前的輸入
+        }
+        
+        // 關閉檔名輸入對話框
+        function closeFilenameDialog() {
+            filenameDialog.style.display = 'none';
+        }
+        
+        // 確認下載
+        function confirmDownload() {
+            const customFilename = filenameInput.value.trim() || '我的錄音';
+            const now = new Date();
+            const dateString = now.getFullYear() + 
+                              ('0' + (now.getMonth() + 1)).slice(-2) + 
+                              ('0' + now.getDate()).slice(-2) + '_' +
+                              ('0' + now.getHours()).slice(-2) + 
+                              ('0' + now.getMinutes()).slice(-2) + 
+                              ('0' + now.getSeconds()).slice(-2);
+            
+            const filename = `${customFilename}_${dateString}.${currentDownloadFormat}`;
+            
+            const a = document.createElement('a');
+            a.href = audioUrl;
+            a.download = filename;
+            a.click();
+            
+            closeFilenameDialog();
+            statusLabel.textContent = '下載完成！';
+            changeCharacterMood('happy');
+        }
+
         // 開始錄音
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          alert('您的瀏覽器不支援錄音功能。');
-          return;
+        recordButton.addEventListener('click', async () => {
+            if (isRecording) {
+                stopRecording();
+                return;
+            }
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioUrl = URL.createObjectURL(audioBlob);
+                    audioElement.src = audioUrl;
+                    
+                    downloadMp3Button.disabled = false;
+                    downloadWavButton.disabled = false;
+                    
+                    statusLabel.textContent = '錄音完成！';
+                    statusLabel.style.fontWeight = 'bold';
+                    statusLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                    changeCharacterMood('happy');
+                };
+                
+                // 開始錄音
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.classList.add('recording');
+                
+                // 變更狀態標籤
+                statusLabel.textContent = '正在錄音...';
+                statusLabel.style.fontWeight = 'bold';
+                statusLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                
+                // 改變角色表情
+                changeCharacterMood('surprised');
+                
+                // 初始化波形圖
+                initializeSoundWave();
+                
+                // 設置音訊分析器
+                setupAudioAnalyzer(stream);
+                
+                // 開始計時
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+                
+            } catch (error) {
+                console.error('無法獲取麥克風權限:', error);
+                alert('無法獲取麥克風權限。請確保您已授予麥克風訪問權限。');
+                statusLabel.textContent = '錄音失敗 😢';
+            }
+        });
+
+        // 停止錄音
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.classList.remove('recording');
+                
+                // 停止計時
+                clearInterval(timerInterval);
+                
+                // 停止波形圖更新
+                cancelAnimationFrame(animationFrameId);
+                
+                // 關閉麥克風
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                // 重置波形圖
+                const waveBars = document.querySelectorAll('.wave-bar');
+                waveBars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+            }
         }
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          let options = {
-            type: 'audio',
-            mimeType: 'audio/webm',
-            recorderType: StereoAudioRecorder,
-            numberOfAudioChannels: 1
-          };
 
-          // 若為 Safari，使用 audio/mp4 格式
-          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          if (isSafari) {
-            options.mimeType = 'audio/mp4';
-          }
-          // 若為 Edge 或 IE，使用 MediaRecorderWrapper 與 audio/wav
-          const isEdge = /Edge/.test(navigator.userAgent);
-          if (isEdge) {
-            options.recorderType = MediaRecorderWrapper;
-            options.mimeType = 'audio/wav';
-          }
+        // 播放錄音
+        playButton.addEventListener('click', () => {
+            if (!audioUrl) {
+                alert('請先錄製一段音訊');
+                statusLabel.textContent = '請先錄音 🎤';
+                return;
+            }
+            
+            if (isPlaying) {
+                audioElement.pause();
+                isPlaying = false;
+                playButton.classList.remove('playing');
+                statusLabel.textContent = '暫停播放';
+                changeCharacterMood('happy');
+                cancelAnimationFrame(animationFrameId);
+                
+                // 重置波形圖
+                const waveBars = document.querySelectorAll('.wave-bar');
+                waveBars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+                
+                return;
+            }
+            
+            audioElement.play();
+            isPlaying = true;
+            playButton.classList.add('playing');
+            
+            // 變更狀態標籤
+            statusLabel.textContent = '正在播放...';
+            statusLabel.style.fontWeight = 'bold';
+            statusLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            
+            // 改變角色表情
+            changeCharacterMood('surprised');
+            
+            // 初始化波形圖
+            initializeSoundWave();
+            
+            // 更新播放時間
+            startTime = new Date(new Date() - audioElement.currentTime * 1000);
+            timerInterval = setInterval(updateTimer, 1000);
+            
+            // 更新波形圖
+            updatePlaybackWave();
+            
+            // 播放結束時的處理
+            audioElement.onended = () => {
+                isPlaying = false;
+                playButton.classList.remove('playing');
+                clearInterval(timerInterval);
+                cancelAnimationFrame(animationFrameId);
+                timeDisplay.textContent = '00:00';
+                statusLabel.textContent = '播放完成！';
+                statusLabel.style.fontWeight = 'bold';
+                statusLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                changeCharacterMood('happy');
+                
+                // 重置波形圖
+                const waveBars = document.querySelectorAll('.wave-bar');
+                waveBars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+            };
+        });
 
-          recorder = new RecordRTC(stream, options);
-          recorder.startRecording();
-          isRecording = true;
-          recordBtn.textContent = '停止錄音';
-          recordBtn.classList.add('recording');
-          statusDiv.innerText = '錄音中...';
-          // 隱藏下載區塊
-          downloadSection.style.display = 'none';
-        } catch (error) {
-          console.error('錄音失敗:', error);
-          alert('無法開始錄音，請檢查麥克風權限或更換瀏覽器。');
-        }
-      }
-    });
+        // 停止按鈕
+        stopButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+                statusLabel.textContent = '已停止錄音';
+            }
+            
+            if (isPlaying) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+                isPlaying = false;
+                playButton.classList.remove('playing');
+                clearInterval(timerInterval);
+                cancelAnimationFrame(animationFrameId);
+                timeDisplay.textContent = '00:00';
+                statusLabel.textContent = '已停止播放';
+                changeCharacterMood('happy');
+                
+                // 重置波形圖
+                const waveBars = document.querySelectorAll('.wave-bar');
+                waveBars.forEach(bar => {
+                    bar.style.height = '5px';
+                });
+            }
+            
+            if (!isRecording && !isPlaying) {
+                statusLabel.textContent = '準備錄音';
+                timeDisplay.textContent = '00:00';
+                changeCharacterMood('happy');
+            }
+        });
 
-    // -------------------------------
-    // 下載錄音處理
-    // -------------------------------
-    downloadBtn.addEventListener('click', function() {
-      if (!audioBlob) {
-        alert('請先錄音再下載');
-        return;
-      }
-      // 如果使用者未輸入檔名，預設為「錄音檔」
-      let filename = filenameInput.value.trim();
-      if (!filename) {
-        filename = '錄音檔';
-      }
-      // 建立一個隱藏的連結來觸發下載
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(audioBlob);
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      statusDiv.innerText = '下載完成！';
-    });
+        // 轉換成MP3格式並下載
+        downloadMp3Button.addEventListener('click', async () => {
+            if (!audioBlob) {
+                alert('請先錄製一段音訊');
+                return;
+            }
+            
+            // 打開檔名輸入對話框，並指定格式為mp3
+            openFilenameDialog('mp3');
+        });
 
-    // -------------------------------
-    // 背景圖片載入及備援邏輯
-    // -------------------------------
-    const bgImage = document.getElementById('backgroundImage');
-    let triedPng = false;
-    bgImage.onerror = function() {
-      if (!triedPng) {
-        triedPng = true;
-        bgImage.src = 'recoderbg.png';
-      } else {
-        const randomNumber = Math.floor(Math.random() * 999) + 1;
-        bgImage.src = 'https://picsum.photos/800/600?random=' + randomNumber;
-      }
-    };
-  </script>
+        // 下載WAV格式
+        downloadWavButton.addEventListener('click', () => {
+            if (!audioBlob) {
+                alert('請先錄製一段音訊');
+                return;
+            }
+            
+            // 打開檔名輸入對話框，並指定格式為wav
+            openFilenameDialog('wav');
+        });
+        
+        // 取消下載按鈕事件
+        cancelDownloadButton.addEventListener('click', closeFilenameDialog);
+        
+        // 確認下載按鈕事件
+        confirmDownloadButton.addEventListener('click', confirmDownload);
+        
+        // 按Enter鍵確認下載
+        filenameInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                confirmDownload();
+            }
+        });
+        
+        // 頁面載入時初始化
+        window.addEventListener('load', initializePage);
+        
+        // 動畫效果 - 使卡通人物眼睛眨動
+        setInterval(() => {
+            const eyes = document.querySelectorAll('.eye');
+            eyes.forEach(eye => {
+                eye.style.height = '1px';
+                setTimeout(() => {
+                    eye.style.height = '15px';
+                }, 200);
+            });
+        }, 5000);
+    </script>
 </body>
 </html>
