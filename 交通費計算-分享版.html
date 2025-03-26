@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>路徑規劃與交通費計算</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    /* API Key 設定遮罩 */
+    #apiKeyOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #apiKeyOverlay .modal {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 90%;
+    }
+    #apiKeyOverlay input[type="text"] {
+      width: 80%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #apiKeyOverlay button {
+      margin: 5px;
+      padding: 8px 12px;
+      background: #4285f4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #apiKeyOverlay .instructions {
+      display: none;
+      text-align: left;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-size: 14px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    /* container 與版面設定 */
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      position: relative;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    /* 重新規劃輸入區，兩欄版型 */
+    .input-area {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+    .input-area .column {
+      flex: 1;
+    }
+    .input-area div {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 80px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: calc(100% - 90px);
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .vehicle-area {
+      display: flex;
+      align-items: center;
+    }
+    .vehicle-area label {
+      width: auto;
+      margin-right: 10px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #4285f4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #357ae8;
+    }
+    #map {
+      width: 100%;
+      height: 450px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .fare-calc {
+      background: #e9f5ff;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .fare-calc p {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    /* 列印樣式：隱藏輸入區與送出按鈕，只保留標題、地圖與計算區塊 */
+    @media print {
+      .input-area, #submitBtn, #printBtn, #setApiKeyBtn {
+        display: none !important;
+      }
+    }
+    /* 設定 API key 按鈕 */
+    #setApiKeyBtn {
+      width: auto;
+      margin: 20px auto;
+      display: block;
+    }
+    /* 右下角製作者資訊 */
+    .footer {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 14px;
+    }
+    .footer a {
+      color: #4285f4;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <!-- API key 設定遮罩 -->
+  <div id="apiKeyOverlay">
+    <div class="modal">
+      <h3>設定 Google Map API Key</h3>
+      <input type="text" id="apiKeyInput" placeholder="請輸入您的 API Key">
+      <br>
+      <button id="saveApiKeyBtn">送出</button>
+      <button id="toggleInstructionsBtn">如何申請 API Key？</button>
+      <div class="instructions" id="apiKeyInstructions">
+        <p>申請 Google Maps API Key 步驟：</p>
+        <ol>
+          <li>前往 Google Cloud Platform 網站：<a href="https://cloud.google.com/" target="_blank">https://cloud.google.com/</a></li>
+          <li>登入您的 Google 帳戶，並建立或選擇一個專案。</li>
+          <li>在「API 與服務」中啟用 Google Maps JavaScript API。</li>
+          <li>前往「憑證」頁面，點選「建立憑證」並選擇 API 金鑰。</li>
+          <li>取得 API Key 後，請將其貼上於上方輸入框中，然後點選「送出」。</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  
+  <div class="container" id="content">
+    <h2>路徑規劃與交通費計算</h2>
+    
+    <!-- 設定 API key 按鈕 -->
+    <button id="setApiKeyBtn">設定 Google Map API Key</button>
+    
+    <!-- 輸入區：左右兩欄 -->
+    <div class="input-area">
+      <div class="column">
+        <div>
+          <label for="start">起點:</label>
+          <!-- 取消預設值 -->
+          <input type="text" id="start" placeholder="請輸入起點">
+        </div>
+      </div>
+      <div class="column">
+        <div>
+          <label for="end">終點:</label>
+          <input type="text" id="end" placeholder="請輸入終點">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 交通工具選擇及送出按鈕 -->
+    <div class="input-area">
+      <div class="column">
+        <div class="vehicle-area">
+          <label>交通工具:</label>
+          <input type="radio" id="car" name="vehicle" value="car" checked>
+          <label for="car">汽車 (3元/km)</label>
+          <input type="radio" id="motorcycle" name="vehicle" value="motorcycle">
+          <label for="motorcycle">機車 (2元/km)</label>
+        </div>
+      </div>
+      <div class="column">
+        <button id="submitBtn">送出</button>
+      </div>
+    </div>
+    
+    <!-- 地圖顯示區 -->
+    <div id="map"></div>
+    
+    <!-- 交通費計算區塊 -->
+    <div class="fare-calc">
+      <h3>交通費計算</h3>
+      <div id="calcResult">
+        <!-- 顯示計算式及總金額 -->
+      </div>
+    </div>
+    
+    <!-- 列印按鈕 -->
+    <button id="printBtn">列印</button>
+  </div>
+  
+  <!-- 右下角版權資訊 -->
+  <div class="footer">
+    Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+  </div>
+  
+  <script>
+    // 檢查 localStorage 是否有存取 apiKey
+    let apiKey = localStorage.getItem("googleMapApiKey");
+    
+    // 顯示或隱藏 API key 設定遮罩
+    const apiKeyOverlay = document.getElementById("apiKeyOverlay");
+    const setApiKeyBtn = document.getElementById("setApiKeyBtn");
+    
+    setApiKeyBtn.addEventListener("click", () => {
+      apiKeyOverlay.style.display = "flex";
+    });
+    
+    // 切換申請 API key 說明的顯示狀態
+    const toggleInstructionsBtn = document.getElementById("toggleInstructionsBtn");
+    const apiKeyInstructions = document.getElementById("apiKeyInstructions");
+    toggleInstructionsBtn.addEventListener("click", () => {
+      if (apiKeyInstructions.style.display === "block") {
+        apiKeyInstructions.style.display = "none";
+      } else {
+        apiKeyInstructions.style.display = "block";
+      }
+    });
+    
+    // 儲存並載入 API key
+    document.getElementById("saveApiKeyBtn").addEventListener("click", () => {
+      const key = document.getElementById("apiKeyInput").value.trim();
+      if (key) {
+        localStorage.setItem("googleMapApiKey", key);
+        apiKey = key;
+        apiKeyOverlay.style.display = "none";
+        loadGoogleMapsAPI(apiKey);
+      } else {
+        alert("請輸入有效的 API key！");
+      }
+    });
+    
+    // 如果 localStorage 有存取 apiKey 則自動載入
+    if (apiKey) {
+      loadGoogleMapsAPI(apiKey);
+    } else {
+      // 沒有 API key 時顯示設定畫面
+      apiKeyOverlay.style.display = "flex";
+    }
+    
+    // 動態載入 Google Maps API
+    function loadGoogleMapsAPI(key) {
+      if (document.getElementById("googleMapsScript")) return;
+      const script = document.createElement("script");
+      script.id = "googleMapsScript";
+      script.src = "https://maps.googleapis.com/maps/api/js?key=" + key + "&callback=initMap";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+    
+    let map, directionsService, directionsRenderer;
+    let startMarker, endMarker; // 自訂起終點標記
+    
+    // 初始化地圖，並關閉預設標記
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 23.7271, lng: 120.4805 },
+        zoom: 8,
+        mapTypeControl: false,
+      });
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true,
+      });
+      directionsRenderer.setMap(map);
+    }
+    
+    // 建立自訂標記及資訊視窗
+    function createMarker(position, content) {
+      const marker = new google.maps.Marker({
+        position,
+        map,
+      });
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="font-size:16px;color:#333;">${content}</div>`,
+      });
+      infoWindow.open(map, marker);
+      return marker;
+    }
+    
+    // 計算路徑並顯示
+    function calculateAndDisplayRoute() {
+      const startText = document.getElementById("start").value;
+      const endText = document.getElementById("end").value;
+      const selectedVehicle = document.querySelector('input[name="vehicle"]:checked').value;
+      
+      if (!startText || !endText) {
+        alert("請輸入完整的起點與終點！");
+        return;
+      }
+      
+      directionsService.route(
+        {
+          origin: startText,
+          destination: endText,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (response, status) => {
+          if (status === "OK") {
+            directionsRenderer.setDirections(response);
+            
+            // 讓地圖縮小一個層級，避免文字框超出畫面
+            setTimeout(() => {
+              map.setZoom(map.getZoom() - 1);
+            }, 500);
+            
+            const route = response.routes[0];
+            let totalDistanceValue = 0;
+            route.legs.forEach(leg => {
+              totalDistanceValue += leg.distance.value;
+            });
+            // 換算為公里
+            const totalDistanceKm = totalDistanceValue / 1000;
+            // 四捨五入取到小數點後 2 位
+            const totalDistanceRounded = parseFloat(totalDistanceKm.toFixed(2));
+            
+            // 計算去回費用，以四捨五入後的距離進行計算
+            const pricePerKm = (selectedVehicle === "car") ? 3 : 2;
+            const totalFareNumber = totalDistanceRounded * pricePerKm * 2;
+            const totalFare = totalFareNumber.toFixed(2);
+            const roundedFare = Math.round(totalFareNumber);
+            
+            // 顯示計算結果
+            document.getElementById("calcResult").innerHTML = `
+              <p>總距離: ${totalDistanceRounded} 公里 (單程)</p>
+              <p>計算方式: ${totalDistanceRounded} 公里 x ${pricePerKm} 元/公里 x 2 (往返) = ${totalFare} 元</p>
+              <p>四捨五入後總金額: ${roundedFare} 元</p>
+            `;
+            
+            // 移除先前的標記 (如果有的話)
+            if (startMarker) startMarker.setMap(null);
+            if (endMarker) endMarker.setMap(null);
+            
+            // 取得起點與終點的座標，分別自訂標記並顯示資訊視窗
+            const leg = route.legs[0];
+            startMarker = createMarker(leg.start_location, startText);
+            endMarker = createMarker(route.legs[route.legs.length - 1].end_location, endText);
+            
+            // 在地圖上顯示中間資訊視窗 (例如顯示單程距離)
+            const midLat = (leg.start_location.lat() + leg.end_location.lat()) / 2;
+            const midLng = (leg.start_location.lng() + leg.end_location.lng()) / 2;
+            const midInfoWindow = new google.maps.InfoWindow({
+              content: `<div style="font-size:16px;color:#333;">單程距離: ${totalDistanceRounded} 公里</div>`,
+              position: { lat: midLat, lng: midLng },
+            });
+            midInfoWindow.open(map);
+          } else {
+            alert("路徑查詢失敗，原因：" + status);
+          }
+        }
+      );
+    }
+    
+    document.getElementById("submitBtn").addEventListener("click", calculateAndDisplayRoute);
+    
+    // 列印功能：點擊按鈕後觸發列印
+    document.getElementById("printBtn").addEventListener("click", function(){
+      window.print();
+    });
+  </script>
+</body>
+</html>
