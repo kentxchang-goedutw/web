@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>路徑規劃與交通費計算 (OpenStreetMap 版本)</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      position: relative;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .input-area {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 20px;
+    }
+    .input-area .column {
+      flex: 1;
+    }
+    .input-area div {
+      margin-bottom: 10px;
+    }
+    label {
+      display: inline-block;
+      width: 80px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: calc(100% - 90px);
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .vehicle-area {
+      display: flex;
+      align-items: center;
+    }
+    .vehicle-area label {
+      width: auto;
+      margin-right: 10px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: #4285f4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #357ae8;
+    }
+    #map {
+      width: 100%;
+      height: 450px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .fare-calc {
+      background: #e9f5ff;
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .fare-calc p {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    @media print {
+      .input-area, #submitBtn, #printBtn {
+        display: none !important;
+      }
+    }
+    .footer {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 14px;
+    }
+    .footer a {
+      color: #4285f4;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="content">
+    <h2>路徑規劃與交通費計算</h2>
+    
+    <!-- 輸入區：左右兩欄 -->
+    <div class="input-area">
+      <div class="column">
+        <div>
+          <label for="start">起點:</label>
+          <input type="text" id="start" placeholder="請輸入起點">
+        </div>
+      </div>
+      <div class="column">
+        <div>
+          <label for="end">終點:</label>
+          <input type="text" id="end" placeholder="請輸入終點">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 交通工具選擇及送出按鈕 -->
+    <div class="input-area">
+      <div class="column">
+        <div class="vehicle-area">
+          <label>交通工具:</label>
+          <input type="radio" id="car" name="vehicle" value="car" checked>
+          <label for="car">汽車 (3元/km)</label>
+          <input type="radio" id="motorcycle" name="vehicle" value="motorcycle">
+          <label for="motorcycle">機車 (2元/km)</label>
+        </div>
+      </div>
+      <div class="column">
+        <button id="submitBtn">送出</button>
+      </div>
+    </div>
+    
+    <!-- 地圖顯示區 -->
+    <div id="map"></div>
+    
+    <!-- 交通費計算區塊 -->
+    <div class="fare-calc">
+      <h3>交通費計算</h3>
+      <div id="calcResult">
+        <!-- 顯示計算式及總金額 -->
+      </div>
+    </div>
+    
+    <!-- 列印按鈕 -->
+    <button id="printBtn">列印</button>
+  </div>
+  
+  <!-- 右下角版權資訊 -->
+  <div class="footer">
+    Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+  </div>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script>
+    // 初始化地圖
+    const map = L.map('map').setView([23.7271, 120.4805], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    
+    let routingControl = null;
+    let startCoord = null;
+    let endCoord = null;
+    
+    // 使用 Nominatim 進行地址地理編碼
+    function geocode(address) {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+      return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            return {
+              lat: parseFloat(data[0].lat),
+              lon: parseFloat(data[0].lon)
+            };
+          } else {
+            throw new Error("查無資料：" + address);
+          }
+        });
+    }
+    
+    // 計算路徑並顯示
+    function calculateAndDisplayRoute() {
+      const startText = document.getElementById("start").value.trim();
+      const endText = document.getElementById("end").value.trim();
+      const selectedVehicle = document.querySelector('input[name="vehicle"]:checked').value;
+      
+      if (!startText || !endText) {
+        alert("請輸入完整的起點與終點！");
+        return;
+      }
+      
+      Promise.all([geocode(startText), geocode(endText)])
+        .then(results => {
+          startCoord = results[0];
+          endCoord = results[1];
+          
+          // 移除先前的路徑規劃（如果有）
+          if (routingControl !== null) {
+            map.removeControl(routingControl);
+          }
+          
+          // 建立路徑規劃控制器
+          routingControl = L.Routing.control({
+            waypoints: [
+              L.latLng(startCoord.lat, startCoord.lon),
+              L.latLng(endCoord.lat, endCoord.lon)
+            ],
+            routeWhileDragging: false,
+            show: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            createMarker: function(i, wp, nWps) {
+              let marker = L.marker(wp.latLng);
+              marker.bindPopup(i === 0 ? startText : (i === nWps - 1 ? endText : ''));
+              marker.openPopup();
+              return marker;
+            }
+          })
+          .on('routesfound', function(e) {
+            const routes = e.routes;
+            if (routes && routes.length > 0) {
+              // 取得總距離 (公尺)
+              const totalDistanceValue = routes[0].summary.totalDistance;
+              const totalDistanceKm = totalDistanceValue / 1000;
+              const totalDistanceRounded = parseFloat(totalDistanceKm.toFixed(2));
+              
+              // 計算交通費
+              const pricePerKm = (selectedVehicle === "car") ? 3 : 2;
+              const totalFareNumber = totalDistanceRounded * pricePerKm * 2;
+              const totalFare = totalFareNumber.toFixed(2);
+              const roundedFare = Math.round(totalFareNumber);
+              
+              // 顯示計算結果
+              document.getElementById("calcResult").innerHTML = `
+                <p>總距離: ${totalDistanceRounded} 公里 (單程)</p>
+                <p>計算方式: ${totalDistanceRounded} 公里 x ${pricePerKm} 元/公里 x 2 (往返) = ${totalFare} 元</p>
+                <p>四捨五入後總金額: ${roundedFare} 元</p>
+              `;
+              
+              // 計算中間位置，顯示起終點名稱與單程距離
+              const startLatLng = L.latLng(startCoord.lat, startCoord.lon);
+              const endLatLng = L.latLng(endCoord.lat, endCoord.lon);
+              const midLat = (startLatLng.lat + endLatLng.lat) / 2;
+              const midLng = (startLatLng.lng + endLatLng.lng) / 2;
+              
+              L.popup({ closeOnClick: false, autoClose: false })
+                .setLatLng([midLat, midLng])
+                .setContent(`<div style="font-size:16px;color:#333;">
+                               起點: ${startText}<br>
+                               終點: ${endText}<br>
+                               單程距離: ${totalDistanceRounded} 公里
+                             </div>`)
+                .openOn(map);
+            }
+          })
+          .addTo(map);
+        })
+        .catch(error => {
+          alert("發生錯誤：" + error.message);
+        });
+    }
+    
+    document.getElementById("submitBtn").addEventListener("click", calculateAndDisplayRoute);
+    document.getElementById("printBtn").addEventListener("click", function(){
+      window.print();
+    });
+  </script>
+</body>
+</html>
