@@ -4,232 +4,1053 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>中小學校園常用各式宣導線上簡報分享</title>
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
+
+        :root {
+            --primary-color: #f06292;
+            --primary-hover: #ec407a;
+            --text-color: #fff;
+            --text-secondary: #333;
+            --border-radius: 15px;
+            --box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+            --book-spine-width: 30px;
+            --book-height: 220px;
+            --book-width: 140px;
+        }
 
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Noto Sans TC', sans-serif;
             background: linear-gradient(to right, #ff7e5f, #feb47b);
-            color: #fff;
+            color: var(--text-color);
             text-align: center;
             padding: 20px;
             margin: 0;
             position: relative;
+            min-height: 100vh;
+            transition: background 0.5s ease;
         }
+
+        .container-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            position: relative;
+            margin-bottom: 40px;
+        }
+
         h1 {
             font-family: 'Pacifico', cursive;
-            font-size: 3em;
+            font-size: 3.5em;
             color: #ffe;
-            text-shadow: 2px 2px 4px #444;
-            background: rgba(0, 0, 0, 0.5);
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: var(--border-radius);
             width: 100%;
-            padding: 5px 0;
-            animation: pulse 2s infinite;
+            padding: 15px 0;
+            margin-bottom: 20px;
+            animation: glow 2s infinite alternate;
+            backdrop-filter: blur(5px);
         }
-        @keyframes pulse {
-            0% { transform: scale(1); text-shadow: 2px 2px 4px #444; }
-            50% { transform: scale(1.1); text-shadow: 4px 4px 8px #666; }
-            100% { transform: scale(1); text-shadow: 2px 2px 4px #444; }
+
+        @keyframes glow {
+            from { text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3); }
+            to { text-shadow: 0 0 15px rgba(255, 255, 255, 0.7), 0 0 25px rgba(255, 255, 255, 0.5); }
         }
+
         .top-right-buttons {
             position: absolute;
             top: 20px;
             right: 20px;
+            z-index: 10;
         }
-        .top-right-buttons button {
-            padding: 10px 15px;
-            margin-left: 10px;
+
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
             font-size: 1em;
-            background: #f06292;
-            color: #fff;
+            background: var(--primary-color);
+            color: var(--text-color);
             border: none;
             border-radius: 30px;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all var(--transition-speed);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--box-shadow);
         }
-        .top-right-buttons button:hover {
-            transform: scale(1.1);
-            background: #ec407a;
+
+        .btn i {
+            margin-right: 8px;
         }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            background: var(--primary-hover);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
         .container {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            gap: 20px;
-            margin: 20px auto;
-            max-width: 1200px;
+            gap: 30px;
+            margin: 30px auto;
         }
-        .input-container, .color-selection {
+
+        .card {
             flex: 1;
-            min-width: 300px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            min-width: 320px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(10px);
+            transition: transform var(--transition-speed);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .card h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
         label {
             font-size: 1.2em;
-            margin-right: 10px;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
-        textarea, input[type="text"] {
+
+        input[type="text"], textarea {
             width: 100%;
-            padding: 5px;
-            margin-top: 5px;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: all var(--transition-speed);
+            outline: none;
+            font-family: 'Noto Sans TC', sans-serif;
         }
-        button {
-            padding: 10px 20px;
-            margin: 10px 5px;
-            font-size: 1.1em;
-            background: #f06292;
-            color: #fff;
+
+        input[type="text"]:focus, textarea:focus {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .color-button {
+            padding: 15px 10px;
             border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        button:hover {
-            transform: scale(1.1);
-            background: #ec407a;
-        }
-        #descriptionContainer {
-            font-size: 1.2em;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.5);
-            color: #000;
             border-radius: 10px;
-            display: inline-block;
-            margin-top: 20px;
-            font-size: calc(1.2em + 5px);
-            white-space: pre-wrap;
-        }
-        .footer {
-            position: relative;
-            margin-top: 20px;
+            cursor: pointer;
             font-size: 0.9em;
-            color: #fff;
+            color: var(--text-color);
+            transition: transform var(--transition-speed);
+            text-align: center;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
+        .color-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        #descriptionContainer {
+            font-size: 1.4em;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            color: var(--text-secondary);
+            border-radius: var(--border-radius);
+            display: inline-block;
+            margin: 30px auto;
+            min-width: 60%;
+            white-space: pre-wrap;
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(5px);
+            line-height: 1.6;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .bookshelf-wrapper {
+            margin: 40px auto;
+            padding: 30px;
+            background: linear-gradient(to bottom, rgba(165, 132, 84, 0.7), rgba(120, 90, 50, 0.8));
+            border-radius: var(--border-radius);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3), var(--box-shadow);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bookshelf-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(to right, rgba(120, 81, 31, 0.8), rgba(212, 175, 125, 0.8), rgba(120, 81, 31, 0.8));
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .bookshelf-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(to right, rgba(120, 81, 31, 0.8), rgba(212, 175, 125, 0.8), rgba(120, 81, 31, 0.8));
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .bookshelf-wrapper h2 {
+            margin-bottom: 40px;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            font-size: 2em;
+        }
+
+        .link-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-gap: 35px;
+            width: 100%;
+            padding: 10px;
+        }
+
+        /* 新的書籍按鈕設計 */
+        .generated-link-button {
+            position: relative;
+            height: var(--book-height);
+            width: var(--book-width);
+            display: block;
+            margin: 0 auto;
+            text-decoration: none;
+            cursor: move;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+
+        .generated-link-button:hover {
+            transform: translateY(-15px) rotateX(5deg) rotateY(-10deg);
+        }
+
+        .book {
+            position: relative;
+            height: 100%;
+            width: 100%;
+            transform-style: preserve-3d;
+            transform: rotateY(-30deg);
+            transition: transform 0.5s;
+        }
+
+        .book-front,
+        .book-back,
+        .book-top,
+        .book-bottom,
+        .book-right,
+        .book-left {
+            position: absolute;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .book-front {
+            height: var(--book-height);
+            width: var(--book-width);
+            transform: translateZ(var(--book-spine-width));
+            border-radius: 2px 10px 10px 2px;
+            background: linear-gradient(45deg, #f6f6f6, #e6e6e6);
+            background-size: 100% 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 15px;
+            overflow: hidden;
+            border-left: 1px solid #ddd;
+        }
+
+        .book-title {
+            font-family: 'Noto Serif TC', serif;
+            font-weight: 700;
+            font-size: 1.2em;
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 0 #fff;
+            word-wrap: break-word;
+            position: relative;
+            z-index: 2;
+        }
+
+        .book-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background: 
+                radial-gradient(circle, transparent 20%, rgba(0,0,0,0.1) 20%, transparent 30%) 0 0,
+                radial-gradient(circle, transparent 20%, rgba(0,0,0,0.1) 20%, transparent 30%) 25px 25px;
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        .book-decor {
+            position: absolute;
+            width: 90%;
+            height: 6px;
+            background: rgba(51, 51, 51, 0.1);
+            bottom: 30px;
+            left: 5%;
+            border-radius: 3px;
+            z-index: 2;
+        }
+
+        .book-decor::before {
+            content: '';
+            position: absolute;
+            width: 90%;
+            height: 6px;
+            background: rgba(51, 51, 51, 0.1);
+            top: -15px;
+            left: 5%;
+            border-radius: 3px;
+        }
+
+        .book-decor::after {
+            content: '';
+            position: absolute;
+            width: 90%;
+            height: 6px;
+            background: rgba(51, 51, 51, 0.1);
+            top: -30px;
+            left: 5%;
+            border-radius: 3px;
+        }
+
+        .book-back {
+            height: var(--book-height);
+            width: var(--book-width);
+            transform: translateZ(calc(-1 * var(--book-spine-width)));
+            border-radius: 10px 2px 2px 10px;
+            background: #e6e6e6;
+            border-right: 1px solid #ddd;
+        }
+        
+        .book-top {
+            height: var(--book-spine-width);
+            width: var(--book-width);
+            transform: rotateX(90deg) translateZ(calc(var(--book-spine-width) / 2));
+            transform-origin: bottom;
+            background: #fff;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .book-bottom {
+            height: var(--book-spine-width);
+            width: var(--book-width);
+            transform: rotateX(-90deg) translateZ(calc(var(--book-height) - var(--book-spine-width) / 2));
+            transform-origin: top;
+            background: #e0e0e0;
+            border-radius: 0 0 3px 3px;
+        }
+        
+        .book-right {
+            height: var(--book-height);
+            width: var(--book-spine-width);
+            transform: rotateY(90deg) translateZ(calc(var(--book-width) - var(--book-spine-width) / 2));
+            transform-origin: left;
+            background: #e0e0e0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .book-left {
+            height: var(--book-height);
+            width: var(--book-spine-width);
+            transform: rotateY(-90deg) translateZ(calc(var(--book-spine-width) / 2));
+            transform-origin: right;
+            background: linear-gradient(to right, #c19a6b, #deb887, #c19a6b);
+            border-radius: 5px 0 0 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+        
+        .book-spine-text {
+            color: #fff;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 0.9em;
+            font-weight: bold;
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 80%;
+        }
+        .book-shine {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.5) 38%, rgba(255,255,255,0) 48%);
+            background-size: 200% 100%;
+            animation: shine 5s infinite;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        @keyframes shine {
+            0% { background-position: -100% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .book-emboss {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, rgba(255,215,0,0.4) 30%, transparent 70%);
+            z-index: 3;
+            opacity: 0.7;
+            border-radius: 50%;
+        }
+
+        .dragover .book {
+            transform: rotateY(0deg);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 1em;
+            color: var(--text-color);
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(5px);
+        }
+
         .footer a {
             color: #fff;
             text-decoration: none;
             font-weight: bold;
-        }
-        .color-selection {
-            text-align: left;
-        }
-        .color-button {
-            display: inline-block;
-            width: 45%;
-            padding: 10px;
-            margin: 5px 2%;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.9em;
-            color: #fff;
-            transition: transform 0.3s;
-            text-align: center;
-        }
-        .color-button:hover {
-            transform: scale(1.1);
-        }
-        .bookshelf-wrapper {
-            margin-top: 30px;
-            padding: 20px;
-            background: linear-gradient(to bottom right, #dab97d, #bfa26e);
-            border-radius: 10px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .link-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            grid-gap: 20px;
-            width: 100%;
-        }
-        .generated-link-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20%;
-            background: url("https://cdn.pixabay.com/photo/2014/04/02/16/21/book-307045_1280.png") center/contain no-repeat;
-            color: #000;
-            text-decoration: none;
+            transition: all var(--transition-speed);
+            padding: 3px 8px;
             border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: move;
-            width: 150px;
-            height: 200px;
-            text-align: center;
-            overflow: hidden;
-            white-space: pre-wrap;
-        }
-        .generated-link-button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        /* 拖曳中樣式 */
-        .dragover {
-            border: 2px dashed #fff;
+        .footer a:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* 批次輸入區(隱藏) */
         #batchInputContainer {
             display: none;
             width: 90%;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-            background: rgba(255,255,255,0.7);
-            border-radius: 10px;
-            color: #000;
-        }
-        #batchInputContainer h3 {
-            margin: 0 0 10px 0;
-        }
-        #batchInputContainer button {
-            background: #f06292;
-            color: #fff;
-            border-radius: 30px;
-            border: none;
-            padding: 10px 20px;
-            margin-top: 10px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        #batchInputContainer button:hover {
-            background: #ec407a;
-            transform: scale(1.1);
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            box-shadow: var(--box-shadow);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 0.3s ease-out;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #batchInputContainer h3 {
+            margin: 0 0 15px 0;
+            color: var(--text-secondary);
+            font-size: 1.5em;
+        }
+
+        #batchInputContainer p {
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        #batchInputContainer .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #999;
+            cursor: pointer;
+            transition: color var(--transition-speed);
+        }
+
+        #batchInputContainer .close-btn:hover {
+            color: #333;
+        }
+
+        .tooltip {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            z-index: 1000;
+            animation: fadeInOut 5s forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+
+        /* Responsive adjustments */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.5em;
+                padding: 10px 0;
+            }
+            
+            .top-right-buttons {
+                position: relative;
+                top: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+            
+            .card {
+                min-width: 100%;
+            }
+            
+            .color-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            #descriptionContainer {
+                font-size: 1.2em;
+                width: 90%;
+            }
+
+            .link-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-gap: 20px;
             }
         }
     
 </style>
 </head>
-<body style="background: linear-gradient(to right, #56ccf2, #2f80ed);">
-<h1>中小學校園常用各式宣導線上簡報分享</h1>
-<div id="descriptionContainer">使用我自製的markdown語法轉線上簡報工具預載內容所生成的簡報，
+<body style="background: linear-gradient(to right, #43c6ac, #f8ffae);">
+<div class="container-wrapper">
+    <header>
+        <h1>中小學校園常用各式宣導線上簡報分享</h1>
+    </header>
+    
+    <div id="descriptionContainer">使用我自製的markdown語法轉線上簡報工具預載內容所生成的簡報，
 簡報內容由chatgpt協助生成。</div>
-<div class="bookshelf-wrapper">
-    <div id="linkContainer" class="link-container">
-        <a class="generated-link-button" href="md2pptx.html?data=居家安全.md" target="_blank" draggable="true"><span style="background-color: rgba(168, 0, 26, 0.5);">居家安全</span></a><a class="generated-link-button" href="md2pptx.html?data=反霸凌.md" target="_blank" draggable="true"><span style="background-color: rgba(86, 25, 242, 0.5);">反霸凌</span></a><a class="generated-link-button" href="md2pptx.html?data=水域安全.md" target="_blank" draggable="true"><span style="background-color: rgba(3, 192, 157, 0.5);">水域安全</span></a><a class="generated-link-button" href="md2pptx.html?data=性侵害防治教育.md" target="_blank" draggable="true"><span style="background-color: rgba(246, 65, 177, 0.5);">性侵害防治教育</span></a><a class="generated-link-button" href="md2pptx.html?data=兒童及青少年性剝削防制教育.md" target="_blank" draggable="true"><span style="background-color: rgba(43, 65, 110, 0.5);">兒童及青少年性剝削防制教育</span></a><a class="generated-link-button" href="md2pptx.html?data=安全教育.md" target="_blank" draggable="true"><span style="background-color: rgba(250, 143, 84, 0.5);">安全教育</span></a><a class="generated-link-button" href="md2pptx.html?data=性別平等.md" target="_blank" draggable="true"><span style="background-color: rgba(228, 7, 150, 0.5);">性別平等</span></a><a class="generated-link-button" href="md2pptx.html?data=性教育與愛滋病防治宣導.md" target="_blank" draggable="true"><span style="background-color: rgba(191, 54, 130, 0.5);">性教育與愛滋病防治宣導</span></a><a class="generated-link-button" href="md2pptx.html?data=煙檳危害宣導.md" target="_blank" draggable="true"><span style="background-color: rgba(224, 116, 51, 0.5);">煙檳危害宣導</span></a><a class="generated-link-button" href="md2pptx.html?data=兒童權利公約介紹.md" target="_blank" draggable="true"><span style="background-color: rgba(188, 160, 176, 0.5);">兒童權利公約介紹</span></a><a class="generated-link-button" href="md2pptx.html?data=法治教育.md" target="_blank" draggable="true"><span style="background-color: rgba(9, 42, 249, 0.5);">法治教育</span></a><a class="generated-link-button" href="md2pptx.html?data=交通安全.md" target="_blank" draggable="true"><span style="background-color: rgba(204, 243, 113, 0.5);">交通安全</span></a><a class="generated-link-button" href="md2pptx.html?data=人權教育.md" target="_blank" draggable="true"><span style="background-color: rgba(199, 63, 49, 0.5);">人權教育</span></a><a class="generated-link-button" href="md2pptx.html?data=家庭教育.md" target="_blank" draggable="true"><span style="background-color: rgba(221, 110, 245, 0.5);">家庭教育</span></a><a class="generated-link-button" href="md2pptx.html?data=家暴防治.md" target="_blank" draggable="true"><span style="background-color: rgba(204, 2, 230, 0.5);">家暴防治</span></a><a class="generated-link-button" href="md2pptx.html?data=環境教育.md" target="_blank" draggable="true"><span style="background-color: rgba(191, 122, 93, 0.5);">環境教育</span></a><a class="generated-link-button" href="md2pptx.html?data=新興毒品.md" target="_blank" draggable="true"><span style="background-color: rgba(54, 60, 80, 0.5);">新興毒品</span></a><a class="generated-link-button" href="md2pptx.html?data=資訊素養.md" target="_blank" draggable="true"><span style="background-color: rgba(44, 132, 154, 0.5);">資訊素養</span></a><a class="generated-link-button" href="md2pptx.html?data=網路詐騙.md" target="_blank" draggable="true"><span style="background-color: rgba(64, 0, 8, 0.5);">網路詐騙</span></a><a class="generated-link-button" href="md2pptx.html?data=智慧財產權.md" target="_blank" draggable="true"><span style="background-color: rgba(201, 210, 102, 0.5);">智慧財產權</span></a><a class="generated-link-button" href="md2pptx.html?data=正向管教.md" target="_blank" draggable="true"><span style="background-color: rgba(238, 233, 232, 0.5);">正向管教</span></a><a class="generated-link-button" href="md2pptx.html?data=防火教育.md" target="_blank" draggable="true"><span style="background-color: rgba(79, 171, 63, 0.5);">防火教育</span></a>
+    
+    <div class="bookshelf-wrapper">
+        <h2><i class="fas fa-book"></i> 我的連結書架</h2>
+        <div id="linkContainer" class="link-container">
+            <a class="generated-link-button" href="md2pptx.html?data=居家安全.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(302, 74%, 78%), hsl(30, 70%, 69%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">居家安全</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(302, 74%, 78%), hsl(30, 70%, 69%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(186, 69%, 64%), lighten(hsl(186, 69%, 64%), 15%), hsl(186, 69%, 64%))">
+                        <div class="book-spine-text">居家安全</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=反霸凌.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(115, 76%, 84%), hsl(47, 70%, 43%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">反霸凌</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(115, 76%, 84%), hsl(47, 70%, 43%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(289, 68%, 50%), lighten(hsl(289, 68%, 50%), 15%), hsl(289, 68%, 50%))">
+                        <div class="book-spine-text">反霸凌</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=水域安全.md" target="_blank" draggable="true" style="opacity: 0.7;">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(51, 76%, 84%), hsl(251, 78%, 56%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">水域安全</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(51, 76%, 84%), hsl(251, 78%, 56%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(231, 66%, 40%), lighten(hsl(231, 66%, 40%), 15%), hsl(231, 66%, 40%))">
+                        <div class="book-spine-text">水域安全</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=性侵害防治教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(303, 76%, 77%), hsl(192, 70%, 59%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">性侵害防治教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(303, 76%, 77%), hsl(192, 70%, 59%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(191, 72%, 40%), lighten(hsl(191, 72%, 40%), 15%), hsl(191, 72%, 40%))">
+                        <div class="book-spine-text">性侵害防治教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=兒童及青少年性剝削防制教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(212, 71%, 78%), hsl(76, 77%, 55%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">兒童及青少年性剝削防制教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(212, 71%, 78%), hsl(76, 77%, 55%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(129, 77%, 63%), lighten(hsl(129, 77%, 63%), 15%), hsl(129, 77%, 63%))">
+                        <div class="book-spine-text">兒童及青少年性剝削防制教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=安全教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(126, 74%, 89%), hsl(322, 60%, 41%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">安全教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(126, 74%, 89%), hsl(322, 60%, 41%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(40, 71%, 51%), lighten(hsl(40, 71%, 51%), 15%), hsl(40, 71%, 51%))">
+                        <div class="book-spine-text">安全教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=性別平等.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(177, 67%, 85%), hsl(291, 79%, 65%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">性別平等</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(177, 67%, 85%), hsl(291, 79%, 65%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(159, 77%, 40%), lighten(hsl(159, 77%, 40%), 15%), hsl(159, 77%, 40%))">
+                        <div class="book-spine-text">性別平等</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=性教育與愛滋病防治宣導.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(133, 75%, 85%), hsl(174, 61%, 55%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">性教育與愛滋病防治宣導</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(133, 75%, 85%), hsl(174, 61%, 55%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(349, 65%, 52%), lighten(hsl(349, 65%, 52%), 15%), hsl(349, 65%, 52%))">
+                        <div class="book-spine-text">性教育與愛滋病防治宣導</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=煙檳危害宣導.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(346, 74%, 88%), hsl(105, 61%, 58%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">煙檳危害宣導</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(346, 74%, 88%), hsl(105, 61%, 58%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(338, 63%, 43%), lighten(hsl(338, 63%, 43%), 15%), hsl(338, 63%, 43%))">
+                        <div class="book-spine-text">煙檳危害宣導</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=兒童權利公約介紹.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(136, 76%, 86%), hsl(20, 70%, 41%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">兒童權利公約介紹</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(136, 76%, 86%), hsl(20, 70%, 41%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(135, 78%, 65%), lighten(hsl(135, 78%, 65%), 15%), hsl(135, 78%, 65%))">
+                        <div class="book-spine-text">兒童權利公約介紹</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=法治教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(174, 62%, 85%), hsl(76, 64%, 56%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">法治教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(174, 62%, 85%), hsl(76, 64%, 56%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(162, 74%, 45%), lighten(hsl(162, 74%, 45%), 15%), hsl(162, 74%, 45%))">
+                        <div class="book-spine-text">法治教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=交通安全.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(35, 68%, 76%), hsl(3, 72%, 50%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">交通安全</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(35, 68%, 76%), hsl(3, 72%, 50%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(306, 72%, 42%), lighten(hsl(306, 72%, 42%), 15%), hsl(306, 72%, 42%))">
+                        <div class="book-spine-text">交通安全</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=人權教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(320, 69%, 81%), hsl(71, 67%, 59%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">人權教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(320, 69%, 81%), hsl(71, 67%, 59%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(322, 64%, 66%), lighten(hsl(322, 64%, 66%), 15%), hsl(322, 64%, 66%))">
+                        <div class="book-spine-text">人權教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=家庭教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(236, 72%, 84%), hsl(183, 66%, 55%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">家庭教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(236, 72%, 84%), hsl(183, 66%, 55%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(229, 63%, 66%), lighten(hsl(229, 63%, 66%), 15%), hsl(229, 63%, 66%))">
+                        <div class="book-spine-text">家庭教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=家暴防治.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(81, 71%, 76%), hsl(233, 78%, 42%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">家暴防治</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(81, 71%, 76%), hsl(233, 78%, 42%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(273, 73%, 53%), lighten(hsl(273, 73%, 53%), 15%), hsl(273, 73%, 53%))">
+                        <div class="book-spine-text">家暴防治</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=環境教育.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(117, 61%, 79%), hsl(310, 75%, 64%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">環境教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(117, 61%, 79%), hsl(310, 75%, 64%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(238, 61%, 53%), lighten(hsl(238, 61%, 53%), 15%), hsl(238, 61%, 53%))">
+                        <div class="book-spine-text">環境教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=新興毒品.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(322, 60%, 84%), hsl(174, 63%, 63%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">新興毒品</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(322, 60%, 84%), hsl(174, 63%, 63%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(292, 68%, 61%), lighten(hsl(292, 68%, 61%), 15%), hsl(292, 68%, 61%))">
+                        <div class="book-spine-text">新興毒品</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=資訊素養.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(148, 65%, 75%), hsl(220, 64%, 47%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">資訊素養</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(148, 65%, 75%), hsl(220, 64%, 47%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(261, 63%, 43%), lighten(hsl(261, 63%, 43%), 15%), hsl(261, 63%, 43%))">
+                        <div class="book-spine-text">資訊素養</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=網路詐騙.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(284, 74%, 84%), hsl(151, 78%, 68%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">網路詐騙</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(284, 74%, 84%), hsl(151, 78%, 68%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(31, 61%, 55%), lighten(hsl(31, 61%, 55%), 15%), hsl(31, 61%, 55%))">
+                        <div class="book-spine-text">網路詐騙</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=智慧財產權.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(89, 64%, 89%), hsl(115, 73%, 46%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">智慧財產權</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(89, 64%, 89%), hsl(115, 73%, 46%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(284, 73%, 58%), lighten(hsl(284, 73%, 58%), 15%), hsl(284, 73%, 58%))">
+                        <div class="book-spine-text">智慧財產權</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=防火教育.md" target="_blank" draggable="true" style="opacity: 1;">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(60, 71%, 76%), hsl(218, 60%, 47%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">防火教育</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(60, 71%, 76%), hsl(218, 60%, 47%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(102, 67%, 64%), lighten(hsl(102, 67%, 64%), 15%), hsl(102, 67%, 64%))">
+                        <div class="book-spine-text">防火教育</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=正向管教.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(0, 69%, 79%), hsl(105, 60%, 56%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">正向管教</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(0, 69%, 79%), hsl(105, 60%, 56%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(272, 69%, 42%), lighten(hsl(272, 69%, 42%), 15%), hsl(272, 69%, 42%))">
+                        <div class="book-spine-text">正向管教</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=性騷擾.md" target="_blank" draggable="true" style="opacity: 1;">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(77, 68%, 79%), hsl(94, 70%, 69%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">性騷擾</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(77, 68%, 79%), hsl(94, 70%, 69%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(332, 79%, 54%), lighten(hsl(332, 79%, 54%), 15%), hsl(332, 79%, 54%))">
+                        <div class="book-spine-text">性騷擾</div>
+                    </div>
+                </div>
+            </a><a class="generated-link-button" href="md2pptx.html?data=雲林品格宣導.md" target="_blank" draggable="true">
+                <div class="book">
+                    <div class="book-front" style="background: linear-gradient(135deg, hsl(91, 75%, 84%), hsl(180, 79%, 57%))">
+                        <div class="book-pattern"></div>
+                        <div class="book-title">雲林品格宣導</div>
+                        <div class="book-decor"></div>
+                        <div class="book-emboss"></div>
+                        <div class="book-shine"></div>
+                    </div>
+                    <div class="book-back" style="background: linear-gradient(135deg, hsl(91, 75%, 84%), hsl(180, 79%, 57%))"></div>
+                    <div class="book-top"></div>
+                    <div class="book-bottom"></div>
+                    <div class="book-right"></div>
+                    <div class="book-left" style="background: linear-gradient(to right, hsl(326, 78%, 65%), lighten(hsl(326, 78%, 65%), 15%), hsl(326, 78%, 65%))">
+                        <div class="book-spine-text">雲林品格宣導</div>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
-</div>
-<div class="footer">
-    Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a>
+    
+    <div class="footer">
+        <p>Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a></p>
+    </div>
 </div>
 </body>
 </html>

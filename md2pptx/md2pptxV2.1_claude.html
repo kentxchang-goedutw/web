@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Markdown 轉線上簡報 - 全新設計</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* 引入 Google 字體 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+        /* 注音字型 */
+        @font-face {
+            font-family: 'ㄅ注音芫荽 Regular';
+            src: url('https://kentxchang-goedutw.github.io/web/BpmfIansui-Regular_0.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* 全局樣式 */
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #ffd166;
+            --danger-color: #ef476f;
+            --gradient-1: linear-gradient(135deg, #4cc9f0, #4361ee);
+            --gradient-2: linear-gradient(135deg, #f72585, #b5179e);
+            --gradient-3: linear-gradient(135deg, #ffd166, #ff9e00);
+            --gradient-4: linear-gradient(135deg, #52b788, #2d6a4f);
+            --gradient-5: linear-gradient(135deg, #c77dff, #7209b7);
+            --gradient-6: linear-gradient(135deg, #480ca8, #3f37c9);
+            --gradient-7: linear-gradient(135deg, #fb8500, #ffb703);
+            --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --border-radius: 15px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            color: var(--dark-color);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 頁面布局 */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            width: 100%;
+        }
+
+        /* 頂部導航欄 */
+        .top-navbar {
+            background-color: var(--light-color);
+            box-shadow: var(--box-shadow);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 2px solid rgba(67, 97, 238, 0.2);
+            position: sticky;
+            top: 0;
+        }
+
+        .navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 0.5px;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* 主容器 */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 編輯區域 */
+        .editor-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            animation: fadeIn 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .editor-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .editor-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .editor-title::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--gradient-1);
+            border-radius: 2px;
+        }
+
+        .editor-subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        #markdownInput {
+            width: 100%;
+            min-height: 250px;
+            padding: 20px;
+            font-size: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            resize: vertical;
+            transition: var(--transition);
+            font-family: 'Noto Sans TC', 'Poppins', monospace;
+            line-height: 1.6;
+        }
+
+        #markdownInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25);
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: var(--transition);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gradient-2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .btn-info {
+            background: var(--gradient-3);
+            color: var(--dark-color);
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.3);
+        }
+
+        .btn-icon {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-tooltip {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--dark-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .btn:hover .btn-tooltip {
+            opacity: 1;
+            visibility: visible;
+            bottom: -35px;
+        }
+
+        /* 簡報容器 */
+        .presentation-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .presentation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .presentation-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .presentation-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .presentation-container {
+            width: 100%;
+            position: relative;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+        }
+
+        #presentation {
+            width: 100%;
+            height: 100%;
+            background: white;
+            position: relative;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            display: none;
+        }
+
+        /* 主題選擇器 */
+        .theme-selector {
+            width: 100%;
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+        }
+
+        .theme-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .theme-option {
+            height: 80px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-option.active {
+            border: 3px solid var(--primary-color);
+        }
+
+        .theme-option span {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 5px;
+            font-size: 12px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .theme-option:hover span {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        #theme1 {
+            background: var(--gradient-1);
+        }
+
+        #theme2 {
+            background: var(--gradient-2);
+        }
+
+        #theme3 {
+            background: var(--gradient-3);
+        }
+
+        #theme4 {
+            background: var(--gradient-4);
+        }
+
+        #theme5 {
+            background: var(--gradient-5);
+        }
+
+        #theme6 {
+            background: var(--gradient-6);
+        }
+
+        #theme7 {
+            background: var(--gradient-7);
+        }
+
+        /* 簡報內容樣式 */
+        #slideContent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            box-sizing: border-box;
+            transition: opacity 0.5s ease;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+            z-index: 2;
+        }
+
+        #slideContent::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #slideContent::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #slideContent::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        #slideContent h1 {
+            font-size: 3em;
+            margin-bottom: 30px;
+            line-height: 1.2;
+            /* 調整背景透明度：原 0.9 調整為 0.7 */
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+
+        #slideContent h2, 
+        #slideContent h3, 
+        #slideContent h4 {
+            margin: 25px 0 15px;
+            line-height: 1.3;
+            /* 調整背景透明度：原 0.8 調整為 0.6 */
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            max-width: 85%;
+        }
+
+        #slideContent p {
+            font-size: 1.5em;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+
+        #slideContent ul, 
+        #slideContent ol {
+            text-align: left;
+            font-size: 1.3em;
+            margin: 20px 0;
+            width: 80%;
+        }
+
+        #slideContent li {
+            margin-bottom: 15px;
+            /* 調整背景透明度：改為 20% */
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        #slideContent img {
+            max-width: 80%;
+            max-height: 60%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #slideContent a {
+            color: var(--primary-color);
+            text-decoration: underline;
+            transition: var(--transition);
+        }
+
+        #slideContent a:hover {
+            color: var(--secondary-color);
+        }
+
+        /* 導航按鈕 */
+        .navBtn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: none;
+            height: 60px;
+            width: 60px;
+            font-size: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+        }
+
+        .navBtn:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        #prevBtn {
+            left: 20px;
+        }
+
+        #nextBtn {
+            right: 20px;
+        }
+
+        /* 幻燈片編號 */
+        #slideNumber {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            /* 頁碼文字設定為白色 */
+            color: #ffffff;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 3;
+        }
+
+        /* 背景圖片 */
+        #backgroundImage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            z-index: 1;
+            opacity: 0.5;
+            display: none;
+        }
+
+        /* 隱形區域 */
+        #invisibleArea {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 80px;
+            cursor: pointer;
+            z-index: 4;
+        }
+
+        /* 第一頁設計者標記 */
+        #designedBy {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            /* 設計者文字調整為白色 */
+            color: #ffffff;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 3;
+        }
+
+        /* 模態框樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1050;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+            margin: 50px auto;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 25px;
+            border-top: 1px solid #eee;
+        }
+
+        /* 圖片設定模態框 */
+        .image-input-group {
+            margin-bottom: 20px;
+        }
+
+        .image-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .image-input-group input[type="text"],
+        .image-input-group input[type="file"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .image-input-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .image-input-group .separator {
+            text-align: center;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .image-input-group .separator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e9ecef;
+        }
+
+        .image-input-group .separator span {
+            position: relative;
+            background: white;
+            padding: 0 15px;
+            color: #6c757d;
+        }
+
+        .opacity-control {
+            margin-top: 20px;
+        }
+
+        .opacity-control label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .opacity-slider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .opacity-slider input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #e9ecef;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .opacity-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .opacity-slider input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+        }
+
+        .opacity-value {
+            font-weight: 600;
+            color: var(--primary-color);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* AI 指令模態框 */
+        #instructionText {
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        /* 使用說明模態框 */
+        .instruction-item {
+            margin-bottom: 15px;
+        }
+
+        .instruction-item h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .instruction-item p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .instruction-item code {
+            background: #f8f9fa;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--accent-color);
+        }
+
+        .instruction-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .instruction-link:hover {
+            text-decoration: underline;
+        }
+
+        /* 頁腳 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            margin-top: auto;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .footer-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .footer-link:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        /* 固定下載按鈕 */
+        #downloadBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #downloadBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(76, 201, 240, 0.4);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .editor-title {
+                font-size: 2rem;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .theme-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .presentation-title {
+                font-size: 1.5rem;
+            }
+
+            .navBtn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            #slideContent h1 {
+                font-size: 2.5em;
+            }
+
+            #slideContent p {
+                font-size: 1.3em;
+            }
+
+            #slideContent ul, 
+            #slideContent ol {
+                font-size: 1.2em;
+            }
+
+            #downloadBtn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-container {
+                padding: 15px;
+            }
+
+            .editor-container {
+                padding: 20px;
+            }
+
+            .editor-title {
+                font-size: 1.8rem;
+            }
+
+            .editor-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .theme-option {
+                height: 60px;
+            }
+
+            #slideContent h1 {
+                font-size: 2em;
+                padding: 10px 20px;
+            }
+
+            #slideContent h2, 
+            #slideContent h3, 
+            #slideContent h4 {
+                font-size: 1.5em;
+                padding: 8px 15px;
+            }
+
+            #slideContent p {
+                font-size: 1.2em;
+            }
+
+            #slideContent ul, 
+            #slideContent ol {
+                font-size: 1.1em;
+                width: 90%;
+            }
+
+            .navBtn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            #prevBtn {
+                left: 10px;
+            }
+
+            #nextBtn {
+                right: 10px;
+            }
+        }
+    </style>
+    <!-- 引入必要的腳本 -->
+    <script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 頂部導航欄 -->
+        <header class="top-navbar">
+            <div class="navbar-logo">
+                <span class="logo-icon">📊</span>
+                <span class="logo-text">MD簡報生成器</span>
+            </div>
+            <div class="navbar-actions">
+                <button id="regenerateBtn" class="btn btn-icon btn-secondary">
+                    <span>↺</span>
+                    <span class="btn-tooltip">重置</span>
+                </button>
+                <button id="fullscreenBtn" class="btn btn-icon btn-primary">
+                    <span>⛶</span>
+                    <span class="btn-tooltip">全螢幕</span>
+                </button>
+            </div>
+        </header>
+		
+        <!-- 主內容區域 -->
+        <main class="main-container">
+            <!-- 編輯器區域 -->
+            <section class="editor-container">
+                <div class="editor-header">
+                    <h1 class="editor-title">Markdown 轉線上簡報</h1>
+                    <p class="editor-subtitle">將 Markdown 文本輕鬆轉換為精美的簡報</p>
+                </div>
+                <textarea id="markdownInput" placeholder="在這裡貼上你的 Markdown 內容...
+# 這是一個標題
+## 這是一個子標題
+
+- 項目 1
+- 項目 2
+- 項目 3
+
+> 引用文字段落
+"></textarea>
+                <div class="editor-actions">
+                    <button id="startPresentationBtn" class="btn btn-primary">
+                        <span>✨</span> 生成簡報
+                    </button>
+                    <button id="aiInstructionBtn" class="btn btn-secondary">
+                        <span>🤖</span> AI生成心智圖參考指令
+                    </button>
+                    <button id="usageInstructionsBtn" class="btn btn-info">
+                        <span>📝</span> 使用說明
+                    </button>
+                </div>
+            </section>
+
+            <!-- 主題選擇器 -->
+            <section id="themeSelector" class="theme-selector" style="display: none;">
+                <h3 class="theme-title">選擇簡報主題</h3>
+                <div class="theme-grid">
+                    <div id="theme1" class="theme-option active">
+                        <span>晨曦之光</span>
+                    </div>
+                    <div id="theme2" class="theme-option">
+                        <span>森林之歌</span>
+                    </div>
+                    <div id="theme3" class="theme-option">
+                        <span>海洋之心</span>
+                    </div>
+                    <div id="theme4" class="theme-option">
+                        <span>暮色微光</span>
+                    </div>
+                    <div id="theme5" class="theme-option">
+                        <span>沙漠之風</span>
+                    </div>
+                    <div id="theme6" class="theme-option">
+                        <span>星空夢想</span>
+                    </div>
+                    <div id="theme7" class="theme-option">
+                        <span>秋日私語</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 簡報區域 -->
+            <section class="presentation-wrapper" id="presentationWrapper" style="display: none;">
+                <div class="presentation-header">
+                    <h2 class="presentation-title">簡報展示</h2>
+                    <div class="presentation-controls">
+                        <button id="editPresentationBtn" class="btn btn-secondary">
+                            <span>✏️</span> 編輯內容
+                        </button>
+                    </div>
+                </div>
+                <div class="presentation-container">
+                    <div id="presentation">
+                        <button id="prevBtn" class="navBtn">❮</button>
+                        <button id="nextBtn" class="navBtn">❯</button>
+                        <img id="backgroundImage" src="" alt="背景圖片">
+                        <div id="slideContent"></div>
+                        <div id="slideNumber"></div>
+                        <div id="invisibleArea"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- AI 指令模態框 -->
+        <div id="aiInstructionModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">AI生成心智圖參考指令</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="instructionText">生成宣導"某主題"的簡報，內容要詳細，使用markdown語法的code呈現，重點文字用粗體</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="copyBtn" class="btn btn-primary">複製指令</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用說明模態框 -->
+        <div id="usageInstructionsModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">使用說明</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="instruction-item">
+                            <h3>網址參數說明</h3>
+                            <p>您可以在網址後添加參數以自動載入內容或設定字型：</p>
+                            <p><code>?data=XX.md</code>：其中 <code>XX.md</code> 是您要載入的 Markdown 文件路徑，程式將自動載入該文件的內容並生成簡報。</p>
+                            <p><code>?f=o</code>：使用注音字型顯示內容。</p>
+                            <p>同時使用兩個參數：<code>?data=XX.md&f=o</code></p>
+                        </div>
+                        <div class="instruction-item">
+                            <h3>設定背景圖片說明</h3>
+                            <p>在簡報模式下，點擊畫面頂部中間的隱形區塊（滑鼠指標變成手形時），可以打開圖片設定對話框。您可以輸入圖片網址或上傳本地圖片，並調整圖片的透明度，點擊 "設定圖片" 即可將其作為背景。</p>
+                            <p>線上背景圖片下載參考網址：<a href="https://616pic.com/beijing/" target="_blank" class="instruction-link">https://616pic.com/beijing/</a></p>
+                        </div>
+                        <div class="instruction-item">
+                            <h3>快捷鍵</h3>
+                            <p><code>方向鍵 →</code>：下一頁</p>
+                            <p><code>方向鍵 ←</code>：上一頁</p>
+                            <p><code>F</code>：全螢幕</p>
+                            <p><code>R</code>：重置</p>
+                            <p><code>O</code>：匯出PDF</p>
+                            <p><code>I</code>：設定背景圖片</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 圖片設定模態框 -->
+        <div id="imageModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">設定背景圖片</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="image-input-group">
+                            <label for="imageUrlInput">輸入圖片網址</label>
+                            <input type="text" id="imageUrlInput" placeholder="貼上圖片URL">
+                            
+                            <div class="separator">
+                                <span>或</span>
+                            </div>
+                            
+                            <label for="imageFileInput">上傳本地圖片</label>
+                            <input type="file" id="imageFileInput" accept="image/*">
+                        </div>
+                        
+                        <div class="opacity-control">
+                            <label for="opacityInput">設定圖片透明度</label>
+                            <div class="opacity-slider">
+                                <input type="range" id="opacityInput" min="0" max="100" value="50">
+                                <span id="opacityValue" class="opacity-value">50%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="cancelImageBtn" class="btn btn-secondary">取消</button>
+                        <button id="setImageBtn" class="btn btn-primary">設定圖片</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 固定按鈕 -->
+        <button id="downloadBtn" class="btn btn-icon">
+            <span>⤓</span>
+            <span class="btn-tooltip">匯出PDF</span>
+        </button>
+
+        <!-- 頁腳 -->
+        <footer class="footer">
+            <p class="footer-text">
+                Designed by <a href="https://kentxchang.blogspot.tw" target="_blank" class="footer-link">阿剛老師</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM 元素
+        const startPresentationBtn = document.getElementById('startPresentationBtn');
+        const markdownInput = document.getElementById('markdownInput');
+        const usageInstructionsBtn = document.getElementById('usageInstructionsBtn');
+        const presentationDiv = document.getElementById('presentation');
+        const presentationWrapper = document.getElementById('presentationWrapper');
+        const slideContentDiv = document.getElementById('slideContent');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const regenerateBtn = document.getElementById('regenerateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const slideNumber = document.getElementById('slideNumber');
+        const backgroundImage = document.getElementById('backgroundImage');
+        const invisibleArea = document.getElementById('invisibleArea');
+        const editorContainer = document.querySelector('.editor-container');
+        const themeSelector = document.getElementById('themeSelector');
+        const editPresentationBtn = document.getElementById('editPresentationBtn');
+        
+        // 模態框
+        const aiInstructionBtn = document.getElementById('aiInstructionBtn');
+        const aiInstructionModal = document.getElementById('aiInstructionModal');
+        const instructionTextElement = document.getElementById('instructionText');
+        const copyBtn = document.getElementById('copyBtn');
+        
+        const usageInstructionsModal = document.getElementById('usageInstructionsModal');
+        const imageModal = document.getElementById('imageModal');
+        const imageUrlInput = document.getElementById('imageUrlInput');
+        const imageFileInput = document.getElementById('imageFileInput');
+        const opacityInput = document.getElementById('opacityInput');
+        const opacityValue = document.getElementById('opacityValue');
+        const setImageBtn = document.getElementById('setImageBtn');
+        const cancelImageBtn = document.getElementById('cancelImageBtn');
+        
+        // 簡報變數
+        let slides = [];
+        let currentSlideIndex = 0;
+        let currentThemeId = 'theme1'; // 默認主題
+        
+        // 檢查網址參數
+        const urlParams = new URLSearchParams(window.location.search);
+        const fontParam = urlParams.get('f');
+        let useZhuyinFont = false;
+
+        if (fontParam === 'o') {
+            useZhuyinFont = true;
+        }
+
+        // 處理 data 參數
+        const dataParam = urlParams.get('data');
+        if (dataParam) {
+            fetchMarkdownAndStartPresentation(dataParam);
+        }
+
+        // 事件監聽器
+        startPresentationBtn.addEventListener('click', () => {
+            const markdownText = markdownInput.value.trim();
+            if (markdownText === '') {
+                alert('請輸入 Markdown 內容！');
+                return;
+            }
+            startPresentation(markdownText);
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                transitionSlide(currentSlideIndex + 1, currentSlideIndex);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlideIndex < slides.length - 1) {
+                currentSlideIndex++;
+                transitionSlide(currentSlideIndex - 1, currentSlideIndex);
+            } else if (currentSlideIndex === slides.length - 1) {
+                currentSlideIndex++;
+                transitionSlide(currentSlideIndex - 1, -1);
+            }
+        });
+
+        fullscreenBtn.addEventListener('click', enterFullscreen);
+
+        regenerateBtn.addEventListener('click', resetPresentation);
+
+        downloadBtn.addEventListener('click', async () => {
+            // 先切換成全螢幕
+            enterFullscreen();
+            // 等待 1 秒讓全螢幕切換生效
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            generatePDF();
+        });
+
+        editPresentationBtn.addEventListener('click', () => {
+            presentationWrapper.style.display = 'none';
+            themeSelector.style.display = 'none';
+            editorContainer.style.display = 'block';
+            downloadBtn.style.display = 'none';
+        });
+
+        // 主題選擇
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                themeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                const themeId = option.id;
+                applyTheme(themeId);
+            });
+        });
+
+        // AI 指令模態框
+        aiInstructionBtn.addEventListener('click', () => {
+            aiInstructionModal.style.display = 'block';
+        });
+
+        // 使用說明模態框
+        usageInstructionsBtn.addEventListener('click', () => {
+            usageInstructionsModal.style.display = 'block';
+        });
+
+        // 關閉模態框
+        document.querySelectorAll('.modal-close').forEach(closeBtn => {
+            closeBtn.addEventListener('click', () => {
+                closeBtn.closest('.modal').style.display = 'none';
+            });
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
+        // 複製按鈕
+        copyBtn.addEventListener('click', () => {
+            const instructionText = instructionTextElement.innerText;
+            copyToClipboard(instructionText);
+            alert('指令已複製到剪貼簿');
+        });
+
+        // 圖片設定
+        invisibleArea.addEventListener('click', () => {
+            if (presentationDiv.style.display !== 'none') {
+                openImageModal();
+            }
+        });
+
+        opacityInput.addEventListener('input', () => {
+            opacityValue.textContent = `${opacityInput.value}%`;
+        });
+
+        setImageBtn.addEventListener('click', () => {
+            const imageUrl = imageUrlInput.value.trim();
+            const imageFile = imageFileInput.files[0];
+            const opacity = opacityInput.value / 100;
+
+            if (imageUrl !== '') {
+                backgroundImage.src = imageUrl;
+                backgroundImage.style.display = 'block';
+                backgroundImage.style.opacity = opacity;
+                imageModal.style.display = 'none';
+            } else if (imageFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    backgroundImage.src = e.target.result;
+                    backgroundImage.style.display = 'block';
+                    backgroundImage.style.opacity = opacity;
+                    imageModal.style.display = 'none';
+                }
+                reader.readAsDataURL(imageFile);
+            } else {
+                alert('請輸入圖片網址或上傳圖片');
+            }
+        });
+
+        cancelImageBtn.addEventListener('click', () => {
+            imageModal.style.display = 'none';
+        });
+
+        // 監聽鍵盤事件
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                nextBtn.click();
+            } else if (event.key === 'ArrowLeft') {
+                prevBtn.click();
+            } else if (event.key === 'r' || event.key === 'R') {
+                regenerateBtn.click();
+            } else if (event.key === 'f' || event.key === 'F') {
+                fullscreenBtn.click();
+            } else if (event.key === 'o' || event.key === 'O') {
+                if (presentationDiv.style.display !== 'none') {
+                    downloadBtn.click();
+                }
+            } else if (event.key === 'i' || event.key === 'I') {
+                if (presentationDiv.style.display !== 'none') {
+                    openImageModal();
+                }
+            }
+        });
+
+        // 監聽全屏變化
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                downloadBtn.style.display = 'none';
+            } else {
+                if (presentationDiv.style.display !== 'none') {
+                    downloadBtn.style.display = 'flex';
+                }
+            }
+        });
+
+        // 功能函數
+        function fetchMarkdownAndStartPresentation(dataUrl) {
+            fetch(dataUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(markdownText => {
+                    markdownInput.value = markdownText;
+                    startPresentation(markdownText);
+                })
+                .catch(error => {
+                    console.error('無法加載指定的 Markdown 文件:', error);
+                    alert('無法加載指定的 Markdown 文件');
+                });
+        }
+
+        function startPresentation(markdownText) {
+            const converter = new showdown.Converter();
+            const htmlContent = converter.makeHtml(markdownText);
+            slides = splitIntoSlides(htmlContent);
+            currentSlideIndex = 0;
+            
+            // 隱藏編輯器，顯示簡報
+            editorContainer.style.display = 'none';
+            themeSelector.style.display = 'block';
+            presentationWrapper.style.display = 'block';
+            presentationDiv.style.display = 'block';
+            downloadBtn.style.display = 'flex';
+            
+            showSlide(currentSlideIndex);
+            applyTheme(currentThemeId);
+        }
+
+        function splitIntoSlides(htmlContent) {
+            const slideMarkers = ['<h1', '<h2', '<h3', '<h4'];
+            let slideArray = [];
+            let startIndex = 0;
+
+            while (startIndex < htmlContent.length) {
+                let endIndex = findNextMarkerIndex(htmlContent, slideMarkers, startIndex + 1);
+                if (endIndex === -1) {
+                    endIndex = htmlContent.length;
+                }
+                slideArray.push(htmlContent.slice(startIndex, endIndex));
+                startIndex = endIndex;
+            }
+
+            return slideArray;
+        }
+
+        function findNextMarkerIndex(htmlContent, markers, startIndex) {
+            return markers.reduce((minIndex, marker) => {
+                const index = htmlContent.indexOf(marker, startIndex);
+                if (index !== -1 && (minIndex === -1 || index < minIndex)) {
+                    return index;
+                }
+                return minIndex;
+            }, -1);
+        }
+
+        function showSlide(index) {
+            if (index === -1) {
+                slideContentDiv.innerHTML = '<h1>簡報結束</h1>';
+                slideNumber.textContent = '';
+            } else {
+                slideContentDiv.innerHTML = slides[index];
+                adjustFontSize(slideContentDiv);
+                
+                // 確保所有超連結在新窗口中打開
+                const links = slideContentDiv.querySelectorAll('a');
+                links.forEach(link => {
+                    link.setAttribute('target', '_blank');
+                });
+
+                // 美化標題和副標題，調整背景透明度
+                const headers = slideContentDiv.querySelectorAll('h1, h2, h3, h4');
+                headers.forEach(header => {
+                    if (header.tagName === 'H1') {
+                        header.style.background = 'rgba(255, 255, 255, 0.7)';
+                        header.style.padding = '15px 30px';
+                        header.style.borderRadius = '15px';
+                        header.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+                        header.style.color = '#000000';
+                    } else {
+                        header.style.background = 'rgba(255, 255, 255, 0.6)';
+                        header.style.padding = '10px 20px';
+                        header.style.borderRadius = '10px';
+                        header.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
+                        header.style.color = '#000000';
+                    }
+                });
+                
+                // 美化列表項，調整背景透明度
+                const listItems = slideContentDiv.querySelectorAll('li');
+                listItems.forEach(item => {
+                    item.style.background = 'rgba(255, 255, 255, 0.2)';
+                    item.style.padding = '8px 15px';
+                    item.style.borderRadius = '8px';
+                    item.style.marginBottom = '10px';
+                });
+                
+                // 更新頁碼顯示
+                slideNumber.textContent = `第 ${index + 1} 頁 / 共 ${slides.length} 頁`;
+
+                // 應用注音字型
+                if (useZhuyinFont) {
+                    slideContentDiv.style.fontFamily = "'ㄅ注音芫荽 Regular', sans-serif";
+                } else {
+                    slideContentDiv.style.fontFamily = '';
+                }
+
+                // 如果是第一頁，添加設計者標示
+                if (index === 0) {
+                    const designedBy = document.createElement('div');
+                    designedBy.id = 'designedBy';
+                    designedBy.textContent = 'Designed by 阿剛老師';
+                    // 設計者文字固定為白色
+                    designedBy.style.color = '#ffffff';
+                    slideContentDiv.appendChild(designedBy);
+                }
+            }
+        }
+
+        function adjustFontSize(element) {
+            let fontSize = 3;
+            element.style.fontSize = `${fontSize}em`;
+            
+            // 只有在元素超出容器大小時才縮小字體
+            while ((element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth) && fontSize > 1) {
+                fontSize -= 0.1;
+                element.style.fontSize = `${fontSize}em`;
+            }
+        }
+
+        function transitionSlide(fromIndex, toIndex) {
+            slideContentDiv.style.opacity = '0';
+            setTimeout(() => {
+                showSlide(toIndex);
+                slideContentDiv.style.opacity = '1';
+            }, 300);
+        }
+
+        function enterFullscreen() {
+            if (presentationDiv.requestFullscreen) {
+                presentationDiv.requestFullscreen();
+            } else if (presentationDiv.mozRequestFullScreen) {
+                presentationDiv.mozRequestFullScreen();
+            } else if (presentationDiv.webkitRequestFullscreen) {
+                presentationDiv.webkitRequestFullscreen();
+            } else if (presentationDiv.msRequestFullscreen) {
+                presentationDiv.msRequestFullscreen();
+            }
+        }
+
+        function resetPresentation() {
+            markdownInput.value = '';
+            presentationDiv.style.display = 'none';
+            presentationWrapper.style.display = 'none';
+            themeSelector.style.display = 'none';
+            editorContainer.style.display = 'block';
+            downloadBtn.style.display = 'none';
+            backgroundImage.src = '';
+            backgroundImage.style.display = 'none';
+        }
+
+        function openImageModal() {
+            imageModal.style.display = 'block';
+            imageUrlInput.value = '';
+            imageFileInput.value = '';
+            opacityInput.value = 50;
+            opacityValue.textContent = '50%';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // 成功複製
+            }, function(err) {
+                console.error('無法複製文字: ', err);
+            });
+        }
+
+        const themes = {
+            theme1: {
+                background: 'linear-gradient(135deg, #4cc9f0, #4361ee)'
+            },
+            theme2: {
+                background: 'linear-gradient(135deg, #f72585, #b5179e)'
+            },
+            theme3: {
+                background: 'linear-gradient(135deg, #ffd166, #ff9e00)'
+            },
+            theme4: {
+                background: 'linear-gradient(135deg, #52b788, #2d6a4f)'
+            },
+            theme5: {
+                background: 'linear-gradient(135deg, #c77dff, #7209b7)'
+            },
+            theme6: {
+                background: 'linear-gradient(135deg, #480ca8, #3f37c9)'
+            },
+            theme7: {
+                background: 'linear-gradient(135deg, #fb8500, #ffb703)'
+            }
+        };
+
+        function applyTheme(themeId) {
+            const theme = themes[themeId];
+            currentThemeId = themeId;
+            
+            presentationDiv.style.background = theme.background;
+            // 固定所有簡報文字顏色為黑色
+            slideContentDiv.style.color = '#000000';
+            
+            // 針對標題也調整為黑色
+            const headers = slideContentDiv.querySelectorAll('h1, h2, h3, h4');
+            headers.forEach(header => {
+                header.style.color = '#000000';
+            });
+            
+            // 將右下角頁碼文字設定為白色
+            slideNumber.style.color = '#ffffff';
+            
+            if (document.getElementById('designedBy')) {
+                document.getElementById('designedBy').style.color = '#ffffff';
+            }
+        }
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+
+            // 獲取預覽區的尺寸
+            const presentationWidth = presentationDiv.offsetWidth;
+            const presentationHeight = presentationDiv.offsetHeight;
+
+            // 創建 PDF
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [presentationWidth, presentationHeight]
+            });
+
+            // 隱藏導航按鈕
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            invisibleArea.style.display = 'none';
+
+            try {
+                for (let i = 0; i < slides.length; i++) {
+                    showSlide(i);
+                    await new Promise(resolve => setTimeout(resolve, 300)); // 等待樣式應用
+                    
+                    // 使用 html2canvas 截圖
+                    const canvas = await html2canvas(presentationDiv, {
+                        scale: 2,
+                        backgroundColor: null,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false
+                    });
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.85);
+
+                    if (i > 0) pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, 0, presentationWidth, presentationHeight, undefined, 'FAST');
+                }
+
+                // 提取投影片標題作為檔名
+                let title = '簡報';
+                if (slides.length > 0) {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = slides[0];
+                    const h1 = tempDiv.querySelector('h1');
+                    if (h1) {
+                        title = h1.textContent.trim();
+                    }
+                }
+
+                pdf.save(`${title}.pdf`);
+            } catch (error) {
+                console.error('PDF生成錯誤:', error);
+                alert('PDF生成過程中發生錯誤，請稍後再試。');
+            } finally {
+                // 恢復導航按鈕
+                prevBtn.style.display = 'flex';
+                nextBtn.style.display = 'flex';
+                downloadBtn.style.display = 'flex';
+                invisibleArea.style.display = 'block';
+                
+                // 恢復當前投影片
+                showSlide(currentSlideIndex);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+  "title": "中小學校園常用各式宣導線上簡報分享",
+  "description": "使用我自製的markdown語法轉線上簡報工具預載內容所生成的簡報，\n簡報內容由chatgpt協助生成。",
+  "links": [
+    {
+      "name": "居家安全",
+      "url": "md2pptx.html?data=居家安全.md"
+    },
+    {
+      "name": "反霸凌",
+      "url": "md2pptx.html?data=反霸凌.md"
+    },
+    {
+      "name": "水域安全",
+      "url": "md2pptx.html?data=水域安全.md"
+    },
+    {
+      "name": "性侵害防治教育",
+      "url": "md2pptx.html?data=性侵害防治教育.md"
+    },
+    {
+      "name": "兒童及青少年性剝削防制教育",
+      "url": "md2pptx.html?data=兒童及青少年性剝削防制教育.md"
+    },
+    {
+      "name": "安全教育",
+      "url": "md2pptx.html?data=安全教育.md"
+    },
+    {
+      "name": "性別平等",
+      "url": "md2pptx.html?data=性別平等.md"
+    },
+    {
+      "name": "性教育與愛滋病防治宣導",
+      "url": "md2pptx.html?data=性教育與愛滋病防治宣導.md"
+    },
+    {
+      "name": "煙檳危害宣導",
+      "url": "md2pptx.html?data=煙檳危害宣導.md"
+    },
+    {
+      "name": "兒童權利公約介紹",
+      "url": "md2pptx.html?data=兒童權利公約介紹.md"
+    },
+    {
+      "name": "法治教育",
+      "url": "md2pptx.html?data=法治教育.md"
+    },
+    {
+      "name": "交通安全",
+      "url": "md2pptx.html?data=交通安全.md"
+    },
+    {
+      "name": "人權教育",
+      "url": "md2pptx.html?data=人權教育.md"
+    },
+    {
+      "name": "家庭教育",
+      "url": "md2pptx.html?data=家庭教育.md"
+    },
+    {
+      "name": "家暴防治",
+      "url": "md2pptx.html?data=家暴防治.md"
+    },
+    {
+      "name": "環境教育",
+      "url": "md2pptx.html?data=環境教育.md"
+    },
+    {
+      "name": "新興毒品",
+      "url": "md2pptx.html?data=新興毒品.md"
+    },
+    {
+      "name": "資訊素養",
+      "url": "md2pptx.html?data=資訊素養.md"
+    },
+    {
+      "name": "網路詐騙",
+      "url": "md2pptx.html?data=網路詐騙.md"
+    },
+    {
+      "name": "智慧財產權",
+      "url": "md2pptx.html?data=智慧財產權.md"
+    },
+    {
+      "name": "正向管教",
+      "url": "md2pptx.html?data=正向管教.md"
+    }
+  ],
+  "background": "linear-gradient(to right, #56ccf2, #2f80ed)"
+}
