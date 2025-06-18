@@ -1,0 +1,1020 @@
+https://kentxchang-goedutw.github.io/web/ka-pic/ka01.png
+https://kentxchang-goedutw.github.io/web/ka-pic/ka02.png<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛四子棋</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Chewy&display=swap'); /* 可愛字體 */
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #FFEFBA, #FFFFFF, #C3E6F3); /* 可愛漸變背景 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* 避免滾動條 */
+            color: #333;
+        }
+
+        #game-container {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 2rem; /* 更圓潤 */
+            box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.2); /* 更立體的陰影 */
+            text-align: center;
+            max-width: 90%;
+            width: 700px;
+            box-sizing: border-box;
+            border: 0.5rem solid #FFDDC1; /* 可愛邊框 */
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-family: 'Chewy', cursive; /* 可愛標題字體 */
+            font-size: 3.5rem;
+            color: #FF6B6B; /* 可愛紅色 */
+            margin-bottom: 1.5rem;
+            text-shadow: 0.2rem 0.2rem #FFDDC1; /* 立體效果 */
+        }
+
+        #mode-selection, #difficulty-selection {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .game-button {
+            background-color: #8DCCEE; /* 可愛藍色 */
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 2rem; /* 超級圓 */
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0.4rem #6BBEDF; /* 按鈕陰影 */
+            border: none;
+            outline: none;
+        }
+
+        .game-button:hover {
+            background-color: #6BBEDF;
+            transform: translateY(-0.2rem);
+            box-shadow: 0 0.6rem #519DBE;
+        }
+
+        .game-button:active {
+            transform: translateY(0.2rem);
+            box-shadow: 0 0.2rem #519DBE;
+        }
+
+        .game-button.selected {
+            background-color: #FFB347; /* 選中時的可愛黃色 */
+            box-shadow: 0 0.4rem #FF9933;
+        }
+
+        #difficulty-selection button {
+            background-color: #FFDDAA; /* 淺黃色 */
+            color: #555;
+            box-shadow: 0 0.4rem #E6C28F;
+        }
+
+        #difficulty-selection button:hover {
+            background-color: #FFCC88;
+            box-shadow: 0 0.6rem #D1A973;
+        }
+
+        #difficulty-selection button.selected {
+            background-color: #FF8C00; /* 選中時的橙色 */
+            color: white;
+            box-shadow: 0 0.4rem #CD6600;
+        }
+
+        #start-game-button { /* 新增的開始遊戲按鈕樣式 */
+            margin-top: 1.5rem;
+            background-color: #5cb85c; /* 綠色 */
+            box-shadow: 0 0.4rem #4cae4c;
+        }
+
+        #start-game-button:hover {
+            background-color: #4cae4c;
+            box-shadow: 0 0.6rem #4cae4c;
+        }
+
+
+        #game-board-container {
+            background-color: #4CAF50; /* 可愛綠色板子 */
+            border-radius: 1.5rem;
+            padding: 1rem;
+            display: inline-block;
+            box-shadow: inset 0 0 1rem rgba(0,0,0,0.2), 0 0.8rem 1.5rem rgba(0,0,0,0.2);
+            border: 0.4rem solid #388E3C; /* 深綠色邊框 */
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 0.5rem; /* 洞之間的間距 */
+            background-color: #4CAF50;
+            border-radius: 1rem;
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            background-color: #ADD8E6; /* 空洞的淺藍色 */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(0,0,0,0.1); /* 洞的輕微邊框 */
+        }
+
+        .piece {
+            width: 90%;
+            height: 90%;
+            border-radius: 50%;
+            position: absolute;
+            animation: dropAnimation 0.5s ease-out forwards; /* 下落動畫 */
+            box-shadow: 0 0.3rem 0.5rem rgba(0,0,0,0.3); /* 棋子陰影 */
+            background-position: center; /* 圖片居中 */
+            background-repeat: no-repeat; /* 防止圖片重複 */
+        }
+
+        .piece.player1 {
+            background-color: #FFD700; /* 可愛金色 */
+            background-image: url('https://kentxchang-goedutw.github.io/web/ka-pic/ka01.png'); /* 小雞圖片 */
+            background-size: 30px 30px; /* 圖片縮小50% */
+        }
+
+        .piece.player2 {
+            background-color: #FF69B4; /* 可愛粉色 */
+            background-image: url('https://kentxchang-goedutw.github.io/web/ka-pic/ka02.png'); /* 小豬圖片 */
+            background-size: 30px 30px; /* 圖片縮小50% */
+        }
+
+        @keyframes dropAnimation {
+            0% {
+                transform: translateY(-200%);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        #message {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 1.5rem;
+            color: #4CAF50; /* 訊息顏色 */
+            min-height: 2.5rem; /* 保持空間 */
+            font-family: 'Chewy', cursive;
+        }
+
+        #reset-button {
+            margin-top: 1.5rem;
+            background-color: #FF6B6B; /* 重置按鈕顏色 */
+            box-shadow: 0 0.4rem #CC5555;
+            display: none; /* 初始隱藏 */
+        }
+
+        #reset-button:hover {
+            background-color: #CC5555;
+            box-shadow: 0 0.6rem #A34444;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            #game-container {
+                padding: 1.5rem;
+                border-radius: 1.5rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+            }
+            .game-button {
+                padding: 0.6rem 1.2rem;
+                font-size: 1rem;
+            }
+            .cell {
+                width: 50px;
+                height: 50px;
+            }
+            #message {
+                font-size: 1.4rem;
+                margin-top: 1rem;
+            }
+            #game-board-container {
+                padding: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #game-container {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .game-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .cell {
+                width: 40px;
+                height: 40px;
+            }
+            #message {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* 載入動畫 */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 2rem;
+            font-family: 'Chewy', cursive;
+            color: #FF6B6B;
+            font-size: 2rem;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #FFB347; /* Orange */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 遮罩，防止點擊 */
+        .game-disabled-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.0); /* 透明遮罩 */
+            z-index: 5; /* 在棋盤上方，但在loading-overlay下方 */
+            display: none; /* 預設隱藏 */
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>可愛四子棋</h1>
+
+        <div id="mode-selection">
+            <button id="player-vs-player" class="game-button">雙人對戰</button>
+            <button id="player-vs-computer" class="game-button">對戰電腦</button>
+        </div>
+
+        <div id="difficulty-selection" class="hidden">
+            <button id="easy" class="game-button">簡單</button>
+            <button id="medium" class="game-button">中等</button>
+            <button id="hard" class="game-button">困難</button>
+            <button id="expert" class="game-button">專家</button>
+        </div>
+
+        <button id="start-game-button" class="game-button hidden">開始遊戲</button> <!-- 開始遊戲按鈕 -->
+
+        <div id="game-board-container"> <!-- 棋盤預設顯示 -->
+            <div id="game-board">
+                <!-- 遊戲棋盤將由 JavaScript 生成 -->
+            </div>
+        </div>
+
+        <div id="message">請選擇遊戲模式</div>
+
+        <button id="reset-button" class="game-button hidden">重新開始</button> <!-- 初始隱藏，遊戲開始後顯示 -->
+
+        <div class="game-disabled-overlay" id="game-disabled-overlay"></div>
+    </div>
+
+    <script type="module">
+        // Firebase 相關導入 (為 Firestore 儲存功能預留，本遊戲未直接使用 Firestore)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 全局變數初始化 (如果存在，則從環境中獲取)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        // Firebase 初始化（即使未實際使用 Firestore，也建議初始化以備未來擴展）
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // 處理認證狀態
+            if (initialAuthToken) {
+                signInWithCustomToken(auth, initialAuthToken)
+                    .then((userCredential) => {
+                        userId = userCredential.user.uid;
+                        console.log("Firebase signed in with custom token. User ID:", userId);
+                    })
+                    .catch((error) => {
+                        console.error("Firebase custom token sign-in error:", error);
+                        signInAnonymously(auth)
+                            .then(() => {
+                                userId = auth.currentUser?.uid || crypto.randomUUID();
+                                console.log("Firebase signed in anonymously due to error. User ID:", userId);
+                            })
+                            .catch((anonError) => console.error("Firebase anonymous sign-in error:", anonError));
+                    });
+            } else {
+                signInAnonymously(auth)
+                    .then(() => {
+                        userId = auth.currentUser?.uid || crypto.randomUUID();
+                        console.log("Firebase signed in anonymously. User ID:", userId);
+                    })
+                    .catch((error) => console.error("Firebase anonymous sign-in error:", error));
+            }
+        } else {
+            console.warn("Firebase config not found. Running without Firebase features.");
+            userId = crypto.randomUUID(); // 生成一個隨機 ID 作為未認證用戶的 ID
+        }
+
+        // --- 遊戲邏輯開始 ---
+        const ROWS = 6;
+        const COLS = 7;
+        let board = [];
+        let currentPlayer = 1; // 1 for Player 1 (黃色), 2 for Player 2 / Computer (粉色)
+        let gameActive = false;
+        let gameMode = null; // 'player-vs-player' 或 'player-vs-computer'
+        let computerDifficulty = null; // 'easy', 'medium', 'hard', 'expert'
+
+        const boardElement = document.getElementById('game-board');
+        const messageElement = document.getElementById('message');
+        const resetButton = document.getElementById('reset-button');
+        const modeSelection = document.getElementById('mode-selection');
+        const difficultySelection = document.getElementById('difficulty-selection');
+        const gameBoardContainer = document.getElementById('game-board-container');
+        const gameContainer = document.getElementById('game-container');
+        const gameDisabledOverlay = document.getElementById('game-disabled-overlay');
+        const startGameButton = document.getElementById('start-game-button'); // 獲取開始遊戲按鈕
+
+        // 事件監聽器
+        document.getElementById('player-vs-player').addEventListener('click', () => selectMode('player-vs-player'));
+        document.getElementById('player-vs-computer').addEventListener('click', () => selectMode('player-vs-computer'));
+        document.getElementById('easy').addEventListener('click', () => selectDifficulty('easy'));
+        document.getElementById('medium').addEventListener('click', () => selectDifficulty('medium'));
+        document.getElementById('hard').addEventListener('click', () => selectDifficulty('hard'));
+        document.getElementById('expert').addEventListener('click', () => selectDifficulty('expert'));
+        resetButton.addEventListener('click', resetGame);
+        startGameButton.addEventListener('click', startGame); // 為開始遊戲按鈕添加事件監聽器
+
+        // 初始化遊戲板
+        function initializeBoard() {
+            board = Array(ROWS).fill(null).map(() => Array(COLS).fill(0)); // 0:空, 1:玩家1, 2:玩家2/電腦
+            boardElement.innerHTML = ''; // 清空舊的板子
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', () => handleCellClick(c));
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        // 選擇遊戲模式
+        function selectMode(mode) {
+            gameMode = mode;
+            // 移除所有模式按鈕的 selected 類別，然後為當前選擇的按鈕添加
+            modeSelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById(mode).classList.add('selected');
+
+            if (mode === 'player-vs-computer') {
+                difficultySelection.classList.remove('hidden'); // 顯示難度選擇
+                messageElement.textContent = '請選擇電腦難度，然後點擊「開始遊戲」';
+                startGameButton.classList.add('hidden'); // 在選擇難度前先隱藏開始按鈕
+            } else {
+                difficultySelection.classList.add('hidden'); // 隱藏難度選擇
+                messageElement.textContent = '點擊「開始遊戲」即可雙人對戰';
+            }
+            startGameButton.classList.remove('hidden'); // 顯示開始遊戲按鈕
+            // 棋盤本身已經是可見的，這裡不再需要 gameBoardContainer.classList.add('hidden');
+            resetButton.style.display = 'none'; // 隱藏重置按鈕
+            // 重置難度選擇的狀態，確保下次選電腦時沒有預選的難度
+            difficultySelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
+            computerDifficulty = null;
+        }
+
+        // 選擇電腦難度
+        function selectDifficulty(difficulty) {
+            computerDifficulty = difficulty;
+            // 移除所有難度按鈕的 selected 類別，然後為當前選擇的按鈕添加
+            difficultySelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById(difficulty).classList.add('selected');
+            messageElement.textContent = `已選擇 ${difficulty} 難度，點擊「開始遊戲」`;
+            startGameButton.classList.remove('hidden'); // 確保開始遊戲按鈕是可見的
+        }
+
+        // 開始遊戲
+        function startGame() {
+            if (!gameMode) {
+                messageElement.textContent = '請先選擇遊戲模式！';
+                return;
+            }
+            if (gameMode === 'player-vs-computer' && !computerDifficulty) {
+                messageElement.textContent = '請先選擇電腦難度！';
+                return;
+            }
+
+            initializeBoard();
+            currentPlayer = 1;
+            gameActive = true;
+            messageElement.textContent = '玩家1 (小雞) 回合'; // 更新訊息顯示棋子名稱
+            resetButton.style.display = 'block';
+            modeSelection.classList.add('hidden');
+            difficultySelection.classList.add('hidden');
+            startGameButton.classList.add('hidden'); // 開始遊戲後隱藏開始按鈕
+            // 棋盤本身已經可見，無需操作 gameBoardContainer.classList.remove('hidden');
+
+            if (gameMode === 'player-vs-computer' && currentPlayer === 2) { // 如果電腦先手 (未來可以擴展)
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        // 處理點擊 (下棋)
+        function handleCellClick(col) {
+            if (!gameActive) return;
+            if (gameMode === 'player-vs-computer' && currentPlayer === 2) return; // 電腦回合不允許玩家點擊
+
+            dropPiece(col);
+        }
+
+        // 放置棋子
+        function dropPiece(col) {
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === 0) {
+                    board[r][col] = currentPlayer;
+                    renderPiece(r, col, currentPlayer);
+
+                    if (checkWin(r, col, currentPlayer)) {
+                        messageElement.textContent = `玩家 ${currentPlayer} 獲勝！`;
+                        gameActive = false;
+                        resetButton.style.display = 'block';
+                        showEndGameMessage(`玩家 ${currentPlayer} 獲勝！`);
+                    } else if (checkDraw()) {
+                        messageElement.textContent = '平手！';
+                        gameActive = false;
+                        resetButton.style.display = 'block';
+                        showEndGameMessage('平手！');
+                    } else {
+                        currentPlayer = (currentPlayer === 1) ? 2 : 1;
+                        messageElement.textContent = `玩家 ${currentPlayer} (${(currentPlayer === 1 ? '小雞' : '小豬')}) 回合`; // 更新訊息顯示棋子名稱
+
+                        if (gameMode === 'player-vs-computer' && currentPlayer === 2) {
+                            gameDisabledOverlay.style.display = 'block'; // 禁用點擊
+                            messageElement.textContent = '電腦正在思考...';
+                            setTimeout(() => {
+                                computerMove();
+                                gameDisabledOverlay.style.display = 'none'; // 啟用點擊
+                            }, 1000 + Math.random() * 500); // 模擬思考時間
+                        }
+                    }
+                    return;
+                }
+            }
+            messageElement.textContent = '該列已滿，請選擇其他列！';
+        }
+
+        // 渲染棋子到 DOM
+        function renderPiece(row, col, player) {
+            const cell = boardElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (cell) {
+                const piece = document.createElement('div');
+                piece.classList.add('piece', `player${player}`);
+                cell.appendChild(piece);
+            }
+        }
+
+        // 檢查勝利條件
+        function checkWin(row, col, player) {
+            // 檢查水平
+            for (let c = 0; c <= COLS - 4; c++) {
+                if (board[row][c] === player &&
+                    board[row][c+1] === player &&
+                    board[row][c+2] === player &&
+                    board[row][c+3] === player) {
+                    return true;
+                }
+            }
+
+            // 檢查垂直
+            for (let r = 0; r <= ROWS - 4; r++) {
+                if (board[r][col] === player &&
+                    board[r+1][col] === player &&
+                    board[r+2][col] === player &&
+                    board[r+3][col] === player) {
+                    return true;
+                }
+            }
+
+            // 檢查正斜線 (從左上到右下)
+            for (let r = 0; r <= ROWS - 4; r++) {
+                for (let c = 0; c <= COLS - 4; c++) {
+                    if (board[r][c] === player &&
+                        board[r+1][c+1] === player &&
+                        board[r+2][c+2] === player &&
+                        board[r+3][c+3] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            // 檢查反斜線 (從右上到左下)
+            for (let r = 0; r <= ROWS - 4; r++) {
+                for (let c = 3; c < COLS; c++) {
+                    if (board[r][c] === player &&
+                        board[r+1][c-1] === player &&
+                        board[r+2][c-2] === player &&
+                        board[r+3][c-3] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // 檢查平手
+        function checkDraw() {
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c] === 0) {
+                        return false; // 還有空位，不是平手
+                    }
+                }
+            }
+            return true; // 所有位置都填滿且沒有勝利者
+        }
+
+        // 電腦 AI 邏輯
+        async function computerMove() {
+            let colToPlay = -1;
+            const validMoves = getValidMoves();
+
+            if (validMoves.length === 0) {
+                console.log("No valid moves for computer.");
+                return;
+            }
+
+            switch (computerDifficulty) {
+                case 'easy':
+                    colToPlay = getRandomMove(validMoves);
+                    break;
+                case 'medium':
+                    colToPlay = getMediumMove(validMoves);
+                    break;
+                case 'hard':
+                    colToPlay = getHardMove(validMoves);
+                    break;
+                case 'expert':
+                    colToPlay = getExpertMove(validMoves);
+                    break;
+                default:
+                    colToPlay = getRandomMove(validMoves);
+            }
+
+            // 確保選擇的列是有效的
+            if (colToPlay === -1 || !validMoves.includes(colToPlay)) {
+                console.warn(`AI chose an invalid or default move (${colToPlay}), falling back to random.`);
+                colToPlay = getRandomMove(validMoves);
+            }
+
+            dropPiece(colToPlay);
+        }
+
+        // 獲取所有有效移動 (非滿的列)
+        function getValidMoves() {
+            const moves = [];
+            for (let c = 0; c < COLS; c++) {
+                if (board[0][c] === 0) { // 如果最頂層的格子是空的，說明該列還有空間
+                    moves.push(c);
+                }
+            }
+            return moves;
+        }
+
+        // AI 難度：簡單 (隨機)
+        function getRandomMove(validMoves) {
+            return validMoves[Math.floor(Math.random() * validMoves.length)];
+        }
+
+        // AI 難度：中等 (優先阻止對手獲勝，否則隨機)
+        function getMediumMove(validMoves) {
+            const computerPlayer = 2;
+            const humanPlayer = 1;
+
+            // 1. 檢查電腦是否能立即獲勝
+            for (const col of validMoves) {
+                const nextBoard = simulateDrop(board, col, computerPlayer);
+                if (checkWinOnBoard(nextBoard, computerPlayer)) {
+                    return col;
+                }
+            }
+
+            // 2. 檢查人類玩家是否能立即獲勝，並阻止
+            for (const col of validMoves) {
+                const nextBoard = simulateDrop(board, col, humanPlayer); // Simulate human move
+                if (checkWinOnBoard(nextBoard, humanPlayer)) {
+                    return col; // 阻止人類玩家獲勝
+                }
+            }
+
+            // 3. 否則隨機選擇
+            return getRandomMove(validMoves);
+        }
+
+        // AI 難度：困難 (考慮自己勝利和阻止對手勝利，並嘗試創建3連)
+        function getHardMove(validMoves) {
+            const computerPlayer = 2;
+            const humanPlayer = 1;
+
+            // 1. 檢查電腦是否能立即獲勝 (4連)
+            for (const col of validMoves) {
+                const simulatedBoard = simulateDrop(board, col, computerPlayer);
+                if (checkWinOnBoard(simulatedBoard, computerPlayer)) {
+                    console.log(`Hard AI: Found winning move at column ${col}`);
+                    return col;
+                }
+            }
+
+            // 2. 檢查人類玩家是否能立即獲勝 (4連)，並阻止
+            for (const col of validMoves) {
+                const simulatedBoard = simulateDrop(board, col, humanPlayer);
+                if (checkWinOnBoard(simulatedBoard, humanPlayer)) {
+                    console.log(`Hard AI: Blocking human winning move at column ${col}`);
+                    return col;
+                }
+            }
+
+            // 3. 嘗試創建或阻止 3 連，並優先考慮中心列
+            let bestScore = -Infinity;
+            let bestCol = -1;
+
+            for (const col of validMoves) {
+                const tempBoard = JSON.parse(JSON.stringify(board)); // 深拷貝棋盤
+                let r = -1; // row where piece drops
+                for (let row = ROWS - 1; row >= 0; row--) {
+                    if (tempBoard[row][col] === 0) {
+                        tempBoard[row][col] = computerPlayer;
+                        r = row;
+                        break;
+                    }
+                }
+
+                if (r === -1) continue; // 列已滿 (不應該發生，因為我們從 validMoves 過濾了)
+
+                let score = 0;
+
+                // 優先考慮中心列
+                score += (Math.abs(COLS / 2 - col) < 1 ? 5 : 0); // 中心列得分更高
+
+                // 檢查自己是否能形成 3 連 (潛在的 4 連)
+                score += evaluateBoardForPlayer(tempBoard, computerPlayer) * 10;
+                // 檢查是否阻止對手形成 3 連
+                score += evaluateBoardForPlayer(tempBoard, humanPlayer) * -5; // 阻止對手得分，負向評分
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestCol = col;
+                }
+            }
+
+            // 如果 bestCol 仍為 -1 (例如，沒有有效移動或所有移動得分都為負)，則隨機移動
+            return bestCol !== -1 ? bestCol : getRandomMove(validMoves);
+        }
+
+        // AI 難度：專家 (Minimax 演算法，有限搜尋深度)
+        function getExpertMove(validMoves) {
+            const computerPlayer = 2;
+            const humanPlayer = 1;
+            const searchDepth = 4; // 專家模式的搜尋深度，可以調整
+
+            let bestMove = -1;
+            let maxScore = -Infinity;
+
+            const loadingOverlay = createLoadingOverlay("電腦正在超負荷運轉！(演算法驅動)");
+            gameContainer.appendChild(loadingOverlay);
+
+            for (const col of validMoves) {
+                const simulatedBoard = simulateDrop(board, col, computerPlayer);
+                
+                // 使用 Negamax 演算法，這裡我們將其應用於當前玩家的視角
+                // 負號是因為我們想要最小化對手（也就是現在的-computerPlayer）的得分
+                const score = -minimax(simulatedBoard, searchDepth - 1, -Infinity, Infinity, humanPlayer);
+
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestMove = col;
+                }
+            }
+
+            loadingOverlay.remove(); // 移除載入動畫
+            return bestMove !== -1 ? bestMove : getRandomMove(validMoves);
+        }
+
+        // Minimax 演算法 (簡化為 Negamax 形式)
+        function minimax(currentBoard, depth, alpha, beta, player) {
+            const validMoves = getValidMovesForBoard(currentBoard);
+            const opponent = player === 1 ? 2 : 1;
+
+            if (depth === 0 || checkWinOnBoard(currentBoard, 1) || checkWinOnBoard(currentBoard, 2) || validMoves.length === 0) {
+                // 達到搜尋深度限制或遊戲結束
+                // 評估棋盤狀態
+                if (checkWinOnBoard(currentBoard, player)) {
+                    return 10000 + depth; // 當前玩家獲勝，得分高 (加上深度獎勵，早贏更好)
+                } else if (checkWinOnBoard(currentBoard, opponent)) {
+                    return -10000 - depth; // 對手獲勝，得分低 (減去深度懲罰，晚輸更差)
+                } else if (validMoves.length === 0) {
+                    return 0; // 平手
+                } else {
+                    return evaluateBoardForPlayer(currentBoard, player);
+                }
+            }
+
+            let maxEval = -Infinity;
+            for (const col of validMoves) {
+                const newBoard = simulateDrop(currentBoard, col, player);
+                const evaluation = -minimax(newBoard, depth - 1, -beta, -alpha, opponent); // 遞歸調用，切換玩家
+
+                maxEval = Math.max(maxEval, evaluation);
+                alpha = Math.max(alpha, evaluation);
+                if (beta <= alpha) {
+                    break; // Alpha-Beta 剪枝
+                }
+            }
+            return maxEval;
+        }
+
+        // 輔助函數：模擬放置棋子
+        function simulateDrop(currentBoard, col, player) {
+            const newBoard = JSON.parse(JSON.stringify(currentBoard)); // 深拷貝
+            for (let r = ROWS - 1; r >= 0; r--) {
+                if (newBoard[r][col] === 0) {
+                    newBoard[r][col] = player;
+                    break;
+                }
+            }
+            return newBoard;
+        }
+
+        // 輔助函數：在給定棋盤上檢查特定玩家是否獲勝
+        function checkWinOnBoard(boardToCheck, player) {
+            // 檢查水平
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c <= COLS - 4; c++) {
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r][c+1] === player &&
+                        boardToCheck[r][c+2] === player &&
+                        boardToCheck[r][c+3] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            // 檢查垂直
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r <= ROWS - 4; r++) {
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r+1][c] === player &&
+                        boardToCheck[r+2][c] === player &&
+                        boardToCheck[r+3][c] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            // 檢查正斜線 (從左上到右下)
+            for (let r = 0; r <= ROWS - 4; r++) {
+                for (let c = 0; c <= COLS - 4; c++) {
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r+1][c+1] === player &&
+                        boardToCheck[r+2][c+2] === player &&
+                        boardToCheck[r+3][c+3] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            // 檢查反斜線 (從右上到左下)
+            for (let r = 0; r <= ROWS - 4; r++) {
+                for (let c = 3; c < COLS; c++) {
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r+1][c-1] === player &&
+                        boardToCheck[r+2][c-2] === player &&
+                        boardToCheck[r+3][c-3] === player) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // 輔助函數：獲取給定棋盤的所有有效移動
+        function getValidMovesForBoard(boardToCheck) {
+            const moves = [];
+            for (let c = 0; c < COLS; c++) {
+                if (boardToCheck[0][c] === 0) {
+                    moves.push(c);
+                }
+            }
+            return moves;
+        }
+
+        // 評估棋盤上某個玩家的潛在得分 (用於 AI)
+        function evaluateBoardForPlayer(boardToEvaluate, player) {
+            let score = 0;
+            const opponent = player === 1 ? 2 : 1;
+
+            // 優先中心列
+            for (let r = 0; r < ROWS; r++) {
+                if (boardToEvaluate[r][Math.floor(COLS / 2)] === player) {
+                    score += 3;
+                }
+            }
+
+            // 評估所有可能的 4 個連續的窗口 (水平, 垂直, 對角線)
+            // 水平
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c <= COLS - 4; c++) {
+                    const window = [boardToEvaluate[r][c], boardToEvaluate[r][c+1], boardToEvaluate[r][c+2], boardToEvaluate[r][c+3]];
+                    score += evaluateWindow(window, player, opponent);
+                }
+            }
+
+            // 垂直
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r <= ROWS - 4; r++) {
+                    const window = [boardToEvaluate[r][c], boardToEvaluate[r+1][c], boardToEvaluate[r+2][c], boardToEvaluate[r+3][c]];
+                    score += evaluateWindow(window, player, opponent);
+                }
+            }
+
+            // 正斜線 (從左上到右下)
+            for (let r = 0; r <= ROWS - 4; r++) {
+                for (let c = 0; c <= COLS - 4; c++) {
+                    const window = [boardToEvaluate[r][c], boardToEvaluate[r+1][c+1], boardToEvaluate[r+2][c+2], boardToEvaluate[r+3][c+3]];
+                    score += evaluateWindow(window, player, opponent);
+                }
+            }
+
+            // 反斜線 (從右上到左下)
+            for (let r = 0; r <= ROWS - 4; r++) {
+                for (let c = 3; c < COLS; c++) {
+                    const window = [boardToEvaluate[r][c], boardToEvaluate[r+1][c-1], boardToEvaluate[r+2][c-2], boardToEvaluate[r+3][c-3]];
+                    score += evaluateWindow(window, player, opponent);
+                }
+            }
+            return score;
+        }
+
+        // 評估一個 4 個單位的窗口
+        function evaluateWindow(window, player, opponent) {
+            let score = 0;
+            const playerCount = window.filter(p => p === player).length;
+            const emptyCount = window.filter(p => p === 0).length;
+            const opponentCount = window.filter(p => p === opponent).length;
+
+            if (playerCount === 4) {
+                score += 10000; // 勝利
+            } else if (playerCount === 3 && emptyCount === 1) {
+                score += 50; // 潛在的 3 連
+            } else if (playerCount === 2 && emptyCount === 2) {
+                score += 10; // 潛在的 2 連
+            }
+
+            if (opponentCount === 3 && emptyCount === 1) {
+                score -= 40; // 阻止對手的 3 連 (這是負分，因為我們想避免它)
+            }
+            // 更複雜的 AI 可能會加入對對手雙重威脅的考慮
+
+            return score;
+        }
+
+
+        // 重置遊戲
+        function resetGame() {
+            gameActive = false;
+            gameMode = null;
+            computerDifficulty = null;
+            boardElement.innerHTML = ''; // 清空棋盤棋子
+            initializeBoard(); // 重新繪製空棋盤
+            messageElement.textContent = '請選擇遊戲模式';
+            resetButton.style.display = 'none';
+            modeSelection.classList.remove('hidden'); // 顯示模式選擇
+            difficultySelection.classList.add('hidden'); // 隱藏難度選擇
+            startGameButton.classList.add('hidden'); // 隱藏開始遊戲按鈕
+            // 棋盤本身已經是可見的，這裡不再需要 gameBoardContainer.classList.add('hidden');
+            modeSelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
+            difficultySelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
+        }
+
+        // 顯示遊戲結束訊息 (可愛的訊息框)
+        function showEndGameMessage(msg) {
+            const existingOverlay = document.getElementById('end-game-message-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'end-game-message-overlay';
+            overlay.classList.add('loading-overlay'); // 重用 loading-overlay 的樣式
+            overlay.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            overlay.style.zIndex = '11';
+
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('message-box', 'bg-white', 'p-8', 'rounded-2xl', 'shadow-xl', 'text-center', 'font-chewy', 'text-2xl', 'text-pink-500', 'border-4', 'border-yellow-300', 'transform', 'scale-0', 'transition-transform', 'duration-300', 'ease-out');
+            messageBox.style.fontFamily = "'Chewy', cursive"; // 直接應用字體
+            messageBox.style.fontSize = '2.5rem'; // 更大字體
+            messageBox.style.color = '#FF69B4'; // 粉色
+            messageBox.style.boxShadow = '0 0.5rem 1rem rgba(0,0,0,0.2)';
+
+            messageBox.innerHTML = `
+                <p class="mb-6">${msg}</p>
+                <button id="close-message" class="game-button bg-green-500 hover:bg-green-600 shadow-lg" style="background-color: #8DCCEE; box-shadow: 0 0.4rem #6BBEDF; margin-top: 1rem;">好的！</button>
+            `;
+            overlay.appendChild(messageBox);
+            gameContainer.appendChild(overlay);
+
+            // 觸發縮放動畫
+            setTimeout(() => {
+                messageBox.style.transform = 'scale(1)';
+            }, 50);
+
+            document.getElementById('close-message').addEventListener('click', () => {
+                overlay.remove();
+            });
+        }
+
+
+        // 載入動畫
+        function createLoadingOverlay(text) {
+            const overlay = document.createElement('div');
+            overlay.classList.add('loading-overlay');
+            overlay.innerHTML = `
+                <div class="spinner"></div>
+                <p>${text}</p>
+            `;
+            return overlay;
+        }
+
+        // 確保在頁面完全載入後才執行遊戲初始化
+        window.onload = function() {
+            // 初始狀態：顯示模式選擇，隱藏其他所有遊戲元素
+            initializeBoard(); // 立即初始化並顯示棋盤
+            modeSelection.classList.remove('hidden');
+            difficultySelection.classList.add('hidden');
+            startGameButton.classList.add('hidden');
+            // gameBoardContainer 預設就可見，無需操作
+            resetButton.style.display = 'none';
+            messageElement.textContent = '請選擇遊戲模式';
+        };
+
+    </script>
+</body>
+</html>
