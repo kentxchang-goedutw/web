@@ -43,7 +43,7 @@
             text-shadow: 0.2rem 0.2rem #FFDDC1; /* 立體效果 */
         }
 
-        #mode-selection, #difficulty-selection {
+        #mode-selection {
             margin-bottom: 1.5rem;
             display: flex;
             justify-content: center;
@@ -81,42 +81,57 @@
             box-shadow: 0 0.4rem #FF9933;
         }
 
-        #difficulty-selection button {
+        /* 新增的可愛選單樣式 */
+        .cute-select {
             background-color: #FFDDAA; /* 淺黃色 */
             color: #555;
+            padding: 0.8rem 1.8rem;
+            border-radius: 2rem; /* 超級圓 */
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
             box-shadow: 0 0.4rem #E6C28F;
+            border: none;
+            outline: none;
+            appearance: none; /* 移除瀏覽器預設樣式 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            /* 自訂下拉箭頭圖示 */
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23555555" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            min-width: 150px; /* 確保選單足夠寬 */
         }
 
-        #difficulty-selection button:hover {
+        .cute-select:hover {
             background-color: #FFCC88;
             box-shadow: 0 0.6rem #D1A973;
         }
 
-        #difficulty-selection button.selected {
-            background-color: #FF8C00; /* 選中時的橙色 */
-            color: white;
-            box-shadow: 0 0.4rem #CD6600;
+        #difficulty-select-container { /* 選單的容器 */
+            margin-bottom: 1.5rem;
         }
 
-        #start-game-button { /* 新增的開始遊戲按鈕樣式 */
-            margin-top: 1.5rem;
-            background-color: #5cb85c; /* 綠色 */
-            box-shadow: 0 0.4rem #4cae4c;
+        /* 開始遊戲按鈕的紅色樣式 */
+        #start-game-button.red-button {
+            background-color: #FF6B6B; /* 可愛紅色 */
+            box-shadow: 0 0.4rem #CC5555;
+            margin-top: 1.5rem; /* 與上方元素的間距 */
         }
 
-        #start-game-button:hover {
-            background-color: #4cae4c;
-            box-shadow: 0 0.6rem #4cae4c;
+        #start-game-button.red-button:hover {
+            background-color: #CC5555;
+            box-shadow: 0 0.6rem #A34444;
         }
 
 
         #game-board-container {
-            background-color: #4CAF50; /* 可愛綠色板子 */
+            /* background-color 和 border 將由 JavaScript 設定 */
             border-radius: 1.5rem;
             padding: 1rem;
             display: inline-block;
             box-shadow: inset 0 0 1rem rgba(0,0,0,0.2), 0 0.8rem 1.5rem rgba(0,0,0,0.2);
-            border: 0.4rem solid #388E3C; /* 深綠色邊框 */
         }
 
         #game-board {
@@ -124,14 +139,14 @@
             grid-template-columns: repeat(7, 1fr);
             grid-template-rows: repeat(6, 1fr);
             gap: 0.5rem; /* 洞之間的間距 */
-            background-color: #4CAF50;
+            /* background-color 將由 JavaScript 設定 */
             border-radius: 1rem;
         }
 
         .cell {
             width: 70px;
             height: 70px;
-            background-color: #ADD8E6; /* 空洞的淺藍色 */
+            background-color: #ADD8E6; /* 固定為淺藍色 */
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -164,6 +179,13 @@
             background-size: 30px 30px; /* 圖片縮小50% */
         }
 
+        /* 獲勝連線的強調樣式 */
+        .piece.highlight-win {
+            box-shadow: 0 0 15px 5px rgba(0, 0, 139, 0.8), 0 0 5px 2px rgba(0, 0, 139, 0.5); /* 深藍色光暈 */
+            border: 3px solid #00008B; /* 深藍色邊框 */
+            animation: pulseGlow 1s infinite alternate; /* 脈衝動畫 */
+        }
+
         @keyframes dropAnimation {
             0% {
                 transform: translateY(-200%);
@@ -175,25 +197,27 @@
             }
         }
 
-        #message {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-top: 1.5rem;
-            color: #4CAF50; /* 訊息顏色 */
-            min-height: 2.5rem; /* 保持空間 */
-            font-family: 'Chewy', cursive;
+        @keyframes pulseGlow {
+            from {
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 10px 3px rgba(0, 0, 139, 0.6); /* 深藍色光暈 */
+            }
+            to {
+                transform: scale(1.05);
+                opacity: 0.9;
+                box-shadow: 0 0 20px 8px rgba(0, 0, 139, 1), 0 0 10px 4px rgba(0, 0, 139, 0.8); /* 更強烈的深藍色光暈 */
+            }
         }
 
-        #reset-button {
-            margin-top: 1.5rem;
-            background-color: #FF6B6B; /* 重置按鈕顏色 */
-            box-shadow: 0 0.4rem #CC5555;
-            display: none; /* 初始隱藏 */
-        }
-
-        #reset-button:hover {
-            background-color: #CC5555;
-            box-shadow: 0 0.6rem #A34444;
+        /* 原本的 #message 現在改為 #game-message，用於錯誤/提示 */
+        #game-message {
+            font-size: 1.2rem;
+            font-weight: normal;
+            margin-top: 1rem; /* Adjusted margin */
+            color: #CC5555; /* Use a warning/error color */
+            min-height: 1.5rem;
+            font-family: 'Inter', sans-serif;
         }
 
         /* 響應式設計 */
@@ -206,7 +230,7 @@
                 font-size: 2.5rem;
                 margin-bottom: 1rem;
             }
-            .game-button {
+            .game-button, .cute-select {
                 padding: 0.6rem 1.2rem;
                 font-size: 1rem;
             }
@@ -214,12 +238,16 @@
                 width: 50px;
                 height: 50px;
             }
-            #message {
-                font-size: 1.4rem;
-                margin-top: 1rem;
+            #game-message { /* 響應式調整 */
+                font-size: 1.2rem;
+                margin-top: 0.5rem;
             }
             #game-board-container {
                 padding: 0.8rem;
+            }
+            .cute-select {
+                background-position: right 0.5rem center; /* 調整箭頭位置 */
+                min-width: 120px;
             }
         }
 
@@ -231,7 +259,7 @@
             h1 {
                 font-size: 2rem;
             }
-            .game-button {
+            .game-button, .cute-select {
                 padding: 0.5rem 1rem;
                 font-size: 0.9rem;
             }
@@ -239,8 +267,11 @@
                 width: 40px;
                 height: 40px;
             }
-            #message {
-                font-size: 1.2rem;
+            #game-message { /* 響應式調整 */
+                font-size: 1rem;
+            }
+            .cute-select {
+                min-width: 100px;
             }
         }
 
@@ -288,35 +319,99 @@
             z-index: 5; /* 在棋盤上方，但在loading-overlay下方 */
             display: none; /* 預設隱藏 */
         }
+
+        /* 新增的遊戲設定疊層 */
+        #game-setup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9); /* 半透明白色 */
+            z-index: 9; /* 在棋盤上方，但在載入/結束遊戲訊息下方 */
+            display: flex; /* 預設顯示為 flex */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 2rem; /* 符合容器圓角 */
+            text-align: center;
+            transition: opacity 0.5s ease-out; /* 新增淡出效果 */
+        }
+        #game-setup-overlay.hidden {
+            opacity: 0;
+            pointer-events: none; /* 隱藏時禁用點擊事件 */
+        }
+
+
+        /* 新增的回合提示窗格 (同時也作為重新開始按鈕的容器) */
+        #turn-hint-pane {
+            font-family: 'Chewy', cursive;
+            font-size: 2.2rem; /* 稍微大一點 */
+            color: #FF6B6B; /* 鮮豔的顏色 */
+            margin-bottom: 1.5rem; /* 與棋盤間距 */
+            text-shadow: 0.1rem 0.1rem #FFDDC1;
+            min-height: 3rem; /* 確保足夠空間 */
+            display: flex; /* 用於內容居中 */
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 7; /* 在遊戲板容器上方 */
+            background-color: rgba(255, 255, 255, 0.7); /* 輕微透明背景 */
+            border-radius: 1rem;
+            padding: 0.5rem 1.5rem;
+            box-shadow: 0 0.2rem 0.5rem rgba(0,0,0,0.1);
+            transition: opacity 0.3s ease; /* 平滑過渡 */
+        }
+        /* 當turn-hint-pane作為按鈕時的樣式 */
+        #turn-hint-pane.game-button {
+            background-color: #8DCCEE; /* 可愛的藍色按鈕背景 */
+            color: white;
+            box-shadow: 0 0.4rem #6BBEDF;
+            cursor: pointer;
+        }
+        #turn-hint-pane.game-button:hover {
+            background-color: #6BBEDF;
+            transform: translateY(-0.2rem);
+            box-shadow: 0 0.6rem #519DBE;
+        }
+        #turn-hint-pane.game-button:active {
+            transform: translateY(0.2rem);
+            box-shadow: 0 0.2rem #519DBE;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>可愛四子棋</h1>
 
-        <div id="mode-selection">
-            <button id="player-vs-player" class="game-button">雙人對戰</button>
-            <button id="player-vs-computer" class="game-button">對戰電腦</button>
+        <div id="game-setup-overlay"> <!-- 初始設定疊層 -->
+            <div id="mode-selection">
+                <button id="player-vs-player" class="game-button">雙人對戰</button>
+                <button id="player-vs-computer" class="game-button">對戰電腦</button>
+            </div>
+
+            <div id="difficulty-select-container" class="hidden"> <!-- 難度選單容器 -->
+                <select id="difficulty-select" class="cute-select">
+                    <option value="">選擇難度</option>
+                    <option value="easy">簡單</option>
+                    <option value="medium">中等</option>
+                    <option value="hard">困難</option>
+                    <option value="expert">專家</option>
+                </select>
+            </div>
+
+            <button id="start-game-button" class="game-button red-button hidden">開始遊戲</button>
         </div>
 
-        <div id="difficulty-selection" class="hidden">
-            <button id="easy" class="game-button">簡單</button>
-            <button id="medium" class="game-button">中等</button>
-            <button id="hard" class="game-button">困難</button>
-            <button id="expert" class="game-button">專家</button>
-        </div>
+        <div id="turn-hint-pane" class="hidden"></div> <!-- 回合提示窗格 (同時也作為重新開始按鈕的容器) -->
 
-        <button id="start-game-button" class="game-button hidden">開始遊戲</button> <!-- 開始遊戲按鈕 -->
-
-        <div id="game-board-container"> <!-- 棋盤預設顯示 -->
+        <div id="game-board-container" class="hidden"> <!-- 棋盤預設隱藏 -->
             <div id="game-board">
                 <!-- 遊戲棋盤將由 JavaScript 生成 -->
             </div>
         </div>
 
-        <div id="message">請選擇遊戲模式</div>
-
-        <button id="reset-button" class="game-button hidden">重新開始</button> <!-- 初始隱藏，遊戲開始後顯示 -->
+        <div id="game-message">請選擇遊戲模式</div> <!-- 一般遊戲訊息 -->
 
         <div class="game-disabled-overlay" id="game-disabled-overlay"></div>
     </div>
@@ -382,24 +477,34 @@
         let computerDifficulty = null; // 'easy', 'medium', 'hard', 'expert'
 
         const boardElement = document.getElementById('game-board');
-        const messageElement = document.getElementById('message');
-        const resetButton = document.getElementById('reset-button');
+        const gameMessageElement = document.getElementById('game-message'); // 用於一般訊息或錯誤提示
+        const turnHintPaneElement = document.getElementById('turn-hint-pane'); // 回合提示窗格
         const modeSelection = document.getElementById('mode-selection');
-        const difficultySelection = document.getElementById('difficulty-selection');
+        const difficultySelectContainer = document.getElementById('difficulty-select-container'); // 難度選單容器
+        const difficultySelect = document.getElementById('difficulty-select'); // 難度選單本身
         const gameBoardContainer = document.getElementById('game-board-container');
         const gameContainer = document.getElementById('game-container');
         const gameDisabledOverlay = document.getElementById('game-disabled-overlay');
-        const startGameButton = document.getElementById('start-game-button'); // 獲取開始遊戲按鈕
+        const startGameButton = document.getElementById('start-game-button');
+        const gameSetupOverlay = document.getElementById('game-setup-overlay'); // 初始設定疊層
+
+        // 定義棋盤顏色調色板 (避免棋子顏色黃色 #FFD700 和粉色 #FF69B4)
+        const BOARD_COLOR_PALETTES = [
+            { boardBg: '#4682B4', boardBorder: '#36698C' }, // Steel Blue
+            { boardBg: '#3CB371', boardBorder: '#2E8B57' }, // Medium Sea Green
+            { boardBg: '#8A2BE2', boardBorder: '#6A1EA0' }, // Blue Violet
+            { boardBg: '#008080', boardBorder: '#006666' }, // Teal
+            { boardBg: '#696969', boardBorder: '#4D4D4D' }, // Dim Gray
+            { boardBg: '#20B2AA', boardBorder: '#1A8F87' }, // Light Sea Green
+            { boardBg: '#A52A2A', boardBorder: '#8B2323' }  // Brown
+        ];
+        const CELL_COLOR = '#ADD8E6'; // 固定的洞的顏色
 
         // 事件監聽器
         document.getElementById('player-vs-player').addEventListener('click', () => selectMode('player-vs-player'));
         document.getElementById('player-vs-computer').addEventListener('click', () => selectMode('player-vs-computer'));
-        document.getElementById('easy').addEventListener('click', () => selectDifficulty('easy'));
-        document.getElementById('medium').addEventListener('click', () => selectDifficulty('medium'));
-        document.getElementById('hard').addEventListener('click', () => selectDifficulty('hard'));
-        document.getElementById('expert').addEventListener('click', () => selectDifficulty('expert'));
-        resetButton.addEventListener('click', resetGame);
-        startGameButton.addEventListener('click', startGame); // 為開始遊戲按鈕添加事件監聽器
+        difficultySelect.addEventListener('change', () => selectDifficulty(difficultySelect.value)); // 監聽選單變化
+        startGameButton.addEventListener('click', startGame);
 
         // 初始化遊戲板
         function initializeBoard() {
@@ -411,6 +516,8 @@
                     cell.classList.add('cell');
                     cell.dataset.row = r;
                     cell.dataset.col = c;
+                    // 將洞的顏色設置為固定的淺藍色
+                    cell.style.backgroundColor = CELL_COLOR;
                     cell.addEventListener('click', () => handleCellClick(c));
                     boardElement.appendChild(cell);
                 }
@@ -420,59 +527,74 @@
         // 選擇遊戲模式
         function selectMode(mode) {
             gameMode = mode;
-            // 移除所有模式按鈕的 selected 類別，然後為當前選擇的按鈕添加
             modeSelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
             document.getElementById(mode).classList.add('selected');
 
             if (mode === 'player-vs-computer') {
-                difficultySelection.classList.remove('hidden'); // 顯示難度選擇
-                messageElement.textContent = '請選擇電腦難度，然後點擊「開始遊戲」';
+                difficultySelectContainer.classList.remove('hidden'); // 顯示難度選單容器
+                gameMessageElement.textContent = '請選擇電腦難度，然後點擊「開始遊戲」';
                 startGameButton.classList.add('hidden'); // 在選擇難度前先隱藏開始按鈕
             } else {
-                difficultySelection.classList.add('hidden'); // 隱藏難度選擇
-                messageElement.textContent = '點擊「開始遊戲」即可雙人對戰';
+                difficultySelectContainer.classList.add('hidden'); // 隱藏難度選單容器
+                gameMessageElement.textContent = '點擊「開始遊戲」即可雙人對戰';
             }
             startGameButton.classList.remove('hidden'); // 顯示開始遊戲按鈕
-            // 棋盤本身已經是可見的，這裡不再需要 gameBoardContainer.classList.add('hidden');
-            resetButton.style.display = 'none'; // 隱藏重置按鈕
-            // 重置難度選擇的狀態，確保下次選電腦時沒有預選的難度
-            difficultySelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
-            computerDifficulty = null;
+            
+            // 重置難度選單的選擇狀態
+            difficultySelect.value = ""; 
+            computerDifficulty = null; // 清除已選擇的難度
         }
 
-        // 選擇電腦難度
+        // 選擇電腦難度 (從下拉選單獲取值)
         function selectDifficulty(difficulty) {
             computerDifficulty = difficulty;
-            // 移除所有難度按鈕的 selected 類別，然後為當前選擇的按鈕添加
-            difficultySelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
-            document.getElementById(difficulty).classList.add('selected');
-            messageElement.textContent = `已選擇 ${difficulty} 難度，點擊「開始遊戲」`;
-            startGameButton.classList.remove('hidden'); // 確保開始遊戲按鈕是可見的
+            if (difficulty === "") { // 如果選了"選擇難度"這個選項
+                 gameMessageElement.textContent = '請選擇有效的電腦難度！';
+                 startGameButton.classList.add('hidden');
+            } else {
+                gameMessageElement.textContent = `已選擇 ${difficulty} 難度，點擊「開始遊戲」`;
+                startGameButton.classList.remove('hidden'); // 確保開始遊戲按鈕是可見的
+            }
         }
 
         // 開始遊戲
         function startGame() {
             if (!gameMode) {
-                messageElement.textContent = '請先選擇遊戲模式！';
+                gameMessageElement.textContent = '請先選擇遊戲模式！';
                 return;
             }
             if (gameMode === 'player-vs-computer' && !computerDifficulty) {
-                messageElement.textContent = '請先選擇電腦難度！';
+                gameMessageElement.textContent = '請先選擇電腦難度！';
                 return;
             }
 
-            initializeBoard();
+            // 隨機選擇棋盤顏色主題
+            const randomPalette = BOARD_COLOR_PALETTES[Math.floor(Math.random() * BOARD_COLOR_PALETTES.length)];
+            gameBoardContainer.style.backgroundColor = randomPalette.boardBg;
+            gameBoardContainer.style.borderColor = randomPalette.boardBorder;
+            boardElement.style.backgroundColor = randomPalette.boardBg; // 內部棋盤背景也設定
+            
+            initializeBoard(); // 重新初始化棋盤以應用洞的顏色
             currentPlayer = 1;
             gameActive = true;
-            messageElement.textContent = '玩家1 (小雞) 回合'; // 更新訊息顯示棋子名稱
-            resetButton.style.display = 'block';
-            modeSelection.classList.add('hidden');
-            difficultySelection.classList.add('hidden');
-            startGameButton.classList.add('hidden'); // 開始遊戲後隱藏開始按鈕
-            // 棋盤本身已經可見，無需操作 gameBoardContainer.classList.remove('hidden');
+            gameMessageElement.textContent = ''; // 清空一般訊息
+
+            // 確保 turnHintPaneElement 處於顯示回合的狀態
+            turnHintPaneElement.classList.remove('hidden', 'game-button');
+            turnHintPaneElement.removeEventListener('click', handleTurnPaneRestartClick); // 移除可能的重啟監聽器
+            turnHintPaneElement.textContent = '玩家1 回合'; // 更新回合提示
+            
+            gameSetupOverlay.classList.add('hidden'); // 隱藏初始設定疊層
+            gameBoardContainer.classList.remove('hidden'); // 顯示棋盤容器
 
             if (gameMode === 'player-vs-computer' && currentPlayer === 2) { // 如果電腦先手 (未來可以擴展)
-                setTimeout(computerMove, 500);
+                gameDisabledOverlay.style.display = 'block'; // 禁用點擊
+                gameMessageElement.textContent = '電腦正在思考...'; // 顯示思考訊息在一般訊息區
+                setTimeout(() => {
+                    computerMove();
+                    gameDisabledOverlay.style.display = 'none'; // 啟用點擊
+                    gameMessageElement.textContent = ''; // 清空思考訊息
+                }, 1000 + Math.random() * 500);
             }
         }
 
@@ -491,33 +613,39 @@
                     board[r][col] = currentPlayer;
                     renderPiece(r, col, currentPlayer);
 
-                    if (checkWin(r, col, currentPlayer)) {
-                        messageElement.textContent = `玩家 ${currentPlayer} 獲勝！`;
+                    // 使用 findWinningCells 來檢查勝利並獲取連線位置
+                    const winningCells = findWinningCells(board, currentPlayer);
+
+                    if (winningCells) {
+                        gameMessageElement.textContent = `玩家 ${currentPlayer} 獲勝！`;
                         gameActive = false;
-                        resetButton.style.display = 'block';
-                        showEndGameMessage(`玩家 ${currentPlayer} 獲勝！`);
+                        turnHintPaneElement.classList.add('hidden'); // 獲勝後隱藏回合提示
+                        highlightWinningCells(winningCells); // 呼叫函數來強調連線
+                        showEndGameMessage(`玩家 ${currentPlayer} 獲勝！`); // 顯示結束訊息，並在關閉後顯示重置按鈕
                     } else if (checkDraw()) {
-                        messageElement.textContent = '平手！';
+                        gameMessageElement.textContent = '平手！';
                         gameActive = false;
-                        resetButton.style.display = 'block';
-                        showEndGameMessage('平手！');
+                        turnHintPaneElement.classList.add('hidden'); // 平手後隱藏回合提示
+                        showEndGameMessage('平手！'); // 顯示結束訊息，並在關閉後顯示重置按鈕
                     } else {
                         currentPlayer = (currentPlayer === 1) ? 2 : 1;
-                        messageElement.textContent = `玩家 ${currentPlayer} (${(currentPlayer === 1 ? '小雞' : '小豬')}) 回合`; // 更新訊息顯示棋子名稱
+                        turnHintPaneElement.textContent = `玩家 ${currentPlayer} 回合`; // 更新回合提示窗格
+                        gameMessageElement.textContent = ''; // 清空列滿提示或其他一般訊息
 
                         if (gameMode === 'player-vs-computer' && currentPlayer === 2) {
                             gameDisabledOverlay.style.display = 'block'; // 禁用點擊
-                            messageElement.textContent = '電腦正在思考...';
+                            gameMessageElement.textContent = '電腦正在思考...';
                             setTimeout(() => {
                                 computerMove();
                                 gameDisabledOverlay.style.display = 'none'; // 啟用點擊
-                            }, 1000 + Math.random() * 500); // 模擬思考時間
+                                gameMessageElement.textContent = ''; // 清空思考訊息
+                            }, 1000 + Math.random() * 500);
                         }
                     }
                     return;
                 }
             }
-            messageElement.textContent = '該列已滿，請選擇其他列！';
+            gameMessageElement.textContent = '該列已滿，請選擇其他列！'; // 列滿提示使用 gameMessageElement
         }
 
         // 渲染棋子到 DOM
@@ -530,36 +658,40 @@
             }
         }
 
-        // 檢查勝利條件
-        function checkWin(row, col, player) {
+        // 找出獲勝的棋子並返回其座標
+        function findWinningCells(boardToCheck, player) {
             // 檢查水平
-            for (let c = 0; c <= COLS - 4; c++) {
-                if (board[row][c] === player &&
-                    board[row][c+1] === player &&
-                    board[row][c+2] === player &&
-                    board[row][c+3] === player) {
-                    return true;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c <= COLS - 4; c++) {
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r][c+1] === player &&
+                        boardToCheck[r][c+2] === player &&
+                        boardToCheck[r][c+3] === player) {
+                        return [[r, c], [r, c+1], [r, c+2], [r, c+3]];
+                    }
                 }
             }
 
             // 檢查垂直
-            for (let r = 0; r <= ROWS - 4; r++) {
-                if (board[r][col] === player &&
-                    board[r+1][col] === player &&
-                    board[r+2][col] === player &&
-                    board[r+3][col] === player) {
-                    return true;
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r <= ROWS - 4; r++) {
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r+1][c] === player &&
+                        boardToCheck[r+2][c] === player &&
+                        boardToCheck[r+3][c] === player) {
+                        return [[r, c], [r+1, c], [r+2, c], [r+3, c]];
+                    }
                 }
             }
 
             // 檢查正斜線 (從左上到右下)
             for (let r = 0; r <= ROWS - 4; r++) {
                 for (let c = 0; c <= COLS - 4; c++) {
-                    if (board[r][c] === player &&
-                        board[r+1][c+1] === player &&
-                        board[r+2][c+2] === player &&
-                        board[r+3][c+3] === player) {
-                        return true;
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r+1][c+1] === player &&
+                        boardToCheck[r+2][c+2] === player &&
+                        boardToCheck[r+3][c+3] === player) {
+                        return [[r, c], [r+1, c+1], [r+2, c+2], [r+3, c+3]];
                     }
                 }
             }
@@ -567,16 +699,30 @@
             // 檢查反斜線 (從右上到左下)
             for (let r = 0; r <= ROWS - 4; r++) {
                 for (let c = 3; c < COLS; c++) {
-                    if (board[r][c] === player &&
-                        board[r+1][c-1] === player &&
-                        board[r+2][c-2] === player &&
-                        board[r+3][c-3] === player) {
-                        return true;
+                    if (boardToCheck[r][c] === player &&
+                        boardToCheck[r+1][c-1] === player &&
+                        boardToCheck[r+2][c-2] === player &&
+                        boardToCheck[r+3][c-3] === player) {
+                        return [[r, c], [r+1, c-1], [r+2, c-2], [r+3, c-3]];
                     }
                 }
             }
+            return null; // 沒有獲勝連線
+        }
 
-            return false;
+        // 僅用於 AI 內部判斷是否獲勝（不需要座標，只判斷勝負）
+        function checkWinOnBoard(boardToCheck, player) {
+            return findWinningCells(boardToCheck, player) !== null;
+        }
+
+        // 根據座標高亮顯示獲勝的棋子
+        function highlightWinningCells(winningCells) {
+            winningCells.forEach(([r, c]) => {
+                const cell = boardElement.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (cell && cell.firstChild) { // 確保單元格存在且包含棋子
+                    cell.firstChild.classList.add('highlight-win');
+                }
+            });
         }
 
         // 檢查平手
@@ -802,58 +948,6 @@
             return newBoard;
         }
 
-        // 輔助函數：在給定棋盤上檢查特定玩家是否獲勝
-        function checkWinOnBoard(boardToCheck, player) {
-            // 檢查水平
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c <= COLS - 4; c++) {
-                    if (boardToCheck[r][c] === player &&
-                        boardToCheck[r][c+1] === player &&
-                        boardToCheck[r][c+2] === player &&
-                        boardToCheck[r][c+3] === player) {
-                        return true;
-                    }
-                }
-            }
-
-            // 檢查垂直
-            for (let c = 0; c < COLS; c++) {
-                for (let r = 0; r <= ROWS - 4; r++) {
-                    if (boardToCheck[r][c] === player &&
-                        boardToCheck[r+1][c] === player &&
-                        boardToCheck[r+2][c] === player &&
-                        boardToCheck[r+3][c] === player) {
-                        return true;
-                    }
-                }
-            }
-
-            // 檢查正斜線 (從左上到右下)
-            for (let r = 0; r <= ROWS - 4; r++) {
-                for (let c = 0; c <= COLS - 4; c++) {
-                    if (boardToCheck[r][c] === player &&
-                        boardToCheck[r+1][c+1] === player &&
-                        boardToCheck[r+2][c+2] === player &&
-                        boardToCheck[r+3][c+3] === player) {
-                        return true;
-                    }
-                }
-            }
-
-            // 檢查反斜線 (從右上到左下)
-            for (let r = 0; r <= ROWS - 4; r++) {
-                for (let c = 3; c < COLS; c++) {
-                    if (boardToCheck[r][c] === player &&
-                        boardToCheck[r+1][c-1] === player &&
-                        boardToCheck[r+2][c-2] === player &&
-                        boardToCheck[r+3][c-3] === player) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
         // 輔助函數：獲取給定棋盤的所有有效移動
         function getValidMovesForBoard(boardToCheck) {
             const moves = [];
@@ -935,6 +1029,10 @@
             return score;
         }
 
+        // 處理 turnHintPaneElement 作為重新開始按鈕的點擊事件
+        function handleTurnPaneRestartClick() {
+            resetGame();
+        }
 
         // 重置遊戲
         function resetGame() {
@@ -942,15 +1040,30 @@
             gameMode = null;
             computerDifficulty = null;
             boardElement.innerHTML = ''; // 清空棋盤棋子
+
+            // 移除所有高亮效果
+            const highlightedPieces = document.querySelectorAll('.piece.highlight-win');
+            highlightedPieces.forEach(piece => {
+                piece.classList.remove('highlight-win');
+            });
+
             initializeBoard(); // 重新繪製空棋盤
-            messageElement.textContent = '請選擇遊戲模式';
-            resetButton.style.display = 'none';
-            modeSelection.classList.remove('hidden'); // 顯示模式選擇
-            difficultySelection.classList.add('hidden'); // 隱藏難度選擇
-            startGameButton.classList.add('hidden'); // 隱藏開始遊戲按鈕
-            // 棋盤本身已經是可見的，這裡不再需要 gameBoardContainer.classList.add('hidden');
+            gameMessageElement.textContent = '請選擇遊戲模式';
+
+            // 隱藏 turnHintPaneElement 並移除按鈕樣式和監聽器
+            turnHintPaneElement.classList.add('hidden');
+            turnHintPaneElement.classList.remove('game-button');
+            turnHintPaneElement.removeEventListener('click', handleTurnPaneRestartClick);
+            turnHintPaneElement.textContent = ''; // 清除文字內容
+
+            gameSetupOverlay.classList.remove('hidden'); // 顯示初始設定疊層
+            gameBoardContainer.classList.add('hidden'); // 重置時隱藏棋盤
+
+            // 清除選擇狀態
             modeSelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
-            difficultySelection.querySelectorAll('.game-button').forEach(btn => btn.classList.remove('selected'));
+            difficultySelect.value = ""; // 重置下拉選單
+            difficultySelectContainer.classList.add('hidden'); // 隱藏難度選單
+            startGameButton.classList.add('hidden'); // 隱藏開始按鈕
         }
 
         // 顯示遊戲結束訊息 (可愛的訊息框)
@@ -987,6 +1100,11 @@
 
             document.getElementById('close-message').addEventListener('click', () => {
                 overlay.remove();
+                // 關閉訊息框後，將 turnHintPaneElement 變為「重新開始遊戲」按鈕
+                turnHintPaneElement.textContent = '重新開始遊戲';
+                turnHintPaneElement.classList.add('game-button');
+                turnHintPaneElement.classList.remove('hidden'); // 確保它可見
+                turnHintPaneElement.addEventListener('click', handleTurnPaneRestartClick);
             });
         }
 
@@ -1004,14 +1122,12 @@
 
         // 確保在頁面完全載入後才執行遊戲初始化
         window.onload = function() {
-            // 初始狀態：顯示模式選擇，隱藏其他所有遊戲元素
-            initializeBoard(); // 立即初始化並顯示棋盤
-            modeSelection.classList.remove('hidden');
-            difficultySelection.classList.add('hidden');
-            startGameButton.classList.add('hidden');
-            // gameBoardContainer 預設就可見，無需操作
-            resetButton.style.display = 'none';
-            messageElement.textContent = '請選擇遊戲模式';
+            // 初始狀態：顯示模式選擇疊層，隱藏棋盤和回合提示
+            initializeBoard(); // 初始棋盤內容，但其容器是隱藏的
+            gameSetupOverlay.classList.remove('hidden'); // 顯示初始設定疊層
+            turnHintPaneElement.classList.add('hidden'); // 隱藏回合提示窗格
+            gameBoardContainer.classList.add('hidden'); // 確保棋盤容器初始是隱藏的
+            gameMessageElement.textContent = '請選擇遊戲模式';
         };
 
     </script>
