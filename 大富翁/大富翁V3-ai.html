@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣大富翁 v3.5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- XLSX library for reading Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            touch-action: manipulation;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: 100px repeat(9, 1fr) 100px;
+            grid-template-rows: 100px repeat(9, 1fr) 100px;
+            gap: 2px;
+            width: 95vw;
+            max-width: 900px;
+            margin: auto;
+            border: 2px solid #1a1a1a;
+            background-color: #f7f3e8;
+            position: relative; /* Ensure the board is positioned for absolute pawns */
+        }
+        .space {
+            position: relative; border: 1px solid #ccc; display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center; padding: 2px;
+            font-size: 0.7rem; text-align: center; overflow: hidden; background-color: white;
+        }
+        .space .name { padding: 2px; line-height: 1.2; }
+        .space .price { font-weight: 500; }
+        .color-bar { width: 100%; height: 15%; flex-shrink: 0; }
+        .corner { font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .space-0 { grid-column: 11 / 12; grid-row: 11 / 12; } .space-1 { grid-column: 10 / 11; grid-row: 11 / 12; }
+        .space-2 { grid-column: 9 / 10; grid-row: 11 / 12; } .space-3 { grid-column: 8 / 9; grid-row: 11 / 12; }
+        .space-4 { grid-column: 7 / 8; grid-row: 11 / 12; } .space-5 { grid-column: 6 / 7; grid-row: 11 / 12; }
+        .space-6 { grid-column: 5 / 6; grid-row: 11 / 12; } .space-7 { grid-column: 4 / 5; grid-row: 11 / 12; }
+        .space-8 { grid-column: 3 / 4; grid-row: 11 / 12; } .space-9 { grid-column: 2 / 3; grid-row: 11 / 12; }
+        .space-10 { grid-column: 1 / 2; grid-row: 11 / 12; } .space-11 { grid-column: 1 / 2; grid-row: 10 / 11; }
+        .space-12 { grid-column: 1 / 2; grid-row: 9 / 10; } .space-13 { grid-column: 1 / 2; grid-row: 8 / 9; }
+        .space-14 { grid-column: 1 / 2; grid-row: 7 / 8; } .space-15 { grid-column: 1 / 2; grid-row: 6 / 7; }
+        .space-16 { grid-column: 1 / 2; grid-row: 5 / 6; } .space-17 { grid-column: 1 / 2; grid-row: 4 / 5; }
+        .space-18 { grid-column: 1 / 2; grid-row: 3 / 4; } .space-19 { grid-column: 1 / 2; grid-row: 2 / 3; }
+        .space-20 { grid-column: 1 / 2; grid-row: 1 / 2; } .space-21 { grid-column: 2 / 3; grid-row: 1 / 2; }
+        .space-22 { grid-column: 3 / 4; grid-row: 1 / 2; } .space-23 { grid-column: 4 / 5; grid-row: 1 / 2; }
+        .space-24 { grid-column: 5 / 6; grid-row: 1 / 2; } .space-25 { grid-column: 6 / 7; grid-row: 1 / 2; }
+        .space-26 { grid-column: 7 / 8; grid-row: 1 / 2; } .space-27 { grid-column: 8 / 9; grid-row: 1 / 2; }
+        .space-28 { grid-column: 9 / 10; grid-row: 1 / 2; } .space-29 { grid-column: 10 / 11; grid-row: 1 / 2; }
+        .space-30 { grid-column: 11 / 12; grid-row: 1 / 2; } .space-31 { grid-column: 11 / 12; grid-row: 2 / 3; }
+        .space-32 { grid-column: 11 / 12; grid-row: 3 / 4; } .space-33 { grid-column: 11 / 12; grid-row: 4 / 5; }
+        .space-34 { grid-column: 11 / 12; grid-row: 5 / 6; } .space-35 { grid-column: 11 / 12; grid-row: 6 / 7; }
+        .space-36 { grid-column: 11 / 12; grid-row: 7 / 8; } .space-37 { grid-column: 11 / 12; grid-row: 8 / 9; }
+        .space-38 { grid-column: 11 / 12; grid-row: 9 / 10; } .space-39 { grid-column: 11 / 12; grid-row: 10 / 11; }
+        .center-area {
+            grid-column: 2 / 11; grid-row: 2 / 11; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        .player-pawn {
+            position: absolute;
+            width: 50px;   /* Doubled from 25px */
+            height: 50px;  /* Doubled from 25px */
+            transition: all 0.5s ease-in-out;
+            z-index: 10; /* Ensures pawns are above other board elements */
+            font-size: 40px; /* Doubled from 20px */
+            text-align: center;
+            line-height: 50px; /* Doubled from 25px */
+            text-shadow: 0 0 3px white, 0 0 5px white;
+        }
+
+        /* CSS for the shaking effect */
+        @keyframes jiggle {
+            0% { transform: translate(0px, 0px) rotate(0deg); }
+            20% { transform: translate(2px, 2px) rotate(1deg); }
+            40% { transform: translate(-2px, -2px) rotate(-1deg); }
+            60% { transform: translate(2px, -2px) rotate(1deg); }
+            80% { transform: translate(-2px, 2px) rotate(-1deg); }
+            100% { transform: translate(0px, 0px) rotate(0deg); }
+        }
+        .jiggle-animation {
+            animation: jiggle 0.4s infinite alternate;
+        }
+
+        .owner-indicator { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; }
+        @media (max-width: 768px) {
+            .board { grid-template-columns: 60px repeat(9, 1fr) 60px; grid-template-rows: 60px repeat(9, 1fr) 60px; gap: 1px; }
+            .space { font-size: 0.5rem; } .corner { font-size: 0.7rem; }
+            .player-pawn { width: 40px; height: 40px; font-size: 32px; line-height: 40px; } /* Adjusted for mobile */
+            .center-area { padding: 10px; } .player-info { margin-bottom: 5px; }
+        }
+        .made-by {
+            position: fixed; bottom: 10px; right: 10px; padding: 5px 10px;
+            background-color: rgba(255, 255, 255, 0.8); border-radius: 8px;
+            font-size: 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .made-by a { color: #3b82f6; text-decoration: none; }
+        .made-by a:hover { text-decoration: underline; }
+
+        /* Quiz Modal specific styles - Beautification */
+        #quiz-modal {
+            background: linear-gradient(135deg, #fbcfe8 0%, #e8d0f8 50%, #bfdbfe 100%); /* soft, cute gradient */
+            border-radius: 1.5rem; /* More rounded corners */
+            padding: 2.5rem; /* More padding */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2), 0 0 0 5px rgba(255,255,255,0.5); /* subtle glow */
+            border: 2px solid #a78bfa; /* purple border */
+        }
+        #quiz-question {
+            color: #6d28d9; /* Deep purple for question */
+            font-size: 1.75rem; /* Larger font */
+            margin-bottom: 1.5rem;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.6);
+        }
+        .quiz-option-btn {
+            background-color: #ffffff; /* White background for options */
+            border: 2px solid #a78bfa; /* Purple border */
+            color: #4c1d95; /* Darker purple text */
+            font-weight: 600; /* Semi-bold */
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem; /* Rounded corners for buttons */
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .quiz-option-btn:hover:not(:disabled) {
+            background-color: #f3e8ff; /* Lighter purple on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+        }
+        .quiz-option-btn.correct { 
+            background-color: #d1fae5; /* green-100 */
+            border-color: #34d399; /* green-400 */
+            color: #065f46; /* green-800 */
+            box-shadow: 0 0 10px #34d399; /* Green glow */
+        } 
+        .quiz-option-btn.incorrect { 
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+            color: #991b1b; /* red-800 */
+            box-shadow: 0 0 10px #ef4444; /* Red glow */
+        }
+        #quiz-feedback {
+            font-size: 1.25rem; /* Larger feedback font */
+            margin-top: 1rem;
+            text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+        }
+        #quiz-feedback.text-green-600 { color: #16a34a; } /* specific green for feedback */
+        #quiz-feedback.text-red-600 { color: #dc2626; } /* specific red for feedback */
+
+        #quiz-ok-btn {
+            background-color: #a78bfa; /* A softer purple for the continue button */
+            transition: all 0.2s ease-in-out;
+            font-size: 1.125rem;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #quiz-ok-btn:hover {
+            background-color: #8b5cf6; /* Darker purple on hover */
+            transform: translateY(-1px);
+        }
+
+        /* Styles for new export/import buttons - TOP LEFT */
+        .game-controls-top-left { 
+            position: fixed;
+            top: 10px; /* Moved to top */
+            left: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+        }
+        .game-controls-top-left button {
+            background-color: #4a5568; /* Gray-700 */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .game-controls-top-left button:hover {
+            background-color: #2d3748; /* Gray-900 */
+        }
+        /* Disabled state for buttons */
+        .game-controls-top-left button:disabled {
+            background-color: #9ca3af; /* Gray-400 */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+
+        /* Styles for End/Reset Game Buttons - TOP RIGHT */
+        .game-controls-top-right {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+        }
+        .game-controls-top-right button {
+            background-color: #ef4444; /* Red-500 for attention */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .game-controls-top-right button:hover {
+            background-color: #dc2626; /* Red-600 */
+        }
+
+        /* Dice Styles */
+        .dice {
+            width: 60px; /* Larger dice */
+            height: 60px;
+            background-color: white;
+            border-radius: 12px; /* More rounded */
+            box-shadow: 
+                inset 0 0 5px rgba(0,0,0,0.3), /* Inner shadow for depth */
+                0 4px 6px rgba(0,0,0,0.15); /* Outer shadow */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem; /* Larger number */
+            font-weight: bold;
+            color: #333;
+            perspective: 1000px; /* For potential 3D effects if we switch */
+            transition: transform 0.1s ease-out; /* Smooth transition for value changes */
+            overflow: hidden; /* Hide overflow during animation */
+        }
+
+        /* Dice Animation */
+        @keyframes roll {
+            0% { transform: rotate(0deg); opacity: 1; }
+            25% { transform: rotate(90deg); opacity: 0.8; }
+            50% { transform: rotate(180deg); opacity: 1; }
+            75% { transform: rotate(270deg); opacity: 0.8; }
+            100% { transform: rotate(360deg); opacity: 1; }
+        }
+        .dice-rolling {
+            animation: roll 0.2s infinite linear; /* Fast continuous rotation */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Setup Screen -->
+    <div id="setup-screen" class="w-full max-w-lg p-8 bg-white rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">台灣大富翁 - 遊戲設定</h1>
+        <div class="mb-4">
+            <label for="player-count" class="block text-gray-700 text-sm font-bold mb-2">玩家人數:</label>
+            <select id="player-count" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <option value="2" selected>2 人</option>
+                <option value="3">3 人</option>
+                <option value="4">4 人</option>
+            </select>
+        </div>
+        <div id="player-details" class="mb-4"></div>
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">初始資金:</label>
+            <div class="flex items-center space-x-2">
+                <select id="initial-money-select" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <option value="15000">$15,000 (預設)</option>
+                    <option value="10000">$10,000</option>
+                    <option value="5000">$5,000</option>
+                    <option value="custom">自訂</option>
+                </select>
+                <input type="number" id="initial-money-custom" class="shadow border rounded w-full py-2 px-3 text-gray-700 hidden" placeholder="輸入金額" value="15000">
+            </div>
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2">遊戲時間:</label>
+            <div class="flex items-center space-x-2">
+                <select id="game-time-select" class="shadow border rounded w-full py-2 px-3 text-gray-700">
+                    <option value="0">不計時</option>
+                    <option value="10">10 分鐘</option>
+                    <option value="20">20 分鐘</option>
+                    <option value="custom">自訂 (分鐘)</option>
+                </select>
+                <input type="number" id="game-time-custom" class="shadow border rounded w-full py-2 px-3 text-gray-700 hidden" placeholder="輸入分鐘" value="30">
+            </div>
+        </div>
+        <!-- XLSX Upload Section -->
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2">題庫設定:</label>
+            <input type="file" id="xlsx-upload" accept=".xlsx,.xls" class="hidden">
+            <button id="upload-xlsx-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">匯入題庫 (XLSX)</button>
+            <div id="quiz-bank-selection" class="mt-4 border p-3 rounded-lg bg-gray-50 hidden">
+                <h3 class="text-md font-bold mb-2">選擇要使用的題庫:</h3>
+                <div id="quiz-bank-list" class="space-y-2">
+                    <p class="text-gray-500 text-sm">請匯入 XLSX 檔案以顯示題庫。</p>
+                </div>
+            </div>
+        </div>
+        <!-- End XLSX Upload Section -->
+
+        <button id="start-game-btn" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-xl transition duration-300 mb-4">
+            開始新遊戲
+        </button>
+        <button id="ai-design-game-btn" class="w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg text-xl transition duration-300">
+            AI 設計遊戲區
+        </button>
+    </div>
+
+    <!-- Game Screen (Initially Hidden) -->
+    <div id="game-screen" class="hidden w-full">
+        <h1 class="text-2xl md:text-4xl font-bold text-gray-800 mb-2 text-center">台灣大富翁</h1>
+        <div id="timer-display" class="text-center text-xl font-bold text-red-600 mb-2"></div>
+
+        <div class="flex flex-col md:flex-row w-full max-w-7xl mx-auto">
+            <div class="relative flex-grow">
+                <div id="game-board" class="board">
+                </div>
+            </div>
+            <div class="w-full md:w-64 lg:w-80 mt-4 md:mt-0 md:ml-4 flex-shrink-0">
+                <div id="player-info-container" class="bg-white p-4 rounded-lg shadow-md"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div id="buy-property-modal" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-sm text-center hidden">
+            <h3 id="buy-property-name" class="text-2xl font-bold mb-2"></h3>
+            <p id="buy-property-price" class="text-xl text-gray-700 mb-4"></p>
+            <p class="text-gray-500 mb-6">您想要購買這塊土地嗎？</p>
+            <div class="flex justify-center space-x-4">
+                <button id="buy-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">購買</button>
+                <button id="skip-buy-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">放棄</button>
+            </div>
+        </div>
+        <div id="card-modal" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-sm text-center hidden">
+            <h3 id="card-title" class="text-2xl font-bold mb-2"></h3>
+            <p id="card-text" class="text-lg text-gray-700 mb-6"></p>
+            <button id="card-ok-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">確定</button>
+        </div>
+        <div id="message-modal" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-sm text-center hidden">
+            <p id="message-text" class="text-lg text-gray-700 mb-6"></p>
+            <button id="message-ok-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">了解</button>
+        </div>
+        <div id="winner-modal" class="bg-white rounded-lg shadow-2xl p-8 w-11/12 max-w-md text-center hidden">
+            <h3 id="winner-title" class="text-3xl font-bold mb-4 text-yellow-500">遊戲結束！</h3>
+            <p id="winner-text" class="text-xl text-gray-800 mb-2"></p>
+            <p id="winner-details" class="text-md text-gray-600 mb-6"></p>
+            <button id="play-again-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-lg">重新開始一局</button>
+        </div>
+        <div id="confirm-modal" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-sm text-center hidden">
+            <p id="confirm-text" class="text-lg text-gray-700 mb-6"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-yes-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg">確定</button>
+                <button id="confirm-no-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">取消</button>
+            </div>
+        </div>
+
+        <!-- Quiz Modal -->
+        <div id="quiz-modal" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-lg text-center hidden">
+            <h3 class="text-2xl font-bold mb-4" id="quiz-question">題目載入中...</h3>
+            <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <button class="quiz-option-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg text-lg transition duration-300"></button>
+                <button class="quiz-option-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg text-lg transition duration-300"></button>
+                <button class="quiz-option-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg text-lg transition duration-300"></button>
+                <button class="quiz-option-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg text-lg transition duration-300"></button>
+            </div>
+            <p id="quiz-feedback" class="text-lg font-semibold mb-4 hidden"></p>
+            <button id="quiz-ok-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 hidden">繼續</button>
+        </div>
+        <!-- End Quiz Modal -->
+
+        <!-- AI Design Modal -->
+        <div id="ai-design-modal" class="bg-white rounded-lg shadow-2xl p-6 w-11/12 max-w-md text-center hidden">
+            <h3 class="text-2xl font-bold mb-4">AI 設計遊戲區</h3>
+            <p class="text-gray-700 mb-4">請輸入遊戲區的主題：</p>
+            <input type="text" id="ai-theme-input" class="shadow border rounded w-full py-2 px-3 text-gray-700 mb-6" placeholder="例如：任天堂遊戲, 台灣美食, 太空探索">
+            <div class="flex justify-center space-x-4">
+                <button id="ai-generate-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">生成</button>
+                <button id="ai-cancel-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300">取消</button>
+            </div>
+            <p id="ai-loading-message" class="text-blue-500 mt-4 hidden">AI 正在設計中，請稍候...</p>
+        </div>
+        <!-- End AI Design Modal -->
+
+    </div>
+
+    <div class="made-by">Made by <a href="https://kentxchang.blogspot.tw" target="_blank">阿剛老師</a></div>
+
+    <!-- New Export/Import Buttons -->
+    <div class="game-controls-top-left" id="game-controls-top-left">
+        <button id="export-game-btn">匯出進度</button>
+        <button id="import-game-btn">載入進度</button>
+    </div>
+
+    <!-- End/Reset Game Buttons -->
+    <div class="game-controls-top-right" id="game-controls-top-right">
+        <button id="end-game-btn">結束遊戲</button>
+        <button id="reset-game-btn">重置遊戲</button>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const initialBoardSpacesData = [
+            { name: '起點', type: 'go' }, { name: '墾丁大街', type: 'property', price: 600, rent: 20, group: '#8B4513' },
+            { name: '命運', type: 'destiny' }, { name: '鵝鑾鼻公園', type: 'property', price: 600, rent: 40, group: '#8B4513' },
+            { name: '所得稅', type: 'tax', amount: 2000 }, { name: '高鐵左營站', type: 'station', price: 2000, rent: 250 },
+            { name: '安平古堡', type: 'property', price: 1000, rent: 60, group: '#ADD8E6' }, { name: '機會', type: 'chance' },
+            { name: '赤崁樓', type: 'property', price: 1000, rent: 60, group: '#ADD8E6' }, { name: '七股鹽山', type: 'property', price: 1200, rent: 80, group: '#ADD8E6' },
+            { name: '監獄', type: 'jail' }, { name: '日月潭', type: 'property', price: 1400, rent: 100, group: '#FFC0CB' },
+            { name: '台積電', type: 'utility', price: 1500 }, { name: '清境農場', type: 'property', price: 1400, rent: 100, group: '#FFC0CB' },
+            { name: '逢甲夜市', type: 'property', price: 1600, rent: 120, group: '#FFC0CB' }, { name: '高鐵台中站', type: 'station', price: 2000, rent: 250 },
+            { name: '大溪老街', type: 'property', price: 1800, rent: 140, group: '#FFA500' }, { name: '命運', type: 'destiny' },
+            { name: '石門水庫', type: 'property', price: 1800, rent: 140, group: '#FFA500' }, { name: '小人國', type: 'property', price: 2000, rent: 160, group: '#FFA500' },
+            { name: '免費停車', type: 'parking' }, { name: '故宮博物院', 'type': 'property', price: 2200, rent: 180, group: '#FF0000' },
+            { name: '機會', type: 'chance' }, { name: '中正紀念堂', type: 'property', price: 2200, rent: 180, group: '#FF0000' },
+            { name: '士林夜市', type: 'property', price: 2400, rent: 200, group: '#FF0000' }, { name: '高鐵台北站', type: 'station', price: 2000, rent: 250 },
+            { name: '淡水老街', type: 'property', price: 2600, rent: 220, group: '#FFFF00' }, { name: '九份', type: 'property', price: 2600, rent: 220, group: '#FFFF00' },
+            { name: '長榮海運', type: 'utility', price: 1500 }, { name: '野柳女王頭', type: 'property', price: 2800, rent: 240, group: '#FFFF00' },
+            { name: '前往監獄', type: 'goToJail' }, { name: '太魯閣', type: 'property', price: 3000, rent: 260, group: '#008000' },
+            { name: '清水斷崖', type: 'property', price: 3000, rent: 260, group: '#008000' }, { name: '命運', type: 'destiny' },
+            { name: '七星潭', type: 'property', price: 3200, rent: 280, group: '#008000' }, { name: '高鐵花蓮站', type: 'station', price: 2000, rent: 250 },
+            { name: '機會', type: 'chance' }, { name: '陽明山', type: 'property', price: 3500, rent: 350, group: '#0000FF' },
+            { name: '奢侈稅', type: 'tax', amount: 1000 }, { name: '台北101', type: 'property', price: 4000, rent: 500, group: '#0000FF' },
+        ];
+        const chanceCards = [
+            { text: "中統一發票，獲得 $2000。", action: 'money', amount: 2000 }, { text: "領到夜市消費券，獲得 $1000。", action: 'money', amount: 1000 },
+            { text: "繳交健保費 $500。", action: 'money', amount: -500 }, { text: "前進到「起點」，領取薪水。", action: 'move', position: 0 },
+            { text: "免費出獄卡。可以保留或出售。", action: 'getOutOfJail' }, { text: "前進到「台北101」。", action: 'move', position: 39 },
+            { text: "銀行分紅，您獲得 $1500。", action: 'money', amount: 1500 }, { text: "前進三步。", action: 'moveRelative', amount: 3 },
+        ];
+        const destinyCards = [
+            { text: "機車超速罰單 $300。", action: 'money', amount: -300 }, { text: "颱風來襲，所有房屋修繕費 $500。", action: 'money', amount: -500 },
+            { text: "直接進入監獄，不得通過起點。", action: 'goToJail' }, { text: "別人請客，獲得 $200。", action: 'money', amount: 200 },
+            { text: "遺產繼承，獲得 $1000。", action: 'money', amount: 1000 }, { text: "繳交所得稅 $1500。", action: 'money', amount: -1500 },
+            { text: "生日禮金，獲得 $500。", action: 'money', amount: 500 },
+        ];
+        
+        let gameState = {
+            quizzes: {}, // Stores imported quiz data: { 'Bank Name': [{ question, answer, options: [] }] }
+            activeQuizBanks: [], // Array of quiz bank names currently selected for use
+            availableQuizIndices: {}, // New: Stores indices of available (unused) questions for each bank
+            gameTitle: '台灣大富翁' // Initial default game title
+        };
+        let gameTimerInterval = null;
+        let diceAnimationInterval = null; // New: For dice rolling animation
+
+        // A mutable copy of the initial board data that can be themed by AI
+        let currentBoardTemplate = JSON.parse(JSON.stringify(initialBoardSpacesData));
+
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const playerCountSelect = document.getElementById('player-count');
+        const playerDetailsContainer = document.getElementById('player-details');
+        const initialMoneySelect = document.getElementById('initial-money-select');
+        const initialMoneyCustom = document.getElementById('initial-money-custom');
+        const gameTimeSelect = document.getElementById('game-time-select');
+        const gameTimeCustom = document.getElementById('game-time-custom');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const timerDisplay = document.getElementById('timer-display');
+        const boardElement = document.getElementById('game-board');
+        const playerInfoContainer = document.getElementById('player-info-container');
+        const modalContainer = document.getElementById('modal-container');
+        const winnerModal = document.getElementById('winner-modal');
+        const confirmModal = document.getElementById('confirm-modal');
+        const buyPropertyModal = document.getElementById('buy-property-modal');
+        const cardModal = document.getElementById('card-modal');
+        const messageModal = document.getElementById('message-modal');
+        const quizModal = document.getElementById('quiz-modal'); // New quiz modal element
+
+        // AI Design related elements
+        const aiDesignGameBtn = document.getElementById('ai-design-game-btn');
+        const aiDesignModal = document.getElementById('ai-design-modal');
+        const aiThemeInput = document.getElementById('ai-theme-input');
+        const aiGenerateBtn = document.getElementById('ai-generate-btn');
+        const aiCancelBtn = document.getElementById('ai-cancel-btn');
+        const aiLoadingMessage = document.getElementById('ai-loading-message');
+
+
+        const playerColors = ['#ef4444', '#3b82f6', '#22c55e', '#f97316'];
+        // Added more emojis for player selection
+        const availableEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐥', '🐺', '🐗', '🐴', '🦄', '🐝', '🦋', '🐌', '🐞', '🐠', '🐙'];
+        
+        // Map of all modal elements for easier management
+        const modals = {
+            buyProperty: buyPropertyModal,
+            card: cardModal,
+            message: messageModal,
+            winner: winnerModal,
+            confirm: confirmModal,
+            quiz: quizModal,
+            aiDesign: aiDesignModal // Add AI design modal here
+        };
+
+        // Function to update the player details section on the setup screen
+        function updatePlayerDetailsView() {
+            const count = parseInt(playerCountSelect.value);
+            playerDetailsContainer.innerHTML = '';
+            let usedEmojis = [];
+            for (let i = 0; i < count; i++) {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'grid grid-cols-2 gap-4 items-center mb-2';
+                
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.id = `player-name-${i}`;
+                nameInput.className = 'shadow border rounded w-full py-2 px-3 text-gray-700';
+                nameInput.placeholder = `玩家 ${i + 1} 名稱`;
+                nameInput.value = `玩家 ${i + 1}`;
+                
+                const emojiSelect = document.createElement('select');
+                emojiSelect.id = `player-emoji-${i}`;
+                emojiSelect.className = 'shadow border rounded w-full py-2 px-3 text-gray-700';
+                
+                // Filter available emojis to ensure uniqueness
+                const availableForThisPlayer = availableEmojis.filter(e => !usedEmojis.includes(e));
+                availableForThisPlayer.forEach((emoji, index) => {
+                    const option = document.createElement('option');
+                    option.value = emoji;
+                    option.textContent = emoji;
+                    if (index === 0) { // Automatically select the first available unique emoji
+                        option.selected = true;
+                        usedEmojis.push(emoji); // Mark it as used
+                    }
+                    emojiSelect.appendChild(option);
+                });
+
+                // Event listener to prevent duplicate emoji selection
+                emojiSelect.addEventListener('change', (e) => {
+                    const allSelects = Array.from(playerDetailsContainer.querySelectorAll('select'));
+                    const selectedValues = allSelects.map(s => s.value);
+                    const duplicates = selectedValues.filter((item, index) => selectedValues.indexOf(item) !== index);
+
+                    if(duplicates.length > 0) {
+                        // Use showMessage instead of alert for better UX
+                        showMessage("每位玩家請選擇不同的棋子！", () => {
+                            // Find a new unique emoji for the current select if a duplicate was chosen
+                            const currentSelect = e.target;
+                            const otherValues = allSelects.filter(s => s !== currentSelect).map(s => s.value);
+                            const newEmoji = availableEmojis.find(emoji => !otherValues.includes(emoji));
+                            currentSelect.value = newEmoji;
+                        });
+                    }
+                });
+                
+                playerDiv.appendChild(nameInput);
+                playerDiv.appendChild(emojiSelect);
+                playerDetailsContainer.appendChild(playerDiv);
+            }
+        }
+        
+        playerCountSelect.addEventListener('change', updatePlayerDetailsView);
+        initialMoneySelect.addEventListener('change', () => initialMoneyCustom.classList.toggle('hidden', initialMoneySelect.value !== 'custom'));
+        gameTimeSelect.addEventListener('change', () => gameTimeCustom.classList.toggle('hidden', gameTimeSelect.value !== 'custom'));
+
+        // Event listener for XLSX upload button
+        const xlsxUploadInput = document.getElementById('xlsx-upload');
+        document.getElementById('upload-xlsx-btn').addEventListener('click', () => {
+            xlsxUploadInput.click(); // Trigger the hidden file input
+        });
+
+        xlsxUploadInput.addEventListener('change', handleXLSXUpload);
+
+        // Handle XLSX file upload
+        function handleXLSXUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                gameState.quizzes = {}; // Clear previous quizzes
+                gameState.availableQuizIndices = {}; // Clear available indices too
+                workbook.SheetNames.forEach(sheetName => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Read as array of arrays
+
+                    // Parse quiz data from JSON
+                    const quizBank = [];
+                    // Assuming first row is header, skip it. Start from row 1 (index 1 in 0-indexed array)
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (row.length < 6 || !row[0] || !row[1] || !row[2] || !row[3] || !row[4] || !row[5]) {
+                            console.warn(`Skipping malformed row in sheet "${sheetName}":`, row);
+                            continue; // Skip rows that don't have enough columns for question, answer, and 4 options
+                        }
+                        const question = String(row[0]).trim();
+                        let correctAnswerIndex = String(row[1]).trim().toUpperCase(); // Convert answer to uppercase for consistency
+                        const options = [String(row[2]).trim(), String(row[3]).trim(), String(row[4]).trim(), String(row[5]).trim()];
+
+                        // Determine correct answer index (0-3) based on '1-4' or 'A-D'
+                        let correctIdx = -1;
+                        if (['1', 'A'].includes(correctAnswerIndex)) correctIdx = 0;
+                        else if (['2', 'B'].includes(correctAnswerIndex)) correctIdx = 1;
+                        else if (['3', 'C'].includes(correctAnswerIndex)) correctIdx = 2;
+                        else if (['4', 'D'].includes(correctAnswerIndex)) correctIdx = 3;
+
+                        if (correctIdx !== -1 && options[correctIdx]) { // Ensure correct option exists
+                             quizBank.push({
+                                question: question,
+                                answer: correctIdx, // Store as 0-indexed integer
+                                options: options
+                            });
+                        } else {
+                            console.warn(`Invalid answer key or missing option for question in sheet "${sheetName}":`, row);
+                        }
+                    }
+                    if (quizBank.length > 0) {
+                        gameState.quizzes[sheetName] = quizBank;
+                        // Initialize availableQuizIndices for this newly loaded bank
+                        gameState.availableQuizIndices[sheetName] = Array.from({ length: quizBank.length }, (_, i) => i);
+                    }
+                });
+
+                renderQuizBankSelection();
+                showMessage(`已匯入 ${Object.keys(gameState.quizzes).length} 個題庫！`);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Render quiz bank checkboxes
+        function renderQuizBankSelection() {
+            const quizBankSelectionDiv = document.getElementById('quiz-bank-selection');
+            const quizBankListDiv = document.getElementById('quiz-bank-list');
+            quizBankListDiv.innerHTML = ''; // Clear previous list
+
+            if (Object.keys(gameState.quizzes).length === 0) {
+                quizBankListDiv.innerHTML = '<p class="text-gray-500 text-sm">請匯入 XLSX 檔案以顯示題庫。</p>';
+                quizBankSelectionDiv.classList.add('hidden');
+                return;
+            }
+
+            quizBankSelectionDiv.classList.remove('hidden');
+            Object.keys(gameState.quizzes).forEach(bankName => {
+                const div = document.createElement('div');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `quiz-bank-${bankName}`;
+                checkbox.value = bankName;
+                checkbox.className = 'mr-2';
+                // Initially check if this bank was previously active (important for loaded games)
+                checkbox.checked = gameState.activeQuizBanks.includes(bankName); 
+
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        if (!gameState.activeQuizBanks.includes(bankName)) {
+                            gameState.activeQuizBanks.push(bankName);
+                        }
+                        // When a bank is activated, ensure its available quiz indices are reset/full
+                        if (gameState.quizzes[bankName]) {
+                             gameState.availableQuizIndices[bankName] = Array.from({ length: gameState.quizzes[bankName].length }, (_, i) => i);
+                        }
+                    } else {
+                        gameState.activeQuizBanks = gameState.activeQuizBanks.filter(name => name !== bankName);
+                        // When a bank is deactivated, clear its available quiz indices
+                        delete gameState.availableQuizIndices[bankName];
+                    }
+                });
+
+                const label = document.createElement('label');
+                label.htmlFor = `quiz-bank-${bankName}`;
+                label.textContent = `${bankName} (${gameState.quizzes[bankName].length} 題)`;
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                quizBankListDiv.appendChild(div);
+            });
+        }
+
+        // Start Game button event listener
+        startGameBtn.addEventListener('click', () => {
+            const players = [];
+            const playerCount = parseInt(playerCountSelect.value);
+            let money = initialMoneySelect.value === 'custom' ? parseInt(initialMoneyCustom.value) || 15000 : parseInt(initialMoneySelect.value);
+            let time = gameTimeSelect.value === 'custom' ? parseInt(gameTimeCustom.value) : parseInt(gameTimeSelect.value);
+
+            // Populate players array with names and emojis
+            for (let i = 0; i < playerCount; i++) {
+                players.push({
+                    id: i, name: document.getElementById(`player-name-${i}`).value || `玩家 ${i + 1}`,
+                    emoji: document.getElementById(`player-emoji-${i}`).value, money: money,
+                    position: 0, inJail: false, jailTurns: 0, getOutOfJailCards: 0
+                });
+            }
+
+            // Check if active quiz banks are selected if any quizzes were imported
+            if (Object.keys(gameState.quizzes).length > 0 && gameState.activeQuizBanks.length === 0) {
+                showMessage('請至少選擇一個題庫以開始遊戲！');
+                return; // Prevent game start
+            }
+
+            setupScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            // Start a new game using the current template (default or AI-themed)
+            initGame({
+                ...gameState,
+                players: players, currentPlayerIndex: 0,
+                board: currentBoardTemplate.map(space => { // Deep copy current template for game board
+                    if (['property', 'station', 'utility'].includes(space.type)) {
+                        return { ...space, ownerId: null };
+                    }
+                    return space;
+                }),
+                dice: [0, 0],
+                gameEndTime: time > 0 ? Date.now() + time * 60 * 1000 : null,
+                isGameOver: false,
+                gameTitle: '台灣大富翁' // Reset title to default if not AI-designed
+            });
+        });
+
+        // Initialize the game state and UI
+        function initGame(loadedState) {
+            gameState = loadedState;
+            // Ensure availableQuizIndices is correctly populated for all active banks on load
+            // This handles cases where state is loaded from older versions or after initial setup
+            gameState.activeQuizBanks.forEach(bankName => {
+                if (!gameState.availableQuizIndices[bankName] || gameState.availableQuizIndices[bankName].length === 0) {
+                    // If not loaded or empty, re-populate from original quizzes
+                    if (gameState.quizzes[bankName]) {
+                        gameState.availableQuizIndices[bankName] = Array.from({ length: gameState.quizzes[bankName].length }, (_, i) => i);
+                    }
+                }
+            });
+            
+            // Set the game title from the state
+            document.querySelector('h1').textContent = gameState.gameTitle;
+
+            drawBoard();
+            drawPlayerInfo();
+            updatePlayerPawns();
+            updateGameMessage();
+            // Apply jiggle animation to the current player's pawn immediately
+            updateCurrentPlayerPawnJiggle();
+
+            if (gameState.gameEndTime) {
+                document.getElementById('end-game-btn')?.classList.remove('hidden'); // Ensure visible for timed games
+                document.getElementById('reset-game-btn')?.classList.remove('hidden'); // Ensure visible for timed games
+                startTimer();
+            } else {
+                const endGameBtn = document.getElementById('end-game-btn');
+                const resetGameBtn = document.getElementById('reset-game-btn');
+                if(endGameBtn) endGameBtn.classList.remove('hidden');
+                if(resetGameBtn) resetGameBtn.classList.remove('hidden');
+                timerDisplay.textContent = '遊戲時間：無限制';
+            }
+            if(gameState.isGameOver) endGame(true); else saveGameState();
+            
+            // Ensure controls are visible after initGame (whether from new game or load)
+            document.getElementById('game-controls-top-left').classList.remove('hidden');
+            document.getElementById('export-game-btn').disabled = false; // Enable export for active game
+            document.getElementById('export-game-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('game-controls-top-right').classList.remove('hidden');
+        }
+
+        // Draw the game board
+        function drawBoard() {
+            boardElement.innerHTML = `
+                <div class="center-area bg-green-100 rounded-lg shadow-inner">
+                    <h2 id="game-message" class="text-xl md:text-3xl font-bold text-center text-green-800 mb-4"></h2>
+                    <div class="flex items-center justify-center space-x-4 mb-4">
+                        <div id="dice1" class="dice">?</div>
+                        <div id="dice2" class="dice">?</div>
+                    </div>
+                    <button id="roll-dice-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition duration-300">擲骰子</button>
+                </div>`;
+            
+            document.getElementById('roll-dice-btn').addEventListener('click', rollDice);
+            document.getElementById('reset-game-btn').addEventListener('click', () => showConfirm("確定要重置遊戲嗎？所有進度將會遺失。", () => { localStorage.removeItem('monopoly_save_game'); location.reload(); }));
+            document.getElementById('end-game-btn').addEventListener('click', () => showConfirm("確定要結束遊戲嗎？將會結算成績。", () => endGame()));
+
+            gameState.board.forEach((space, i) => { // Use gameState.board directly
+                const spaceDiv = document.createElement('div');
+                spaceDiv.className = `space space-${i}`;
+                spaceDiv.id = `space-${i}`;
+                if (space.type === 'property' || space.type === 'station' || space.type === 'utility') {
+                     if(space.group) {
+                        const colorBar = document.createElement('div');
+                        colorBar.className = 'color-bar';
+                        colorBar.style.backgroundColor = space.group;
+                        spaceDiv.appendChild(colorBar);
+                    }
+                    spaceDiv.innerHTML += `<div class="name flex-grow flex items-center justify-center">${space.name}</div><div class="price">$${space.price}</div>`;
+                } else if (['jail', 'parking', 'go', 'goToJail'].includes(space.type)) {
+                    spaceDiv.classList.add('corner');
+                    spaceDiv.innerHTML = `<div class="name">${space.name}</div>`;
+                } else {
+                    spaceDiv.innerHTML = `<div class="name flex items-center justify-center h-full">${space.name}</div>`;
+                }
+                const ownerIndicator = document.createElement('div');
+                ownerIndicator.className = 'owner-indicator';
+                ownerIndicator.id = `owner-${i}`;
+                if (space.ownerId !== null) ownerIndicator.style.backgroundColor = playerColors[space.ownerId];
+                spaceDiv.appendChild(ownerIndicator);
+                boardElement.appendChild(spaceDiv);
+            });
+
+            // Create player pawns and append them directly to the board element
+            gameState.players.forEach((player) => {
+                const pawn = document.createElement('div');
+                pawn.id = `pawn-${player.id}`;
+                pawn.className = 'player-pawn';
+                pawn.textContent = player.emoji; // Set the emoji as pawn content
+                boardElement.appendChild(pawn); // Append to boardElement directly for z-index control
+            });
+        }
+        
+        // Draw player information in the sidebar
+        function drawPlayerInfo() {
+            playerInfoContainer.innerHTML = '';
+            gameState.players.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.id = `player-info-${player.id}`;
+                playerDiv.className = 'player-info p-3 rounded-lg border-2 mb-2 transition-all duration-300';
+                playerDiv.style.borderColor = playerColors[player.id];
+                if(player.id === gameState.currentPlayerIndex) playerDiv.classList.add('shadow-lg', 'bg-yellow-100');
+                
+                const playerProperties = gameState.board.map((s, i) => ({...s, index: i})).filter(s => s.ownerId === player.id);
+                let propertiesHTML = playerProperties.map(p => {
+                    const propColor = p.group || '#A9A9A9';
+                    let assetDetails = '';
+
+                    // Calculate current value (90% of original price)
+                    // Note: p.price will now be the potentially AI-generated price
+                    const currentValue = Math.round(p.price * 0.9);
+
+                    let currentRent = 0; // Default rent for properties that are not station/utility
+                    if (p.type === 'property') {
+                        currentRent = p.rent;
+                    } else if (p.type === 'station') {
+                        const ownerStationsCount = gameState.board.filter(s => s.type === 'station' && s.ownerId === player.id).length;
+                        currentRent = p.rent * Math.pow(2, ownerStationsCount - 1);
+                    } else if (p.type === 'utility') {
+                        const ownerUtilitiesCount = gameState.board.filter(s => s.type === 'utility' && s.ownerId === player.id).length;
+                        const multiplier = ownerUtilitiesCount === 1 ? 4 : 10;
+                        assetDetails = `<span class="text-xs text-gray-700"> 現值: $${currentValue} / 租金: 骰子點數x${multiplier}</span>`;
+                    }
+
+                    if (p.type !== 'utility') { // For properties and stations, display exact rent
+                        assetDetails = `<span class="text-xs text-gray-700"> 現值: $${currentValue} / 租金: $${currentRent}</span>`;
+                    }
+
+                    return `
+                        <div class="inline-block text-xs font-semibold mr-1 mb-1 px-1.5 py-0.5 rounded" style="background-color:${propColor}; color: ${isDark(propColor) ? 'white' : 'black'}">
+                            ${p.name}
+                            <br>${assetDetails}
+                        </div>`;
+                }).join('');
+                if(propertiesHTML === '') propertiesHTML = '<span class="text-xs text-gray-500">無</span>';
+
+                // Add jail status if player is in jail
+                let jailStatus = '';
+                if (player.inJail) {
+                    const turnsLeft = 4 - player.jailTurns; // Assuming max 3 turns in jail before forced bail/card
+                    jailStatus = `<span class="text-sm text-red-500 ml-2"> (監獄中: 剩 ${turnsLeft} 回合)</span>`;
+                }
+
+                // Display player name with their chosen emoji
+                playerDiv.innerHTML = `
+                    <div class="flex justify-between items-center"><h4 class="text-lg font-bold" style="color:${playerColors[player.id]}">${player.name} ${player.emoji}${jailStatus}</h4><span class="text-lg font-semibold">$${player.money}</span></div>
+                    <div class="mt-2"><h5 class="text-sm font-bold mb-1">資產:</h5><div class="property-list">${propertiesHTML}</div></div>`;
+                playerInfoContainer.appendChild(playerDiv);
+            });
+        }
+        
+        // Helper function to determine if a color is dark for text contrast
+        function isDark(color) {
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
+            return ((r * 299) + (g * 587) + (b * 114)) / 1000 < 155;
+        }
+
+        // Update player pawn positions on the board and apply jiggle animation
+        function updatePlayerPawns() {
+            // Define relative offsets for pawns within a space, considering their doubled size
+            const pawnRelativeOffsets = [
+                { top: 10, left: 10 },    // Player 0: top-left corner
+                { top: 10, right: 10 },   // Player 1: top-right corner
+                { bottom: 10, left: 10 }, // Player 2: bottom-left corner
+                { bottom: 10, right: 10 } // Player 3: bottom-right corner
+            ];
+
+            gameState.players.forEach((player) => {
+                const pawn = document.getElementById(`pawn-${player.id}`);
+                const spaceEl = document.getElementById(`space-${player.position}`);
+                
+                if (spaceEl && pawn) {
+                    // Get the bounding rectangles of the space and the board for precise positioning
+                    const spaceRect = spaceEl.getBoundingClientRect();
+                    const boardRect = boardElement.getBoundingClientRect();
+
+                    // Calculate the space's position relative to the board's top-left corner
+                    const spaceLeftOnBoard = spaceRect.left - boardRect.left;
+                    const spaceTopOnBoard = spaceRect.top - boardRect.top;
+
+                    // Get the actual rendered size of the pawn (which might change with responsive CSS)
+                    const pawnRect = pawn.getBoundingClientRect();
+                    const pawnWidth = pawnRect.width;
+                    const pawnHeight = pawnRect.height;
+
+                    const offset = pawnRelativeOffsets[player.id % pawnRelativeOffsets.length];
+
+                    let finalLeft, finalTop;
+
+                    // Calculate final 'left' position based on relative offset
+                    if (offset.left !== undefined) {
+                        finalLeft = spaceLeftOnBoard + offset.left;
+                    } else if (offset.right !== undefined) {
+                        finalLeft = spaceLeftOnBoard + spaceRect.width - pawnWidth - offset.right;
+                    }
+
+                    // Calculate final 'top' position based on relative offset
+                    if (offset.top !== undefined) {
+                        finalTop = spaceTopOnBoard + offset.top;
+                    } else if (offset.bottom !== undefined) {
+                        finalTop = spaceTopOnBoard + spaceRect.height - pawnHeight - offset.bottom;
+                    }
+                    
+                    // Apply calculated absolute positioning
+                    pawn.style.position = 'absolute';
+                    pawn.style.left = `${finalLeft}px`;
+                    pawn.style.top = `${finalTop}px`;
+                    // Clear other positioning properties to avoid conflicts
+                    pawn.style.right = 'auto';
+                    pawn.style.bottom = 'auto';
+                }
+            });
+            updateCurrentPlayerPawnJiggle(); // Update jiggle after all pawns are positioned
+        }
+
+        // Applies/removes jiggle animation to the current player's pawn
+        function updateCurrentPlayerPawnJiggle() {
+            // Remove jiggle from all pawns first
+            gameState.players.forEach(player => {
+                const pawn = document.getElementById(`pawn-${player.id}`);
+                if (pawn) {
+                    pawn.classList.remove('jiggle-animation');
+                }
+            });
+
+            // Add jiggle to the current player's pawn
+            const currentPlayerPawn = document.getElementById(`pawn-${gameState.currentPlayerIndex}`);
+            if (currentPlayerPawn) {
+                currentPlayerPawn.classList.add('jiggle-animation');
+            }
+        }
+
+        // Update the main game message
+        function updateGameMessage(message) {
+            const msgEl = document.getElementById('game-message');
+            if(msgEl) msgEl.textContent = message || `輪到 ${gameState.players[gameState.currentPlayerIndex].name} ${gameState.players[gameState.currentPlayerIndex].emoji}`;
+        }
+
+        // This function determines if the current player gets another turn (doubles) or if it switches.
+        // `validActionTaken` is true if the player answered a quiz correctly AND performed the space action,
+        // or if no quiz was required/relevant for that space.
+        function endTurn(validActionTaken = true) {
+            // If doubles, and the action was valid (or no quiz was involved), allow another roll.
+            if (gameState.dice[0] === gameState.dice[1] && validActionTaken) {
+                showMessage('你擲出了雙倍點數，可以再擲一次！', () => {
+                    document.getElementById('roll-dice-btn').disabled = false;
+                    updateGameMessage(`輪到 ${gameState.players[gameState.currentPlayerIndex].name} ${gameState.players[gameState.currentPlayerIndex].emoji}`);
+                    updateCurrentPlayerPawnJiggle(); // Ensure jiggle is on current player if they roll again
+                });
+            } else {
+                // Otherwise, switch to the next player.
+                switchPlayer();
+            }
+            saveGameState();
+        }
+
+        // Switch to the next player's turn
+        function switchPlayer() {
+            gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+            // Skip bankrupt players only if there are still active players left
+            const activePlayers = gameState.players.filter(p => p.money >= 0);
+            if (activePlayers.length > 0) {
+                while(gameState.players[gameState.currentPlayerIndex].money < 0 && activePlayers.length > 0) {
+                     gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+                     // Re-filter active players in case the loop runs multiple times and players go bankrupt
+                     const currentActivePlayers = gameState.players.filter(p => p.money >= 0);
+                     if (currentActivePlayers.length === 0) {
+                         endGame(); // All players bankrupt
+                         return;
+                     }
+                }
+                // If the loop finished and the current player is still bankrupt (meaning all remaining are bankrupt)
+                if (gameState.players[gameState.currentPlayerIndex].money < 0) {
+                    endGame();
+                    return;
+                }
+            } else {
+                // If all players are bankrupt, game ends.
+                endGame();
+                return;
+            }
+            
+            updateGameMessage();
+            drawPlayerInfo();
+            updateCurrentPlayerPawnJiggle(); // Update jiggle after switching player
+            document.getElementById('roll-dice-btn').disabled = false;
+            
+            if (gameState.players[gameState.currentPlayerIndex].inJail) handleJailTurn();
+            saveGameState();
+        }
+        // Roll the dice and move the player
+        function rollDice() {
+            document.getElementById('roll-dice-btn').disabled = true;
+            const dice1El = document.getElementById('dice1');
+            const dice2El = document.getElementById('dice2');
+
+            dice1El.classList.add('dice-rolling');
+            dice2El.classList.add('dice-rolling');
+
+            let animationCounter = 0;
+            const maxAnimationCycles = 10; // How many times the numbers will rapidly change
+
+            diceAnimationInterval = setInterval(() => {
+                if (animationCounter < maxAnimationCycles) {
+                    dice1El.textContent = Math.floor(Math.random() * 6) + 1;
+                    dice2El.textContent = Math.floor(Math.random() * 6) + 1;
+                    animationCounter++;
+                } else {
+                    clearInterval(diceAnimationInterval);
+                    diceAnimationInterval = null;
+                    dice1El.classList.remove('dice-rolling');
+                    dice2El.classList.remove('dice-rolling');
+
+                    gameState.dice[0] = Math.floor(Math.random() * 6) + 1;
+                    gameState.dice[1] = Math.floor(Math.random() * 6) + 1;
+                    dice1El.textContent = gameState.dice[0];
+                    dice2El.textContent = gameState.dice[1];
+                    
+                    movePlayer(gameState.dice[0] + gameState.dice[1]);
+                }
+            }, 100); // Change numbers every 100ms
+        }
+        // Move the player step by step
+        async function movePlayer(steps) {
+            const player = gameState.players[gameState.currentPlayerIndex];
+            if(player.inJail) {
+                if(gameState.dice[0] === gameState.dice[1]) {
+                    player.inJail = false;
+                    player.jailTurns = 0;
+                    showMessage("擲出雙倍！你自由了！", () => movePlayer(steps)); // Recurse move for double
+                } else {
+                    showMessage("在監獄中，擲骰失敗。", () => endTurn(false)); // Lost turn in jail
+                }
+                return;
+            }
+            const oldPosition = player.position;
+            for(let i = 1; i <= steps; i++) {
+                player.position = (oldPosition + i) % gameState.board.length;
+                updatePlayerPawns();
+                await new Promise(res => setTimeout(res, 100)); // Short delay for visual movement
+            }
+            // Check if player passed Go (start)
+            if (player.position < oldPosition) {
+                player.money += 2000;
+                showMessage('經過「起點」，領取薪水 $2000！', () => drawPlayerInfo(), 3000); 
+            }
+            setTimeout(() => handleSpaceAction(player.position, true), 200); // Pass true to indicate first land on space
+        }
+
+        // Handles actions based on the space the player landed on
+        // `isFirstLand` indicates if this is the initial landing or a consequence of a card/jail release
+        function handleSpaceAction(position, isFirstLand = false) {
+            const space = gameState.board[position];
+            const player = gameState.players[gameState.currentPlayerIndex];
+            
+            const hasActiveQuizzes = gameState.activeQuizBanks.length > 0;
+
+            // Conditions that should *NEVER* trigger a quiz, directly perform space action
+            const skipQuizDirectly = ['tax', 'goToJail', 'jail'].includes(space.type) || // Punishment spaces
+                                     (['property', 'station', 'utility'].includes(space.type) && space.ownerId !== null); // Owned by anyone (including current player)
+
+            // Logic for when to show a quiz
+            if (isFirstLand && hasActiveQuizzes && !skipQuizDirectly) {
+                // These are the spaces that *should* trigger a quiz IF conditions above are met
+                // This includes: unowned properties, go, parking, chance, destiny
+                showQuizModal(space, position); // Quiz modal handles its own callback to performSpaceActionAfterQuiz or endTurn
+            } else {
+                // No quiz, proceed directly with space action (e.g., punishment spaces, owned properties, or no quizzes active)
+                performSpaceActionAfterQuiz(space, position); // performSpaceActionAfterQuiz will call endTurn
+            }
+            checkBankruptcy(); // Check for bankruptcy after every action
+        }
+
+        // Performs the actual action for the space after a potential quiz (or if no quiz was triggered)
+        function performSpaceActionAfterQuiz(space, position) {
+            const player = gameState.players[gameState.currentPlayerIndex];
+            switch(space.type) {
+                case 'property': case 'station': case 'utility':
+                    if (space.ownerId === null) {
+                        showBuyPropertyModal(space, position); // Unowned, offer to buy. This modal will call endTurn().
+                    } else if (space.ownerId !== player.id) {
+                        payRent(space, position); // Owned by another player, pay rent. This will call endTurn().
+                    } else { // Owned by current player
+                        endTurn(true); // Do nothing, just end turn (valid action)
+                    }
+                    break;
+                case 'chance': drawCard('chance'); break; // drawCard will handle its own endTurn
+                case 'destiny': drawCard('destiny'); break; // drawCard will handle its own endTurn
+                case 'go':
+                case 'parking':
+                case 'jail': // If landing on jail (just visiting), no action
+                    endTurn(true);
+                    break;
+                case 'tax':
+                    player.money -= space.amount;
+                    showMessage(`繳交 ${space.name} $${space.amount}。`, () => { drawPlayerInfo(); endTurn(true); });
+                    break;
+                case 'goToJail': goToJail(); break; // goToJail will call switchPlayer
+                default: endTurn(true); break;
+            }
+        }
+
+        // Show Quiz Modal
+        function showQuizModal(space, position) {
+            const quizQuestionEl = document.getElementById('quiz-question');
+            const quizOptionsEls = document.querySelectorAll('#quiz-options .quiz-option-btn');
+            const quizFeedbackEl = document.getElementById('quiz-feedback');
+            const quizOkBtn = document.getElementById('quiz-ok-btn');
+
+            quizFeedbackEl.classList.add('hidden');
+            quizOkBtn.classList.add('hidden'); // Hide until answer is given
+            quizOptionsEls.forEach(btn => {
+                btn.classList.remove('correct', 'incorrect', 'opacity-50', 'cursor-not-allowed');
+                btn.disabled = false; // Enable all options
+            });
+
+            // Collect all available questions from active quiz banks
+            let allActiveQuestionsWithBankInfo = [];
+            gameState.activeQuizBanks.forEach(bankName => {
+                if (gameState.quizzes[bankName] && gameState.availableQuizIndices[bankName]) {
+                    gameState.availableQuizIndices[bankName].forEach(qIndex => {
+                        allActiveQuestionsWithBankInfo.push({
+                            question: gameState.quizzes[bankName][qIndex],
+                            bankName: bankName,
+                            qIndex: qIndex
+                        });
+                    });
+                }
+            });
+
+            // If all questions are used, reset the available pools for all active banks
+            if (allActiveQuestionsWithBankInfo.length === 0) {
+                gameState.activeQuizBanks.forEach(bankName => {
+                    if (gameState.quizzes[bankName]) {
+                        gameState.availableQuizIndices[bankName] = Array.from({ length: gameState.quizzes[bankName].length }, (_, i) => i);
+                    }
+                });
+                // After resetting, re-populate allActiveQuestionsWithBankInfo
+                gameState.activeQuizBanks.forEach(bankName => {
+                    if (gameState.quizzes[bankName] && gameState.availableQuizIndices[bankName]) {
+                        gameState.availableQuizIndices[bankName].forEach(qIndex => {
+                            allActiveQuestionsWithBankInfo.push({
+                                question: gameState.quizzes[bankName][qIndex],
+                                bankName: bankName,
+                                qIndex: qIndex
+                            });
+                        });
+                    }
+                });
+            }
+
+            if (allActiveQuestionsWithBankInfo.length === 0) {
+                showMessage('沒有可用的題目。', () => performSpaceActionAfterQuiz(space, position));
+                return;
+            }
+
+            // Pick a random question from the currently available pool
+            const randomIndex = Math.floor(Math.random() * allActiveQuestionsWithBankInfo.length);
+            const { question: randomQuestionData, bankName: pickedBank, qIndex: pickedIndex } = allActiveQuestionsWithBankInfo[randomIndex];
+            
+            // Remove the picked question from the available pool
+            // Filter creates a new array, assign it back
+            gameState.availableQuizIndices[pickedBank] = gameState.availableQuizIndices[pickedBank].filter(idx => idx !== pickedIndex);
+
+
+            quizQuestionEl.textContent = randomQuestionData.question;
+            randomQuestionData.options.forEach((optionText, index) => {
+                quizOptionsEls[index].textContent = optionText;
+                quizOptionsEls[index].onclick = () => {
+                    // Disable all options after one is clicked
+                    quizOptionsEls.forEach(btn => {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    });
+
+                    if (index === randomQuestionData.answer) {
+                        quizFeedbackEl.textContent = '恭喜你，答對了！';
+                        quizFeedbackEl.classList.remove('text-red-600');
+                        quizFeedbackEl.classList.add('text-green-600');
+                        quizOptionsEls[index].classList.add('correct');
+
+                        quizOkBtn.onclick = () => {
+                            closeSpecificModal(quizModal);
+                            // If correct, proceed with the original space action
+                            performSpaceActionAfterQuiz(space, position); 
+                        };
+                    } else {
+                        quizFeedbackEl.textContent = `答錯了。正確答案是: ${randomQuestionData.options[randomQuestionData.answer]}`;
+                        quizFeedbackEl.classList.remove('text-green-600');
+                        quizFeedbackEl.classList.add('text-red-600');
+                        quizOptionsEls[index].classList.add('incorrect');
+                        quizOptionsEls[randomQuestionData.answer].classList.add('correct'); // Highlight correct answer
+
+                        quizOkBtn.onclick = () => {
+                            closeSpecificModal(quizModal);
+                            // If incorrect, skip the action and just proceed to next turn (always switch player)
+                            showMessage('你答錯了！無法進行此格子的操作。', () => endTurn(false)); 
+                        };
+                    }
+                    quizFeedbackEl.classList.remove('hidden');
+                    quizOkBtn.classList.remove('hidden'); // Show continue button
+                };
+            });
+            modalContainer.classList.remove('hidden');
+            quizModal.classList.remove('hidden');
+        }
+
+        // Calculate and pay rent
+        function payRent(space, position) { 
+             const owner = gameState.players.find(p => p.id === space.ownerId);
+             if (!owner) { endTurn(true); return; } 
+             let rent = 0;
+             if(space.type === 'property') rent = space.rent;
+             else if (space.type === 'station') {
+                 // Rent for stations increases based on how many stations the owner has
+                 const count = gameState.board.filter(s => s.type === 'station' && s.ownerId === owner.id).length;
+                 rent = space.rent * Math.pow(2, count - 1);
+             } else if (space.type === 'utility') {
+                 // Rent for utilities depends on dice roll and number of utilities owned
+                 const count = gameState.board.filter(s => s.type === 'utility' && s.ownerId === owner.id).length;
+                 rent = (gameState.dice[0] + gameState.dice[1]) * (count === 1 ? 40 : 100);
+             }
+             const player = gameState.players[gameState.currentPlayerIndex];
+             player.money -= rent;
+             owner.money += rent;
+             showMessage(`降落在 ${owner.name} 的 ${space.name}，支付租金 $${rent}。`, () => { drawPlayerInfo(); checkBankruptcy(); endTurn(true); });
+        }
+        // Send player to jail
+        function goToJail() {
+            const player = gameState.players[gameState.currentPlayerIndex];
+            player.position = 10; // Jail space index
+            player.inJail = true;
+            player.jailTurns = 0; // Reset jail turns
+            updatePlayerPawns();
+            showMessage('你被送進監獄了！', switchPlayer); // Always switch player after going to jail
+        }
+        // Handle player's turn while in jail
+        function handleJailTurn() {
+            const player = gameState.players[gameState.currentPlayerIndex];
+            player.jailTurns++;
+            drawPlayerInfo(); // Update player info to show jail turns
+            if (player.getOutOfJailCards > 0) {
+                // Use a Get Out of Jail Free card
+                player.getOutOfJailCards--;
+                player.inJail = false;
+                player.jailTurns = 0;
+                showMessage(`使用了「免費出獄卡」，可以再擲一次！`, () => endTurn(true)); // Valid action, player can roll again
+            } else if (player.jailTurns > 3) {
+                 // After 3 turns, pay bail
+                 player.money -= 500;
+                 player.inJail = false;
+                 player.jailTurns = 0;
+                 showMessage(`已在監獄待3回合，支付 $500 保釋金。`, () => { drawPlayerInfo(); endTurn(true); }); // Valid action, player can roll again
+            } else {
+                 // Still in jail, skip turn
+                 showMessage(`你在監獄中，還剩下 ${4 - player.jailTurns} 回合。`, switchPlayer); // Invalid action, skip to next player
+            }
+            saveGameState();
+        }
+        // Draw and process a Chance or Destiny card
+        function drawCard(type) {
+            const cardDeck = type === 'chance' ? chanceCards : destinyCards;
+            const card = cardDeck[Math.floor(Math.random() * cardDeck.length)];
+            showCardModal(type, card.text, () => handleCardAction(card)); // Card modal calls handleCardAction
+        }
+        // Perform action specified by the card
+        function handleCardAction(card) {
+            const player = gameState.players[gameState.currentPlayerIndex];
+            switch(card.action) {
+                case 'money': player.money += card.amount; drawPlayerInfo(); endTurn(true); break;
+                // For move actions from cards, we don't trigger quiz again, pass isFirstLand = false
+                case 'move': player.position = card.position; if(player.position === 0) player.money += 2000; updatePlayerPawns(); handleSpaceAction(player.position, false); break;
+                case 'moveRelative': // For relative move actions from cards, we don't trigger quiz again
+                    const oldPosForRelativeMove = player.position;
+                    player.position = (player.position + card.amount) % gameState.board.length;
+                    if (player.position < oldPosForRelativeMove && card.amount > 0) { // Check if passed Go
+                        player.money += 2000;
+                        showMessage('經過「起點」，領取薪水 $2000！', () => drawPlayerInfo(), 3000); 
+                    }
+                    updatePlayerPawns();
+                    handleSpaceAction(player.position, false); // No quiz after card move
+                    break;
+                case 'goToJail': goToJail(); break; // goToJail handles its own switchPlayer
+                case 'getOutOfJail': player.getOutOfJailCards++; endTurn(true); break;
+            }
+            checkBankruptcy();
+        }
+        // Check if any player is bankrupt and end game if only one player remains
+        function checkBankruptcy() {
+            // Filter out bankrupt players
+            const remainingPlayers = gameState.players.filter(p => p.money >= 0);
+
+            // If only one or zero players remain, end the game.
+            if(remainingPlayers.length <= 1 && !gameState.isGameOver) {
+                // Show bankruptcy message for newly bankrupt players before ending
+                gameState.players.forEach(player => {
+                    if(player.money < 0 && !player.announcedBankruptcy) {
+                        player.announcedBankruptcy = true; // Mark as announced to prevent repeated messages
+                        showMessage(`${player.name} 破產了！`, () => {
+                           gameState.board.forEach(space => { if (space.ownerId === player.id) space.ownerId = null; });
+                           drawBoard(); // Redraw board to reflect ownership changes
+                           // After message, recheck and potentially end game
+                           if(gameState.players.filter(p => p.money >= 0).length <= 1) {
+                               endGame();
+                           }
+                        });
+                    }
+                });
+                // If the condition still holds (all bankrupt or only one left), end the game
+                if (remainingPlayers.length <= 1) {
+                    endGame();
+                }
+            } else {
+                // For any players who just went bankrupt, but the game is not yet over (more than one active player left)
+                gameState.players.forEach(player => {
+                    if(player.money < 0 && !player.announcedBankruptcy) {
+                        player.announcedBankruptcy = true;
+                        showMessage(`${player.name} 破產了！`, () => {
+                           gameState.board.forEach(space => { if (space.ownerId === player.id) space.ownerId = null; });
+                           drawBoard();
+                           // After message, if current player is bankrupt, switch to next valid player
+                           if(gameState.players[gameState.currentPlayerIndex].money < 0) {
+                                switchPlayer();
+                           }
+                        });
+                    }
+                });
+            }
+        }
+
+        // Save game state to local storage
+        function saveGameState() { 
+            if (!gameState.isGameOver) {
+                // Save the entire gameState object including current gameTitle and the full board.
+                // The board array within gameState already contains the themed names/prices if AI was used.
+                localStorage.setItem('monopoly_save_game', JSON.stringify(gameState));
+            } 
+        }
+
+        // Load game state from local storage or show setup screen
+        function loadGame() {
+            const savedGame = localStorage.getItem('monopoly_save_game');
+            const exportBtn = document.getElementById('export-game-btn');
+            const importBtn = document.getElementById('import-game-btn');
+            const topLeftControls = document.getElementById('game-controls-top-left');
+            const topRightControls = document.getElementById('game-controls-top-right');
+
+            if (savedGame) {
+                try {
+                    const loadedState = JSON.parse(savedGame);
+                    
+                    // Directly use loadedState.board as the game board
+                    // Ensure all necessary properties exist, providing fallbacks
+                    if (!loadedState.board || !Array.isArray(loadedState.board) || loadedState.board.length === 0) {
+                         throw new Error("載入檔案中遊戲板資料不完整。");
+                    }
+                    // For compatibility with older saves that only saved ownerId/type
+                    const reconstructedBoard = loadedState.board.map((loadedSpace, index) => {
+                        const initialSpace = initialBoardSpacesData[index];
+                        if (initialSpace && loadedSpace && loadedSpace.type) {
+                            if (['property', 'station', 'utility'].includes(loadedSpace.type) && loadedSpace.name && loadedSpace.price) {
+                                // Full details saved (from v3.5 or later, or AI-designed)
+                                return {
+                                    ...loadedSpace,
+                                    group: loadedSpace.group || initialSpace.group, // Ensure group is present
+                                    rent: loadedSpace.rent || initialSpace.rent // Ensure rent is present
+                                };
+                            } else if (['property', 'station', 'utility'].includes(loadedSpace.type)) {
+                                // Partial details (older save), reconstruct using initialBoardSpacesData
+                                return { ...initialSpace, ownerId: loadedSpace.ownerId || null };
+                            }
+                        }
+                        return initialSpace || loadedSpace; // Use initial if no loaded type, or fallback to loaded if initial missing (shouldn't happen)
+                    });
+
+                    const finalLoadedState = {
+                        ...loadedState,
+                        board: reconstructedBoard,
+                        quizzes: loadedState.quizzes || {},
+                        activeQuizBanks: loadedState.activeQuizBanks || [],
+                        availableQuizIndices: loadedState.availableQuizIndices || {},
+                        gameTitle: loadedState.gameTitle || '台灣大富翁' // Load game title or default
+                    };
+
+                    setupScreen.classList.add('hidden');
+                    gameScreen.classList.remove('hidden');
+                    initGame(finalLoadedState);
+
+                    // Ensure controls are visible after loading
+                    topLeftControls.classList.remove('hidden');
+                    topRightControls.classList.remove('hidden');
+                    exportBtn.disabled = false; // Enable export for active game
+                    exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                } catch (e) {
+                    console.error("Error loading saved game:", e);
+                    showMessage("載入遊戲失敗，檔案可能已損壞。將開始新遊戲。", () => {
+                        localStorage.removeItem('monopoly_save_game');
+                        // Fallback to setup screen if load fails
+                        setupScreen.classList.remove('hidden');
+                        gameScreen.classList.add('hidden'); // Ensure game screen is hidden on fallback
+                        updatePlayerDetailsView();
+                        renderQuizBankSelection();
+
+                        // For setup screen after failed load
+                        topLeftControls.classList.remove('hidden'); // Import button should be available
+                        exportBtn.disabled = true; // Export is disabled
+                        exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        topRightControls.classList.add('hidden'); // End/Reset should be hidden
+                    });
+                }
+            } else { // No saved game found, show setup
+                setupScreen.classList.remove('hidden');
+                gameScreen.classList.add('hidden'); // Ensure game screen is hidden
+                updatePlayerDetailsView(); // Initialize player details for new game
+                renderQuizBankSelection(); // Render quiz bank selection on fresh load
+
+                // For setup screen
+                topLeftControls.classList.remove('hidden'); // Import button should be available
+                exportBtn.disabled = true; // Export is disabled
+                exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                topRightControls.classList.add('hidden'); // End/Reset should be hidden
+            }
+        }
+        // Start the game timer
+        function startTimer() {
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                if(gameState.isGameOver) { clearInterval(gameTimerInterval); return; }
+                const remaining = gameState.gameEndTime - Date.now();
+                if (remaining <= 0) {
+                    timerDisplay.textContent = "時間到！"; clearInterval(gameTimerInterval); endGame();
+                } else {
+                    const minutes = Math.floor((remaining / 1000) / 60);
+                    const seconds = Math.floor((remaining / 1000) % 60);
+                    timerDisplay.textContent = `剩餘時間: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+        // End the game and display results
+        function endGame(isSilent = false) {
+            if(gameState.isGameOver && !isSilent) return;
+            gameState.isGameOver = true;
+            document.getElementById('roll-dice-btn').disabled = true;
+            if(gameTimerInterval) clearInterval(gameTimerInterval);
+            
+            // Calculate total assets for each player
+            const playerAssets = gameState.players.map(player => {
+                const propertyValue = gameState.board.filter(s => s.ownerId === player.id).reduce((sum, prop) => {
+                    // For owned properties, calculate value at 90% of original price
+                    if (prop.type === 'property' || prop.type === 'station' || prop.type === 'utility') {
+                        return sum + (prop.price * 0.9); // 90% of original price
+                    }
+                    return sum;
+                }, 0);
+                return { ...player, totalAssets: Math.round(player.money + propertyValue) }; // Round to nearest integer
+            }).sort((a, b) => b.totalAssets - a.totalAssets); // Sort by total assets descending
+
+            // Filter out players who are effectively bankrupt and not ranked
+            const rankedPlayers = playerAssets.filter(p => p.totalAssets >= 0);
+            
+            // Determine winner based on total assets, if any players have positive assets
+            const winner = rankedPlayers.length > 0 ? rankedPlayers[0] : { name: '無人', emoji: '😭', totalAssets: 0 }; // Default if all are bankrupt
+
+            document.getElementById('winner-text').textContent = `恭喜 ${winner.name} 獲勝！`;
+            if (rankedPlayers.length > 0) {
+                document.getElementById('winner-details').innerHTML = rankedPlayers.map((p, i) => `<div>#${i+1}: ${p.name} ${p.emoji} - 總資產 $${p.totalAssets}</div>`).join('');
+            } else {
+                 document.getElementById('winner-details').innerHTML = `<div>所有玩家皆已破產。</div>`;
+            }
+            
+            modalContainer.classList.remove('hidden');
+            winnerModal.classList.remove('hidden');
+            localStorage.removeItem('monopoly_save_game'); // Clear saved game
+        }
+        // Event listener for playing again
+        document.getElementById('play-again-btn').addEventListener('click', () => { location.reload(); });
+        
+        // Show a confirmation modal
+        function showConfirm(text, onYes) {
+            document.getElementById('confirm-text').textContent = text;
+            document.getElementById('confirm-yes-btn').onclick = () => { closeSpecificModal(confirmModal); onYes(); };
+            document.getElementById('confirm-no-btn').onclick = () => closeSpecificModal(confirmModal);
+            modalContainer.classList.remove('hidden');
+            confirmModal.classList.remove('hidden');
+        }
+        // Show the buy property modal
+        function showBuyPropertyModal(space, position) {
+            document.getElementById('buy-property-name').textContent = space.name;
+            document.getElementById('buy-property-price').textContent = `價格: $${space.price}`;
+            const player = gameState.players[gameState.currentPlayerIndex];
+            const buyBtn = document.getElementById('buy-btn');
+            buyBtn.disabled = player.money < space.price; // Disable buy button if not enough money
+            if(buyBtn.disabled) buyBtn.classList.add('opacity-50', 'cursor-not-allowed'); else buyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            buyBtn.onclick = () => { player.money -= space.price; space.ownerId = player.id; document.getElementById(`owner-${position}`).style.backgroundColor = playerColors[player.id]; drawPlayerInfo(); closeSpecificModal(buyPropertyModal); endTurn(true); };
+            document.getElementById('skip-buy-btn').onclick = () => { closeSpecificModal(buyPropertyModal); endTurn(true); };
+            modalContainer.classList.remove('hidden'); buyPropertyModal.classList.remove('hidden');
+        }
+        // Show a card modal (Chance or Destiny)
+        function showCardModal(type, text, callback) {
+            const cardTitle = document.getElementById('card-title');
+            cardTitle.textContent = type === 'chance' ? '機會' : '命運';
+            cardTitle.className = `text-2xl font-bold mb-2 ${type === 'chance' ? 'text-blue-500' : 'text-orange-500'}`;
+            document.getElementById('card-text').textContent = text;
+            document.getElementById('card-ok-btn').onclick = () => { closeSpecificModal(cardModal); callback(); };
+            modalContainer.classList.remove('hidden'); cardModal.classList.remove('hidden');
+        }
+
+        // Helper function to check if any modal is currently visible
+        function anyModalActive() {
+            return Object.values(modals).some(m => !m.classList.contains('hidden'));
+        }
+
+        // Closes a specific modal and manages the overall modal container visibility
+        function closeSpecificModal(modalElement) {
+            modalElement.classList.add('hidden');
+            // Only hide the main container if no other modals are active
+            if (!anyModalActive()) {
+                modalContainer.classList.add('hidden');
+            }
+        }
+
+        // Show a general message modal, with optional auto-close
+        function showMessage(text, callback, autoCloseDelay = 0) {
+            document.getElementById('message-text').textContent = text;
+            const messageOkBtn = document.getElementById('message-ok-btn');
+            
+            // Define the action to take when the message modal closes
+            const closeMessageAndContinue = () => {
+                closeSpecificModal(messageModal);
+                if (callback) callback();
+            };
+
+            messageOkBtn.onclick = closeMessageAndContinue;
+            messageOkBtn.classList.remove('hidden'); // Ensure button is visible by default
+
+            if (autoCloseDelay > 0) {
+                messageOkBtn.classList.add('hidden'); // Hide the button for auto-close messages
+                setTimeout(closeMessageAndContinue, autoCloseDelay);
+            } else {
+                messageOkBtn.classList.remove('hidden'); // Show button if no auto-close
+            }
+
+            modalContainer.classList.remove('hidden'); // Ensure container is visible
+            messageModal.classList.remove('hidden'); // Ensure message modal is visible
+        }
+
+        // --- Export/Import Game Functions ---
+        document.getElementById('export-game-btn').addEventListener('click', exportGameProgress);
+        document.getElementById('import-game-btn').addEventListener('click', importGameProgress);
+
+        function exportGameProgress() {
+            try {
+                // Save the entire gameState object including current gameTitle and the full board.
+                // The board array within gameState already contains the themed names/prices if AI was used.
+                const jsonString = JSON.stringify(gameState, null, 2); // Prettify JSON for readability
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `台灣大富翁_儲存_${new Date().toISOString().slice(0, 10)}.json`; // Filename with date
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showMessage('遊戲進度已匯出！', null, 2000);
+            } catch (e) {
+                console.error("匯出遊戲進度時發生錯誤:", e);
+                showMessage('匯出遊戲進度失敗！', null, 2000);
+            }
+        }
+
+        function importGameProgress() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const loadedState = JSON.parse(event.target.result);
+                        
+                        // Basic validation: Check if key properties exist
+                        if (!loadedState.players || !Array.isArray(loadedState.players) ||
+                            !loadedState.board || !Array.isArray(loadedState.board) ||
+                            loadedState.players.length === 0) {
+                            throw new Error("載入檔案格式不正確或資料不完整。");
+                        }
+
+                        // Stop current timer if running
+                        if (gameTimerInterval) {
+                            clearInterval(gameTimerInterval);
+                            gameTimerInterval = null;
+                        }
+
+                        // AI themed board is now directly part of loadedState.board
+                        // So, we don't need to reconstruct with initialBoardSpacesData for names/prices
+                        // just ensure integrity and proper fallback for other properties if needed.
+                        const finalLoadedState = {
+                            ...loadedState,
+                            quizzes: loadedState.quizzes || {},
+                            activeQuizBanks: loadedState.activeQuizBanks || [],
+                            availableQuizIndices: loadedState.availableQuizIndices || {},
+                            gameTitle: loadedState.gameTitle || '台灣大富翁',
+                            // The loadedState.board should already be the fully-formed board
+                            // but we map it to ensure deep copy and default ownerId if missing
+                            board: loadedState.board.map(space => ({...space, ownerId: space.ownerId === undefined ? null : space.ownerId}))
+                        };
+
+                        // Ensure game screen is visible and setup screen is hidden
+                        setupScreen.classList.add('hidden');
+                        gameScreen.classList.remove('hidden');
+
+                        initGame(finalLoadedState);
+                        showMessage('遊戲進度已成功載入！', null, 2000);
+                    } catch (error) {
+                        console.error("載入遊戲進度時發生錯誤:", error);
+                        showMessage(`載入遊戲進度失敗: ${error.message || '檔案可能已損壞或格式不正確。'}`, null, 3000);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click(); // Open file dialog
+        }
+
+        // --- AI Design Game Functions ---
+        aiDesignGameBtn.addEventListener('click', showAIDesignModal);
+        aiGenerateBtn.addEventListener('click', generateAIDesign);
+        aiCancelBtn.addEventListener('click', () => closeSpecificModal(aiDesignModal));
+
+        function showAIDesignModal() {
+            aiThemeInput.value = ''; // Clear previous input
+            aiLoadingMessage.classList.add('hidden'); // Hide loading message
+            aiGenerateBtn.disabled = false; // Enable generate button
+            aiGenerateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            modalContainer.classList.remove('hidden');
+            aiDesignModal.classList.remove('hidden');
+        }
+
+        async function generateAIDesign() {
+            const theme = aiThemeInput.value.trim();
+            if (!theme) {
+                showMessage('請輸入一個遊戲主題！');
+                return;
+            }
+
+            aiGenerateBtn.disabled = true;
+            aiGenerateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            aiLoadingMessage.classList.remove('hidden');
+            
+            closeSpecificModal(aiDesignModal); // Close the AI input modal immediately
+
+            showMessage('AI 正在設計遊戲區，請稍候...', null, 0); // Show a general loading message
+
+            try {
+                const propertiesToTheme = initialBoardSpacesData.filter(s => ['property', 'station', 'utility'].includes(s.type));
+                
+                // Construct the prompt for the AI
+                const prompt = `
+                    您是一位遊戲板設計師。我需要一個以「${theme}」為主題的大富翁遊戲板。
+                    請為標準大富翁遊戲板中的以下類型空間生成新的名稱和價格。
+                    價格應介於 $1000 到 $4000 之間，且必須是 $100 的倍數。
+                    請排除「起點」、「監獄」、「免費停車」、「前往監獄」、「所得稅」、「機會」、「命運」這些空間。
+
+                    需要重新命名的原始空間類型和名稱：
+                    ${JSON.stringify(propertiesToTheme.map(s => ({ originalName: s.name, type: s.type, originalPrice: s.price })))}
+
+                    請以以下 JSON 格式回傳結果：
+                    {
+                      "gameTitle": "「[您的主題遊戲名稱]」大富翁",
+                      "spaces": [
+                        { "originalName": "墾丁大街", "newName": "...", "newPrice": 1200 },
+                        { "originalName": "高鐵左營站", "newName": "...", "newPrice": 2500 },
+                        { "originalName": "台積電", "newName": "...", "newPrice": 3000 }
+                        // ... 請確保 JSON 輸出中的「spaces」陣列包含所有提供的原始名稱的條目，即使新名稱與原始名稱相似。空間的順序應保持不變。
+                      ]
+                    }
+                `;
+
+                // Call Gemini API
+                const apiKey = ""; // Canvas will provide this at runtime
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "gameTitle": { "type": "STRING" },
+                                "spaces": {
+                                    "type": "ARRAY",
+                                    "items": {
+                                        "type": "OBJECT",
+                                        "properties": {
+                                            "originalName": { "type": "STRING" },
+                                            "newName": { "type": "STRING" },
+                                            "newPrice": { "type": "NUMBER" }
+                                        },
+                                        "required": ["originalName", "newName", "newPrice"]
+                                    }
+                                }
+                            },
+                            "required": ["gameTitle", "spaces"]
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const aiResponseText = result.candidates[0].content.parts[0].text;
+                    const aiData = JSON.parse(aiResponseText);
+                    
+                    applyAIDesignToBoard(aiData);
+                    closeSpecificModal(messageModal); // Close the loading message
+                    showMessage('遊戲區設計完成！正在啟動新遊戲。', null, 2000);
+                } else {
+                    throw new Error("AI 回應格式不正確或沒有內容。");
+                }
+            } catch (error) {
+                console.error("AI 設計遊戲區時發生錯誤:", error);
+                closeSpecificModal(messageModal); // Close loading message
+                showMessage(`AI 設計遊戲區失敗: ${error.message || '無法生成遊戲區。請稍後再試。'}`, null, 5000);
+                aiGenerateBtn.disabled = false;
+                aiGenerateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function applyAIDesignToBoard(aiData) {
+            // Create a new board template based on initial, then apply AI changes
+            let newThemedBoardTemplate = JSON.parse(JSON.stringify(initialBoardSpacesData));
+            const aiSpacesMap = new Map(aiData.spaces.map(s => [s.originalName, s]));
+
+            newThemedBoardTemplate.forEach(space => {
+                if (['property', 'station', 'utility'].includes(space.type)) {
+                    const aiSpace = aiSpacesMap.get(space.name);
+                    if (aiSpace) {
+                        space.name = aiSpace.newName;
+                        // Validate and adjust price
+                        let newPrice = parseInt(aiSpace.newPrice);
+                        if (isNaN(newPrice) || newPrice < 1000 || newPrice > 4000) {
+                            // Fallback to random valid price if AI price is invalid
+                            newPrice = Math.floor(Math.random() * (4000 - 1000 + 100) / 100) * 100 + 1000; // Random price between 1000 and 4000 in 100 increments
+                        } else {
+                            // Ensure price is a multiple of 100
+                            newPrice = Math.round(newPrice / 100) * 100;
+                            // Clamp to range in case rounding pushes it out
+                            newPrice = Math.max(1000, Math.min(4000, newPrice));
+                        }
+                        space.price = newPrice;
+
+                        // Adjust rent proportionally based on new price vs original price ratio (simple heuristic)
+                        // Make sure space.price is original here before calculation for ratio, or use a fixed ratio
+                        // Let's use a simplified rent adjustment based on a general range for properties, or a fixed increase for stations/utilities
+                        if (space.type === 'property') {
+                           space.rent = Math.max(20, Math.round(space.price * 0.05)); // 5% of new price, min 20
+                        } else if (space.type === 'station') {
+                            // Stations usually have fixed base rent, multiplier scales. Let's keep original base rent for stations.
+                            // If AI changes station price, it doesn't change base rent structure.
+                            // So, we keep original station rent, AI only changes its name/price.
+                        } else if (space.type === 'utility') {
+                            // Utilities also have fixed multipliers. Keep original rent data.
+                        }
+                    }
+                }
+            });
+
+            // Update the global currentBoardTemplate for subsequent new games unless AI is used again
+            currentBoardTemplate = newThemedBoardTemplate;
+
+            // Prepare players for the new game
+            const initialMoney = initialMoneySelect.value === 'custom' ? parseInt(initialMoneyCustom.value) || 15000 : parseInt(initialMoneySelect.value);
+            const gameTime = gameTimeSelect.value === 'custom' ? parseInt(gameTimeCustom.value) : parseInt(gameTimeSelect.value);
+            const players = [];
+            const playerCount = parseInt(playerCountSelect.value);
+            for (let i = 0; i < playerCount; i++) {
+                players.push({
+                    id: i, name: document.getElementById(`player-name-${i}`).value || `玩家 ${i + 1}`,
+                    emoji: document.getElementById(`player-emoji-${i}`).value, money: initialMoney,
+                    position: 0, inJail: false, jailTurns: 0, getOutOfJailCards: 0
+                });
+            }
+
+            // Start the game with the newly designed board template and AI-generated title
+            initGame({
+                ...gameState, // Preserve quizzes, activeQuizBanks, etc.
+                players: players,
+                currentPlayerIndex: 0,
+                board: currentBoardTemplate.map(space => { // Deep copy current template for game board
+                    if (['property', 'station', 'utility'].includes(space.type)) {
+                        return { ...space, ownerId: null };
+                    }
+                    return space;
+                }),
+                dice: [0, 0],
+                gameEndTime: gameTime > 0 ? Date.now() + gameTime * 60 * 1000 : null,
+                isGameOver: false,
+                gameTitle: aiData.gameTitle // Set AI-generated title
+            });
+
+            // Reset saved game in local storage if any, as this is a new themed game
+            localStorage.removeItem('monopoly_save_game'); 
+        }
+        
+        window.onload = loadGame;
+    </script>
+</body>
+</html>
