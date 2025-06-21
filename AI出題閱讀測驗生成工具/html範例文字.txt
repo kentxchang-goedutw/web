@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IU 的成長故事閱讀測驗</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* 整體樣式 */
+body {
+    font-family: "Noto Sans TC", sans-serif;
+    margin: 20px;
+    line-height: 1.8;
+    color: #333;
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 80px; /* 留給底部按鈕和版權資訊的空間 */
+    min-height: 100vh; /* 確保內容足夠長以顯示底部固定元素 */
+    position: relative; /* 為了固定定位的子元素 */
+}
+.container {
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+/* 區塊樣式 */
+.section {
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-sizing: border-box; /* 確保padding不會增加寬度 */
+}
+.story-block {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+}
+.quiz-block {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+}
+.result-block {
+    background: #e6f3ff;
+    border: 1px solid #cce7ff;
+    display: none;
+}
+
+/* 標題 */
+h1 {
+    margin-top: 0;
+    color: #4CAF50; /* 綠色 */
+    font-size: 1.8rem;
+    text-align: center;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+h2 {
+    margin: 8px 0;
+    color: #3f51b5; /* 藍色 */
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+/* 故事文本 */
+.story-block p {
+    font-size: 1.05rem;
+    text-align: justify;
+}
+
+/* 題目網格 */
+.quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 自動調整列寬 */
+    gap: 20px;
+}
+
+/* 題目層次區塊 */
+.level {
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+.l1 { background: #e8f5e9; border: 1px solid #c8e6c9; } /* 淺綠 */
+.l2 { background: #fffde7; border: 1px solid #fff9c4; } /* 淺黃 */
+.l3 { background: #fbe9e7; border: 1px solid #ffccbc; } /* 淺橘 */
+.l4 { background: #e0f2f7; border: 1px solid #b2ebf2; } /* 淺藍 */
+
+/* 單個問題 */
+.question {
+    margin: 15px 0;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.question label {
+    display: block;
+    margin: 8px 0;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+}
+.question label:hover {
+    background-color: #f0f0f0;
+}
+.question input[type="radio"] {
+    margin-right: 8px;
+}
+
+/* 答題結果反饋 */
+.okq { background: #e6ffe6; border: 1px solid #a8e6a8; } /* 正確問題背景 */
+.badq { background: #ffebeb; border: 1px solid #f0a8a8; } /* 錯誤問題背景 */
+.question .mark {
+    margin-left: 8px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+.badq .mark {
+    color: #F44336;
+}
+
+/* 按鈕樣式 */
+.button-group-top { /* For "提交答案" button that remains at top */
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.button-group-fixed { /* For fixed buttons at the bottom-left */
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap; /* 允許按鈕換行 */
+    z-index: 999; /* 確保在其他內容之上 */
+}
+
+button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* min-width removed for blue buttons to auto-fit text */
+}
+/* 綠色按鈕 (提交答案) */
+button.green-btn {
+    background: #4CAF50;
+    min-width: 150px; /* 保持提交答案按鈕的最小寬度 */
+}
+button.green-btn:hover {
+    background-color: #66BB6A;
+}
+
+/* 藍色按鈕 (AI重新出題, AI模型設定) */
+button.blue-btn {
+    background: #2196F3; /* 藍色 */
+}
+button.blue-btn:hover {
+    background-color: #1976D2; /* 深藍色 */
+}
+
+button:active {
+    transform: translateY(0);
+}
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 結果概覽網格 */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+.box {
+    border: 2px solid #66BB6A;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 10px;
+    font-size: .95rem;
+    line-height: 1.5;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.res1 { background: #e3f2fd; } .res2 { background: #fff3e0; } .res3 { background: #fce4ec; } .res4 { background: #e8f5e9; }
+.okp { background: #e6ffe6; } /* 解析正確背景 */
+.badp { background: #ffecec; } /* 解析錯誤背景 */
+
+/* 解析詳情 */
+.explain {
+    margin: 8px 0;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border: 1px solid #eee;
+}
+
+/* 版權資訊 */
+.credit {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: #ffffff;
+    border: 2px solid #4CAF50;
+    border-radius: 8px;
+    padding: 8px 15px;
+    box-shadow: 0 0 8px rgba(0,0,0,.2);
+    font-size:.85rem;
+    z-index: 99;
+}
+.credit a {
+    text-decoration: none;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* 訊息視窗 */
+#messageBox, #settingsModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 1000;
+    text-align: center;
+    width: 90%;
+    max-width: 500px;
+    box-sizing: border-box;
+}
+#messageBox p, #settingsModal h3 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #555;
+}
+#settingsModal label {
+    display: block;
+    margin-bottom: 10px;
+    text-align: left;
+    font-weight: bold;
+    color: #4CAF50;
+}
+#settingsModal input[type="radio"] {
+    margin-right: 8px;
+}
+#settingsModal input[type="text"], #settingsModal select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+#settingsModal .setting-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+/* 模態視窗內的按鈕使用綠色樣式 */
+#messageBox button,
+#settingsModal .modal-button-group button {
+    background-color: #4CAF50; /* 綠色 */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 5px;
+    min-width: 100px;
+}
+#messageBox button:hover,
+#settingsModal .modal-button-group button:hover {
+    background-color: #66BB6A; /* 淺綠色 */
+}
+
+
+/* RWD 調整 */
+@media (max-width: 768px) {
+    body {
+        margin: 15px;
+        padding-bottom: 100px; /* 為適應底部固定按鈕增加更多空間 */
+    }
+    .section {
+        padding: 20px;
+    }
+    .quiz-grid {
+        grid-template-columns: 1fr; /* 單列顯示 */
+    }
+    .grid {
+        grid-template-columns: repeat(2, 1fr); /* 兩列顯示 */
+    }
+    h1 {
+        font-size: 1.6rem;
+    }
+    h2 {
+        font-size: 1.1rem;
+    }
+    .button-group-fixed {
+        flex-direction: column; /* 小螢幕下垂直排列按鈕 */
+        align-items: flex-start;
+        left: 15px;
+        bottom: 15px;
+        width: calc(100% - 30px); /* 讓按鈕組佔據大部分寬度 */
+    }
+    .button-group-fixed button {
+        width: 100%; /* 小螢幕下按鈕佔滿寬度 */
+    }
+    .credit {
+        position: static; /* 在小螢幕下改為靜態定位 */
+        margin-top: 20px;
+        text-align: center;
+        box-shadow: none;
+        width: auto;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="story-block section">
+        <h1>IU 的成長故事</h1>
+        <p>
+            李知恩，這個名字在韓國娛樂圈家喻戶曉，但外界更熟悉的是她的藝名——IU。這位被譽為「音源強盜」、「國民妹妹」的歌手，其璀璨星途背後，卻有著一段充滿逆境與堅持的感人故事。
+            <br><br>
+            IU 的童年並不如人意。在小學時期，她和家人遭遇經濟困境，甚至不得不與弟弟分開，寄宿在親戚家中。那段時間，她過著沒有自己獨立房間的生活，經常只能在冰冷的廚房地板上鋪被而眠。儘管環境艱苦，但她對音樂的熱情從未熄滅。年幼的她喜歡聽廣播，電台裡傳來的歌聲成為她心靈的慰藉，也在那時，一顆想成為歌手的種子悄然萌芽。她常常在狹小的空間裡，反覆練習唱歌，歌聲成了她對抗現實困境的力量。
+            <br><br>
+            懷抱著歌手夢想的 IU，從國中時期便開始參加各種經紀公司的選拔。然而，一次又一次的失敗接踵而來。據悉，她曾參加過二十多次的試鏡，卻屢屢碰壁，甚至經歷了詐騙集團的教訓，一度讓她心灰意冷。儘管如此，她始終沒有放棄，堅持不懈地努力著。最終，她被LOEN娛樂公司（現為Kakao M）看中，終於獲得了出道的機會。
+            <br><br>
+            2008年，IU 以一首名為《迷兒》的歌曲正式出道，但這張專輯並未引起太大的水花。她沒有因此氣餒，反而更加努力地精進自己的歌唱實力，並學習彈奏吉他，主動參與歌曲的創作，包括作詞和作曲，展現出她對音樂的真摯與才華。
+            <br><br>
+            真正的轉捩點發生在2010年，憑藉歌曲《好日子》中令人驚艷的「三段式高音」，IU 一夜之間紅遍韓國，也因此獲得了「國民妹妹」的稱號，成為炙手可熱的國民級偶像。然而，隨之而來的是外界對她形象的定型與龐大的關注壓力。
+            <br><br>
+            IU 並沒有被這些既定的標籤所限制。她不斷挑戰自我，在音樂上尋求突破。從探討二十多歲迷茫與陰影的《二十三》，到鼓勵聽眾擁抱真實自我的《Palette》，再到反思愛與離別的《Celebrity》，每一張專輯，IU 都積極參與製作，擔任製作人，邀請不同的音樂人合作，將自己的音樂風格從主流K-pop延伸到民謠、搖滾、R&B等多樣化的領域，展現了她作為藝術家的無限可能性。
+            <br><br>
+            除了音樂事業上的成就，IU 的善良與回饋社會的精神也備受讚揚。多年來，她一直低調地向多個慈善機構捐款，包括幫助兒童、老年人以及動物保護等領域。在COVID-19疫情期間，她更是大手筆捐出數億韓元和大量醫療物資，展現了作為公眾人物的社會責任感。
+            <br><br>
+            IU 的故事，是一個關於夢想、堅持、努力與回饋的勵志篇章。她不僅用音樂溫暖人心，更以自身的行動成為許多人心目中「最想成為的那種大人」。她的成長軌跡證明，即便身處困境，只要心懷希望，不懈努力，便能綻放出屬於自己的光芒。
+        </p>
+    </div>
+
+    <div class="quiz-block section">
+        <form id="quiz">
+            <div class="quiz-grid" id="qgrid"></div>
+            <div class="button-group-top">
+                <button type="button" onclick="grade()" class="green-btn">提交答案</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="result" class="result-block section">
+        <h2>測驗結果</h2>
+        <div class="grid" id="grid"></div>
+        <h3>答案解析</h3>
+        <div id="details"></div>
+    </div>
+</div>
+
+<!-- 固定在左下角的按鈕組 -->
+<div class="button-group-fixed">
+    <button type="button" onclick="showSettingsModal()" id="settingsBtn" class="blue-btn">⚙️</button>
+    <button type="button" onclick="regenerateQuiz()" id="regenerateBtn" class="blue-btn">AI重新出題</button>
+</div>
+
+<div class="credit"><a href="https://kentxchang.blogspot.tw" target="_blank" rel="noopener">Made by 阿剛老師</a></div>
+
+<!-- 訊息視窗 -->
+<div id="messageBox">
+    <p id="messageBoxText"></p>
+    <button onclick="hideMessageBox()">確定</button>
+</div>
+
+<!-- AI 模型設定彈出視窗 -->
+<div id="settingsModal">
+    <h3>AI 模型設定</h3>
+    <div class="setting-item">
+        <label>
+            <input type="radio" name="aiModelType" value="gemini_default" checked> 預設 Gemini 模型
+        </label>
+        <small style="display: block; margin-top: 5px; color: #666;">使用系統預設的 Gemini 模型 (gemini-2.0-flash)，無需 API Key。</small>
+    </div>
+
+    <div class="setting-item">
+        <label>
+            <input type="radio" name="aiModelType" value="gemini_key"> Gemini API Key
+        </label>
+        <input type="text" id="geminiApiKey" placeholder="在此輸入您的 Gemini API Key" style="display: none;">
+        <small id="geminiKeyHelp" style="display: none; margin-top: 5px; color: #666;">
+            您可以在 <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a> 獲取 API Key。
+        </small>
+    </div>
+
+    <div class="setting-item">
+        <label>
+            <input type="radio" name="aiModelType" value="ollama"> 本地 Ollama URL
+        </label>
+        <input type="text" id="ollamaUrl" placeholder="例如: http://localhost:11434" style="display: none;">
+        <button type="button" id="loadOllamaModelsBtn" style="display: none; margin-top: 10px; margin-bottom: 10px;">載入 Ollama 模型</button>
+        <select id="ollamaModelSelect" style="display: none;">
+            <option value="">請選擇一個模型</option>
+        </select>
+        <small id="ollamaHelp" style="display: none; margin-top: 5px; color: #666;">
+            請確保您的 Ollama 服務正在運行，並輸入正確的 URL。
+        </small>
+    </div>
+
+    <div class="modal-button-group" style="margin-top: 20px;">
+        <button onclick="saveSettings()">儲存設定</button>
+        <button onclick="hideSettingsModal()">關閉</button>
+    </div>
+</div>
+
+<script>
+    // 定義PIRLS閱讀理解層次
+    const desc = ["提取訊息", "推論訊息", "詮釋整合", "比較評估"];
+
+    // 初始題目陣列
+    let qs = [
+        {l:1, q:"IU 的童年時期曾與弟弟分開，並寄宿在誰家中？", a:["學校宿舍", "朋友家", "親戚家", "孤兒院"], c:2, e:"文中明確提到「與弟弟分開，寄宿在親戚家中」。"},
+        {l:1, q:"IU 是在哪一年憑藉歌曲《好日子》的三段式高音而爆紅？", a:["2008年", "2010年", "2012年", "2015年"], c:1, e:"文中提到「真正的轉捩點發生在2010年，憑藉歌曲《好日子》」。"},
+        {l:1, q:"除了音樂事業，IU 也持續向哪些領域的慈善機構捐款？", a:["藝術教育、體育發展、環境保護", "兒童、老年人、動物保護", "科技研究、醫療創新、文化遺產", "災難救援、國際和平、人權倡議"], c:1, e:"文中明確列出「包括幫助兒童、老年人以及動物保護等領域」。"},
+        {l:2, q:"IU 在童年時期遭遇經濟困境時，為何喜歡聽廣播？", a:["因為廣播可以幫助她學習新知識。", "因為廣播中的歌聲能給她心靈慰藉並啟發她的夢想。", "因為廣播是她與外界唯一的聯繫方式。", "因為廣播節目能讓她忘記現實的煩惱。"], c:1, e:"文中提到「電台裡傳來的歌聲成為她心靈的慰藉，也在那時，一顆想成為歌手的種子悄然萌芽。」"},
+        {l:2, q:"儘管 IU 曾多次試鏡失敗，甚至被詐騙，但她仍未放棄，這最能說明她具有什麼樣的特質？", a:["盲目樂觀", "缺乏判斷力", "堅韌不拔", "不知變通"], c:2, e:"屢敗屢戰卻不放棄，是堅韌不拔的表現。"},
+        {l:2, q:"IU 爆紅後獲得「國民妹妹」的稱號，但她「並沒有被這些既定的標籤所限制」，這暗示了什麼？", a:["她不喜歡這個稱號。", "她認為這個稱號阻礙了她音樂上的發展。", "她希望突破大眾對她清純形象的固定認知，展現更多面向。", "她覺得這個稱號會讓她失去隱私。"], c:2, e:"「並沒有被既定標籤限制」和後續「在音樂上尋求突破」的敘述，暗示她希望擺脫單一形象。"},
+        {l:3, q:"綜觀 IU 從出道曲《迷兒》到《Celebrity》的音樂發展歷程，最能體現她作為藝術家怎樣的轉變？", a:["從依賴公司安排到掌握音樂主導權，並不斷拓展音樂類型。", "從模仿前輩風格到創造出獨一無二的K-pop音樂。", "從專注歌唱技巧到更重視舞蹈表現。", "從只為粉絲創作到迎合大眾市場喜好。"], c:0, e:"文中提到她「主動參與歌曲的創作」、「擔任製作人」、「將自己的音樂風格從主流K-pop延伸到多樣化的領域」，這些都體現了她對音樂主導權的掌握和風格的拓展。"},
+        {l:3, q:"文章透過 IU 的成長故事，主要想傳達的核心訊息是什麼？", a:["只要擁有天賦，就能在演藝圈成功。", "藝人成功的關鍵在於經紀公司的扶持。", "即使身處逆境，透過堅持不懈的努力與回饋社會，也能實現夢想並發光發熱。", "成為國民偶像的過程必然充滿艱辛與挑戰。"], c:2, e:"文章從她童年的困境、屢次試鏡失敗、突破標籤限制，到最終的慈善捐款，都圍繞著「堅持」、「努力」、「回饋」這些主題，並總結為「證明，即便身處困境，只要心懷希望，不懈努力，便能綻放出屬於自己的光芒」。"},
+        {l:4, q:"若要將本文改編成一部勵志劇的劇本，下列哪個情節最能突出 IU 的「國民妹妹」稱號對她帶來的挑戰？", a:["IU 在錄音室與製作人爭論新專輯的音樂風格。", "IU 為了符合可愛形象，刻意改變自己的穿著和言行。", "粉絲要求 IU 只能演唱可愛風格的歌曲，不能嘗試其他類型。", "IU 在社群媒體上回應關於她個人生活的謠言。"], c:2, e:"「國民妹妹」標籤帶來的挑戰是「外界對她形象的定型與龐大的關注壓力」，這會限制她在音樂上的多樣性嘗試。粉絲要求只能演唱特定風格的歌曲，最能直接體現這種形象定型的壓力。"},
+        {l:4, q:"本文在敘述 IU 的故事時，主要使用了哪種敘事手法來增強文章的說服力？", a:["引用大量數據和專家訪談，提升客觀性。", "透過時間軸順序，詳述其成長與轉變，展現奮鬥歷程。", "著重描寫個人內心掙扎與心理活動，引發共鳴。", "採用倒敘手法，先呈現成就再回溯奮鬥過程。"], c:1, e:"文章按照時間線從童年、出道、爆紅、音樂轉型到公益活動，一步步呈現IU的成長軌跡，這種順序敘事手法最能展現她的奮鬥歷程，增強說服力。"}
+    ];
+
+    // AI模型設定的狀態變數
+    let currentApiConfig = {
+        type: localStorage.getItem('aiModelType') || 'gemini_default', // 儲存使用者選擇的API類型
+        geminiApiKey: localStorage.getItem('geminiApiKey') || '',
+        ollamaUrl: localStorage.getItem('ollamaUrl') || 'http://localhost:11434', // 預設Ollama URL
+        ollamaModel: localStorage.getItem('ollamaModel') || ''
+    };
+
+    // 顯示訊息視窗
+    function showMessageBox(message) {
+        document.getElementById('messageBoxText').innerText = message;
+        document.getElementById('messageBox').style.display = 'block';
+    }
+
+    // 隱藏訊息視窗
+    function hideMessageBox() {
+        document.getElementById('messageBox').style.display = 'none';
+    }
+
+    // 渲染測驗題目
+    function render() {
+        let h = "", n = 1;
+        // 確保題目按照層次順序顯示
+        const sortedQs = [...qs].sort((a, b) => a.l - b.l);
+
+        [1, 2, 3, 4].forEach(l => {
+            h += `<div class="level l${l}"><h2>第${l}層－${desc[l-1]}</h2>`;
+            sortedQs.filter(o => o.l === l).forEach(o => {
+                const i = qs.indexOf(o); // 使用原始qs陣列的索引，以便於提交時匹配
+                h += `<div class="question" id="q${i}">${n++}. ${o.q}`;
+                h += o.a.map((t, k) => `<label><input type="radio" name="q${i}" value="${k}">${t}</label>`).join("");
+                h += `</div>`;
+            });
+            h += `</div>`;
+        });
+        document.getElementById("qgrid").innerHTML = h;
+    }
+
+    // 頁面載入時自動渲染測驗
+    document.addEventListener('DOMContentLoaded', () => {
+        render();
+        // 初始化設定彈窗的UI狀態
+        const savedType = currentApiConfig.type;
+        const radioElement = document.querySelector(`input[name="aiModelType"][value="${savedType}"]`);
+        if (radioElement) {
+            radioElement.checked = true;
+        }
+        document.getElementById('geminiApiKey').value = currentApiConfig.geminiApiKey;
+        document.getElementById('ollamaUrl').value = currentApiConfig.ollamaUrl;
+        updateSettingsModalUI(); // 根據儲存的類型更新UI顯示
+    });
+
+    // 提交測驗答案並批改
+    function grade() {
+        let correct = [0, 0, 0, 0], total = [0, 0, 0, 0], detail = "";
+        qs.forEach((o, i) => {
+            const rs = document.querySelectorAll(`input[name=q${i}]`);
+            // 清除之前的標記
+            rs.forEach(r => {
+                const lab = r.parentElement;
+                lab.querySelector('.mark') && lab.removeChild(lab.querySelector('.mark'));
+            });
+
+            const sel = [...rs].find(r => r.checked); // 找到被選中的選項
+            const ok = sel && +sel.value === o.c; // 檢查是否正確
+
+            total[o.l-1]++; // 該層次總題數加一
+            if (ok) correct[o.l-1]++; // 該層次答對題數加一
+
+            // 生成詳細解析
+            detail += `<p class="explain ${ok ? 'okp' : 'badp'}">題${i+1}：${ok ? "✔ 正確" : "✘ 錯誤"}，答案 ${o.a[o.c]}｜解析：${o.e}</p>`;
+            
+            // 更新問題的背景顏色
+            document.getElementById(`q${i}`).className = `question ${ok ? 'okq' : 'badq'}`;
+
+            // 在選項旁添加正確/錯誤標記
+            rs.forEach(r => {
+                const lab = r.parentElement;
+                const m = document.createElement("span");
+                m.className = "mark";
+                m.textContent = (+r.value === o.c) ? "✔" : (r.checked ? "✘" : "");
+                lab.appendChild(m);
+            });
+        });
+
+        // 顯示各層次得分概覽
+        document.getElementById("grid").innerHTML = correct.map((c, i) => {
+            const p = total[i] > 0 ? Math.round(c / total[i] * 100) : 0;
+            return `<div class="box res${i+1} ${c === total[i] ? 'okq' : 'badq'}">層${i+1}<br>${desc[i]}<br>${c}/${total[i]}<br>${p}%</div>`;
+        }).join("");
+
+        // 顯示詳細解析
+        document.getElementById("details").innerHTML = detail;
+        document.getElementById("result").style.display = "block"; // 顯示結果區塊
+    }
+
+    // AI 重新出題功能
+    async function regenerateQuiz() {
+        const storyText = document.querySelector('.story-block p').innerText;
+        const regenerateButton = document.getElementById('regenerateBtn');
+        const settingsButton = document.getElementById('settingsBtn');
+        const originalRegenerateButtonText = regenerateButton.innerText;
+        
+        regenerateButton.disabled = true;
+        settingsButton.disabled = true; // 禁用設定按鈕
+        regenerateButton.innerText = '重新出題中...';
+        showMessageBox("正在生成新題目，請稍候...");
+
+        // 清除之前的結果和測驗顯示
+        document.getElementById("result").style.display = "none";
+        document.getElementById("qgrid").innerHTML = '';
+
+        let apiUrl = '';
+        let payload = {};
+        let fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+        try {
+            if (currentApiConfig.type === 'gemini_default' || currentApiConfig.type === 'gemini_key') {
+                const apiKey = currentApiConfig.type === 'gemini_key' ? currentApiConfig.geminiApiKey : "";
+                if (currentApiConfig.type === 'gemini_key' && !apiKey) {
+                    showMessageBox("請在設定中輸入您的 Gemini API Key。");
+                    return;
+                }
+                apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const prompt = `根據以下文本，生成10道閱讀測驗選擇題。請嚴格按照PIRLS閱讀理解的四個層次分配題目數量：第一層次3題、第二層次3題、第三層次2題、第四層次2題。每道題目必須有4個選項，並標明正確答案的索引（從0開始）。每題還需提供簡潔的解析。請以JSON陣列格式返回，每個物件包含 'l' (層次), 'q' (問題), 'a' (選項陣列), 'c' (正確答案索引), 'e' (解析)。
+                
+                文本內容：
+                ${storyText}`;
+
+                payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "l": { "type": "NUMBER" },
+                                    "q": { "type": "STRING" },
+                                    "a": { "type": "ARRAY", "items": { "type": "STRING" } },
+                                    "c": { "type": "NUMBER" },
+                                    "e": { "type": "STRING" }
+                                },
+                                required: ["l", "q", "a", "c", "e"]
+                            }
+                        }
+                    }
+                };
+                fetchOptions.body = JSON.stringify(payload);
+
+            } else if (currentApiConfig.type === 'ollama') {
+                if (!currentApiConfig.ollamaUrl || !currentApiConfig.ollamaModel) {
+                    showMessageBox("請在設定中輸入 Ollama URL 並選擇一個模型。");
+                    return;
+                }
+                apiUrl = `${currentApiConfig.ollamaUrl}/api/generate`;
+                
+                // Ollama prompt needs to explicitly ask for JSON
+                const ollamaPrompt = `請根據以下文本，生成10道閱讀測驗選擇題。請嚴格按照PIRLS閱讀理解的四個層次分配題目數量：第一層次3題、第二層次3題、第三層次2題、第四層次2題。每道題目必須有4個選項，並標明正確答案的索引（從0開始）。每題還需提供簡潔的解析。請以JSON陣列格式返回，不要包含任何額外的文字或說明，只返回JSON陣列本身。
+
+                JSON 格式範例：
+                [
+                    {"l":1, "q":"問題1?", "a":["選項A","選項B","選項C","選項D"], "c":0, "e":"解析1"},
+                    {"l":2, "q":"問題2?", "a":["選項A","選項B","選項C","選項D"], "c":1, "e":"解析2"}
+                ]
+
+                文本內容：
+                ${storyText}`;
+
+                payload = {
+                    model: currentApiConfig.ollamaModel,
+                    prompt: ollamaPrompt,
+                    format: "json", // 嘗試讓 Ollama 直接輸出 JSON
+                    stream: false // 獲取完整的回應
+                };
+                fetchOptions.body = JSON.stringify(payload);
+            } else {
+                showMessageBox("請在設定中選擇一個 AI 模型。");
+                return;
+            }
+
+            const response = await fetch(apiUrl, fetchOptions);
+            const result = await response.json();
+
+            let newQs;
+
+            if (currentApiConfig.type === 'gemini_default' || currentApiConfig.type === 'gemini_key') {
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    try {
+                        newQs = JSON.parse(jsonString);
+                    } catch (parseError) {
+                        console.error("Gemini JSON解析錯誤:", parseError);
+                        showMessageBox("AI生成的問題格式無效，請稍後再試。");
+                        return;
+                    }
+                } else {
+                    console.error("Gemini未能生成有效內容:", result);
+                    showMessageBox("AI未能生成問題，請稍後再試。");
+                    return;
+                }
+            } else if (currentApiConfig.type === 'ollama') {
+                if (result.response) {
+                    try {
+                        // Ollama 的 response 字段包含了模型實際生成的文本內容
+                        newQs = JSON.parse(result.response);
+                    } catch (parseError) {
+                        console.error("Ollama JSON解析錯誤:", parseError);
+                        showMessageBox("Ollama 生成的問題格式無效，請確保模型能理解JSON格式請求。");
+                        return;
+                    }
+                } else if (result.error) {
+                    console.error("Ollama API 錯誤:", result.error);
+                    showMessageBox(`Ollama 錯誤: ${result.error}。請檢查 Ollama URL 或模型名稱是否正確。`);
+                    return;
+                }
+                 else {
+                    console.error("Ollama 未能生成有效內容:", result);
+                    showMessageBox("Ollama 未能生成問題，請稍後再試。");
+                    return;
+                }
+            }
+
+            // 驗證AI生成的問題結構是否符合預期
+            const isValid = Array.isArray(newQs) && newQs.length === 10 && newQs.every(q =>
+                typeof q.l === 'number' && q.l >= 1 && q.l <= 4 &&
+                typeof q.q === 'string' && q.q.length > 0 &&
+                Array.isArray(q.a) && q.a.length === 4 && q.a.every(item => typeof item === 'string' && item.length > 0) &&
+                typeof q.c === 'number' && q.c >= 0 && q.c < 4 &&
+                typeof q.e === 'string' && q.e.length > 0
+            );
+
+            if (isValid) {
+                qs.splice(0, qs.length, ...newQs); // 使用新問題替換現有問題
+                render(); // 重新渲染測驗
+                hideMessageBox();
+                showMessageBox("新題目已成功生成！");
+            } else {
+                console.error("AI生成的問題結構不正確或數量不足:", newQs);
+                showMessageBox("AI生成的問題格式不正確或數量不足，請稍後再試。");
+            }
+
+        } catch (error) {
+            console.error("重新出題時發生錯誤:", error);
+            showMessageBox(`重新出題時發生錯誤: ${error.message}。請檢查您的 AI 模型設定或網路連接。`);
+        } finally {
+            regenerateButton.disabled = false;
+            settingsButton.disabled = false; // 重新啟用設定按鈕
+            regenerateButton.innerText = originalRegenerateButtonText;
+        }
+    }
+
+    // 顯示設定彈窗
+    function showSettingsModal() {
+        document.getElementById('settingsModal').style.display = 'block';
+        updateSettingsModalUI(); // 確保UI狀態正確
+    }
+
+    // 隱藏設定彈窗
+    function hideSettingsModal() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    // 根據選中的AI模型類型更新UI顯示
+    function updateSettingsModalUI() {
+        const typeRadios = document.querySelectorAll('input[name="aiModelType"]');
+        const geminiApiKeyInput = document.getElementById('geminiApiKey');
+        const geminiKeyHelp = document.getElementById('geminiKeyHelp');
+        const ollamaUrlInput = document.getElementById('ollamaUrl');
+        const loadOllamaModelsBtn = document.getElementById('loadOllamaModelsBtn');
+        const ollamaModelSelect = document.getElementById('ollamaModelSelect');
+        const ollamaHelp = document.getElementById('ollamaHelp');
+
+        let selectedType = 'gemini_default';
+        typeRadios.forEach(radio => {
+            if (radio.checked) {
+                selectedType = radio.value;
+            }
+        });
+
+        // 隱藏所有額外輸入
+        geminiApiKeyInput.style.display = 'none';
+        geminiKeyHelp.style.display = 'none';
+        ollamaUrlInput.style.display = 'none';
+        loadOllamaModelsBtn.style.display = 'none';
+        ollamaModelSelect.style.display = 'none';
+        ollamaHelp.style.display = 'none';
+
+        // 根據選中的類型顯示對應的輸入
+        if (selectedType === 'gemini_key') {
+            geminiApiKeyInput.style.display = 'block';
+            geminiKeyHelp.style.display = 'block';
+            geminiApiKeyInput.focus();
+        } else if (selectedType === 'ollama') {
+            ollamaUrlInput.style.display = 'block';
+            loadOllamaModelsBtn.style.display = 'block';
+            ollamaModelSelect.style.display = 'block';
+            ollamaHelp.style.display = 'block';
+            ollamaUrlInput.focus();
+            // 如果已經有模型了，預設選中
+            if (currentApiConfig.ollamaModel) {
+                ollamaModelSelect.value = currentApiConfig.ollamaModel;
+            }
+        }
+    }
+
+    // 監聽AI模型類型選擇的變化
+    document.querySelectorAll('input[name="aiModelType"]').forEach(radio => {
+        radio.addEventListener('change', updateSettingsModalUI);
+    });
+
+    // 載入Ollama模型列表
+    document.getElementById('loadOllamaModelsBtn').addEventListener('click', async () => {
+        const ollamaUrl = document.getElementById('ollamaUrl').value.trim();
+        const ollamaModelSelect = document.getElementById('ollamaModelSelect');
+        
+        if (!ollamaUrl) {
+            showMessageBox("請輸入 Ollama URL。");
+            return;
+        }
+
+        ollamaModelSelect.innerHTML = '<option value="">載入中...</option>';
+        ollamaModelSelect.disabled = true;
+
+        try {
+            const response = await fetch(`${ollamaUrl}/api/tags`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            ollamaModelSelect.innerHTML = '<option value="">請選擇一個模型</option>'; // 清空並添加預設選項
+            if (data.models && data.models.length > 0) {
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.name;
+                    option.textContent = model.name;
+                    ollamaModelSelect.appendChild(option);
+                });
+                // 嘗試選擇之前儲存的模型
+                if (currentApiConfig.ollamaModel && Array.from(ollamaModelSelect.options).some(opt => opt.value === currentApiConfig.ollamaModel)) {
+                    ollamaModelSelect.value = currentApiConfig.ollamaModel;
+                } else {
+                    currentApiConfig.ollamaModel = ''; // 如果之前儲存的模型不存在，則清空
+                }
+            } else {
+                showMessageBox("未從 Ollama 服務獲取到任何模型。");
+            }
+        } catch (error) {
+            console.error("載入 Ollama 模型失敗:", error);
+            showMessageBox(`載入 Ollama 模型失敗: ${error.message}。請確認 URL 或 Ollama 服務是否運行。`);
+            ollamaModelSelect.innerHTML = '<option value="">載入失敗</option>';
+        } finally {
+            ollamaModelSelect.disabled = false;
+        }
+    });
+
+    // 儲存設定
+    function saveSettings() {
+        const typeRadios = document.querySelectorAll('input[name="aiModelType"]');
+        let selectedType = 'gemini_default';
+        typeRadios.forEach(radio => {
+            if (radio.checked) {
+                selectedType = radio.value;
+            }
+        });
+
+        currentApiConfig.type = selectedType;
+        localStorage.setItem('aiModelType', selectedType);
+
+        if (selectedType === 'gemini_key') {
+            const apiKey = document.getElementById('geminiApiKey').value.trim();
+            currentApiConfig.geminiApiKey = apiKey;
+            localStorage.setItem('geminiApiKey', apiKey);
+            if (!apiKey) {
+                showMessageBox("警告：您未輸入 Gemini API Key，將可能導致重新出題失敗。");
+            } else {
+                showMessageBox("Gemini API Key 已儲存。");
+            }
+        } else {
+            localStorage.removeItem('geminiApiKey'); // 清除不使用的設定
+        }
+
+        if (selectedType === 'ollama') {
+            const ollamaUrl = document.getElementById('ollamaUrl').value.trim();
+            const ollamaModel = document.getElementById('ollamaModelSelect').value;
+            currentApiConfig.ollamaUrl = ollamaUrl;
+            currentApiConfig.ollamaModel = ollamaModel;
+            localStorage.setItem('ollamaUrl', ollamaUrl);
+            localStorage.setItem('ollamaModel', ollamaModel);
+            if (!ollamaUrl || !ollamaModel) {
+                showMessageBox("警告：您未完整設定 Ollama URL 或模型，將可能導致重新出題失敗。");
+            } else {
+                showMessageBox("Ollama 設定已儲存。");
+            }
+        } else {
+            localStorage.removeItem('ollamaUrl'); // 清除不使用的設定
+            localStorage.removeItem('ollamaModel');
+        }
+
+        hideSettingsModal();
+    }
+</script>
+</body>
+</html>
