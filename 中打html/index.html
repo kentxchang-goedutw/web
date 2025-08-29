@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>打字練習器 (Google試算表題庫版)</title>
+  <style>
+    /* 引入注音字體 */
+    @font-face {
+      font-family: 'ㄅ注音芫荽 Regular';
+      src: url('https://kentxchang-goedutw.github.io/web/BpmfIansui-Regular_0.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    body {
+      font-family: 'Courier New', Courier, monospace, 'Noto Sans TC', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #6dd5fa, #2980b9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+      color: #fff;
+    }
+    /* 當添加 .phonetic-font 類時，使用注音字體 */
+    body.phonetic-font,
+    body.phonetic-font textarea,
+    body.phonetic-font input,
+    body.phonetic-font button,
+    body.phonetic-font th,
+    body.phonetic-font td,
+    body.phonetic-font label,
+    body.phonetic-font p,
+    body.phonetic-font .typing-instruction,
+    body.phonetic-font .modal-content {
+      font-family: 'ㄅ注音芫荽 Regular', sans-serif;
+    }
+    .container {
+      position: relative;
+      max-width: 800px;
+      width: 95%;
+      padding: 20px;
+      padding-top: 60px; /* 增加頂部空間給開關 */
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      color: #333;
+    }
+    h1 {
+      color: #2c3e50;
+      font-size: 36px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .input-container {
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    .input-container label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: #2980b9;
+    }
+    .input-container textarea {
+      width: 100%;
+      height: 100px;
+      padding: 12px;
+      font-size: 18px;
+      border: 2px solid #2980b9;
+      border-radius: 8px;
+      box-sizing: border-box;
+      box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
+      resize: vertical;
+    }
+    .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #2980b9;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    button:hover {
+      background-color: #3498db;
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    #output {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ccc;
+      font-size: 18px;
+    }
+    #output table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #output th, #output td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-size: 28px;
+    }
+    #output th {
+      background-color: #f2f2f2;
+    }
+    #referenceText {
+      font-size: 28px;
+      word-break: break-all;
+    }
+    #userInput {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 28px;
+    }
+    .correct { color: blue; }
+    .incorrect { color: red; background-color: #ffdddd; }
+    #timer {
+      font-size: 24px;
+      font-weight: bold;
+      color: #e74c3c;
+      display: none;
+      margin-bottom: 10px;
+    }
+    .stats div {
+      font-size: 20px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 5px 0;
+    }
+    #resetButton { display: none; }
+    #footer {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      font-size: 14px;
+      color: #fff;
+    }
+    a {
+      color: #ecf0f1;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+    .typing-instruction {
+      font-size: 20px;
+      font-weight: bold;
+      color: #8e44ad;
+    }
+    
+    /* Modal styles */
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 1000; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.5);
+        animation: fadeIn 0.3s;
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px 30px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 700px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        animation: slideIn 0.3s;
+        color: #333;
+        text-align: left;
+    }
+    .modal-content h2 { color: #2980b9; }
+    .modal-content h3 { color: #2c3e50; }
+    .modal-content pre {
+        background-color: #eee;
+        padding: 15px;
+        border-radius: 5px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .modal-content code { font-family: 'Courier New', Courier, monospace; background-color: #e0e0e0; padding: 2px 4px; border-radius: 3px; }
+    .modal-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+    .modal-content th, .modal-content td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .modal-content th {
+        background-color: #f2f2f2;
+    }
+    .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close-button:hover, .close-button:focus {
+        color: black;
+        text-decoration: none;
+    }
+    #helpButton {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-size: 24px;
+        cursor: pointer;
+        background: none;
+        border: none;
+        box-shadow: none;
+        padding: 5px;
+    }
+    #questionBankList {
+        list-style-type: none;
+        padding: 0;
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+    #questionBankList li {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    #questionBankList li:hover {
+        background-color: #f1f1f1;
+    }
+    #loadingMessage, #errorMessage {
+        text-align: center;
+        padding: 20px;
+        font-size: 18px;
+        color: #888;
+    }
+    
+    /* Font Toggle Switch */
+    .font-toggle-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .font-toggle-label {
+      color: #2c3e50;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+    }
+    input:checked + .slider {
+      background-color: #2980b9;
+    }
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2980b9;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .slider.round {
+      border-radius: 24px;
+    }
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+    @keyframes slideIn { from {transform: translateY(-50px);} to {transform: translateY(0);} }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="font-toggle-container">
+      <label class="font-toggle-label" for="fontToggle">注音字體</label>
+      <label class="switch">
+        <input type="checkbox" id="fontToggle">
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <button id="helpButton" onclick="toggleHelpModal(true)">ℹ️</button>
+    <h1>打字練習器V2</h1>
+    <div class="input-container">
+      <label for="inputText">請輸入參照文字</label>
+      <textarea id="inputText" placeholder="在這裡貼入中文字，或從題庫選擇"></textarea>
+    </div>
+    <div class="button-group">
+        <button id="submitButton" onclick="submitText()">送出參照文字</button>
+        <button id="generateButton" onclick="generateRandomText()">隨機生成參照文字</button>
+        <button id="openBankButton" onclick="openQuestionBank()">開啟題庫</button>
+        <button id="typingHelpButton" onclick="toggleTypingHelpModal(true)">注音打字說明</button>
+        <button id="resetButton" onclick="resetText()">重新貼上參照文字</button>
+    </div>
+    <p id="timer">計時器: 0:00</p>
+    <div id="output"></div>
+  </div>
+
+  <div id="footer">
+    Designed by <a href="https://kentxchang.blogspot.tw" target="_blank">kentxchang</a>
+  </div>
+
+  <!-- Question Bank Modal -->
+  <div id="bankModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="toggleBankModal(false)">&times;</span>
+      <h2>選擇題庫</h2>
+      <div id="loadingMessage">載入中，請稍候...</div>
+      <div id="errorMessage" style="display:none;"></div>
+      <ul id="questionBankList"></ul>
+    </div>
+  </div>
+
+  <!-- GAS Help Modal -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="toggleHelpModal(false)">&times;</span>
+      <h2>設定說明：如何串接 Google 試算表題庫</h2>
+      <p>您可以建立自己的 Google 試算表作為打字練習的題庫。請依照以下步驟設定：</p>
+      <ol>
+        <li><strong>建立 Google 試算表:</strong><br>
+          前往 <a href="https://sheets.new" target="_blank">Google Sheets</a> 建立一份新的試算表。
+        </li>
+        <li><strong>開啟 Apps Script 編輯器:</strong><br>
+          在試算表選單中，點擊「擴充功能」 > 「Apps Script」。
+        </li>
+        <li><strong>貼上程式碼:</strong><br>
+          將編輯器中原有的程式碼清空，然後複製並貼上<strong>下方提供的完整 GAS 程式碼</strong>。儲存專案 (給它一個名稱，例如 "打字題庫")。
+        </li>
+        <li><strong>部署為網頁應用程式:</strong><br>
+          a. 在 Apps Script 編輯器右上角，點擊「部署」 > 「新增部署」。<br>
+          b. 在「選取類型」旁點擊齒輪圖示，選擇「網頁應用程式」。<br>
+          c. 在「描述」欄位可輸入一些說名，方便您日後管理。<br>
+          d. 在「誰可以存取」的下拉選單中，選擇「任何人」。<strong>(這是必要步驟，否則網頁無法讀取資料)</strong><br>
+          e. 點擊「部署」。程式會自動在您的試算表中建立範例題庫，並產生一組「網頁應用程式網址」。請複製此網址。
+        </li>
+        <li><strong>新增您的題庫資料:</strong><br>
+          回到您的試算表，會看到一個名為「題庫」的新工作表及範例資料。您可以依照「題庫名稱」和「參照文字」的格式，新增或修改成您自己的內容。
+        </li>
+        <li><strong>將網址貼到本機網頁:</strong><br>
+          用文字編輯器打開這個 HTML 檔案，找到下方的 `&lt;script&gt;` 區塊，用您剛剛複製的網址替換掉引號中的範例網址。儲存檔案後，重新用瀏覽器開啟即可。
+          <pre>
+&lt;script&gt;
+  // --- 設定區 ---
+  // vvv 請將您發佈的 Google Apps Script 網頁應用程式網址貼在這裡 vvv
+  const gasUrl = "請用您自己的網址取代這裡"; // &lt;--- 就是改這裡
+  // ^^^ 請將您發佈的 Google Apps Script 網頁應用程式網址貼在這裡 ^^^
+  // --- 結束設定區 ---
+  ...
+&lt;/script&gt;</pre>
+        </li>
+      </ol>
+      <hr>
+      <h3>Google Apps Script (GAS) 程式碼 (請完整複製)</h3>
+      <pre>
+// 當網頁透過 GET 方式請求時會執行的主要函式
+function doGet(e) {
+  // 每次被存取時，都先檢查試算表和工作表是否已正確設定
+  setupSheet();
+  
+  // 取得所有題庫資料
+  const data = getQuestionBanks();
+  
+  // 取得 JSONP 的回呼函式名稱
+  const callback = e.parameter.callback;
+  
+  // 如果有回呼函式名稱 (代表是 JSONP 請求)，就回傳 JSONP 格式
+  if (callback) {
+    return ContentService
+      .createTextOutput(callback + '(' + JSON.stringify(data) + ')')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    // 否則，回傳一般的 JSON (加上 CORS 標頭以供其他用途)
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON)
+      .withHeaders({
+        "Content-Type": "application/json; charset=utf-8",
+        "Access-Control-Allow-Origin": "*",
+      });
+  }
+}
+
+// 取得所有題庫資料的函式
+function getQuestionBanks() {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("題庫");
+    // 如果工作表不存在或沒有資料，回傳空陣列
+    if (!sheet || sheet.getLastRow() <= 1) {
+        return { success: true, data: [] };
+    }
+    // 取得工作表中除了標頭以外的所有資料
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+    
+    // 將二維陣列轉換為物件陣列，方便前端使用
+    const questionBanks = data.map(row => {
+      // 過濾掉沒有名稱或內容的空行
+      if (row[0] && row[1]) {
+        return {
+          name: row[0].toString().trim(),
+          text: row[1].toString().trim()
+        };
+      }
+      return null;
+    }).filter(item => item !== null); // 移除空項目
+    
+    return { success: true, data: questionBanks };
+  } catch (error) {
+    // 如果發生錯誤，回傳包含錯誤訊息的物件
+    return { success: false, message: "讀取試算表時發生錯誤: " + error.message };
+  }
+}
+
+// 初始化設定試算表的函式
+function setupSheet() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = "題庫";
+  let sheet = spreadsheet.getSheetByName(sheetName);
+
+  // 如果找不到名為 "題庫" 的工作表，就建立一個並填入範例資料
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+    
+    // 設定欄位標頭
+    const headers = [["題庫名稱", "參照文字"]];
+    const headerRange = sheet.getRange(1, 1, 1, 2);
+    headerRange.setValues(headers);
+    headerRange.setFontWeight("bold"); // 將標頭設為粗體
+    sheet.setColumnWidth(1, 200); // 設定第一欄寬度
+    sheet.setColumnWidth(2, 600); // 設定第二欄寬度
+    
+    // 新增一些範例資料
+    sheet.getRange(2, 1, 2, 2).setValues([
+      ["範例文章一：岳陽樓記", "慶曆四年春，滕子京謫守巴陵郡。越明年，政通人和，百廢具興。乃重修岳陽樓，增其舊制，刻唐賢今人詩賦於其上。屬予作文以記之。"],
+      ["範例文章二：網路佳句", "我們最大的恐懼不是我們不夠好，我們最大的恐懼是我們超乎想像的能力。我們害怕的不是我們的黑暗面，而是我們的光明面。"]
+    ]);
+  }
+}
+      </pre>
+    </div>
+  </div>
+
+  <!-- Typing Help Modal -->
+  <div id="typingHelpModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="toggleTypingHelpModal(false)">&times;</span>
+        <h2>注音輸入法打字說明</h2>
+
+        <h3>注音字體顯示 (學習輔助)</h3>
+        <p>為了方便初學者或需要對照注音的學生，本工具提供了特殊的「注音字體」顯示模式。</p>
+        <ul>
+            <li><strong>如何開啟：</strong>點擊頁面左上角的「注音字體」開關即可。</li>
+            <li><strong>功能：</strong>開啟後，頁面上的所有文字（包含參照文章與您的輸入）都會變成附帶注音符號的字體，有助於學習與辨識。</li>
+            <li><strong>提示：</strong>您也可以透過在網址後方加上 <code>?f=o</code> 來預設開啟此模式。</li>
+        </ul>
+        <hr>
+        
+        <h3>全形／半形模式切換</h3>
+        <p>在 Windows 或 macOS 中，切換中文輸入法後，您可以使用快速鍵 <code>Shift</code> + <code>Space</code> (空白鍵) 來切換全形與半形模式。</p>
+        <ul>
+            <li><strong>全形模式：</strong>英文字母、數字、符號都會佔用一個中文字的寬度。例如：ＡＢＣ １２３ ，。</li>
+            <li><strong>半形模式：</strong>英文字母、數字、符號為標準寬度。例如：ABC 123 ,.</li>
+        </ul>
+        <p><strong>建議：</strong>進行本打字練習時，為了與參照文字的標點符號格式一致，請務必使用<strong>全形模式</strong>輸入標點符號。</p>
+
+        <h3>中文標點符號輸入 (微軟注音輸入法)</h3>
+        <p>在中文注音輸入法的<strong>全形模式</strong>下，您可以透過組合鍵輸入對應的標點符號。常見符號如下：</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>符號</th>
+                    <th>名稱</th>
+                    <th>方法1<br>(<code>`</code> 系列)</th>
+                    <th>方法2<br>(<code>Ctrl</code> 系列)</th>
+                    <th>方法3<br>(<code>Ctrl+Alt+,</code> 系列)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>，</td><td>逗號</td><td><code>`</code> + <code>,</code></td><td><code>Ctrl</code> + <code>,</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>,</code></td></tr>
+                <tr><td>。</td><td>句號</td><td><code>`</code> + <code>.</code></td><td><code>Ctrl</code> + <code>.</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>m</code></td></tr>
+                <tr><td>、</td><td>頓號</td><td><code>`</code> + <code>'</code></td><td><code>Ctrl</code> + <code>'</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>'</code></td></tr>
+                <tr><td>；</td><td>分號</td><td><code>`</code> + <code>;</code></td><td><code>Ctrl</code> + <code>;</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>;</code></td></tr>
+                <tr><td>：</td><td>冒號</td><td><code>`</code> + <code>Shift</code>+<code>;</code></td><td><code>Ctrl</code> + <code>Shift</code>+<code>;</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>l</code></td></tr>
+                <tr><td>？</td><td>問號</td><td><code>`</code> + <code>Shift</code>+<code>/</code></td><td><code>Ctrl</code> + <code>Shift</code>+<code>/</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>/</code></td></tr>
+                <tr><td>！</td><td>驚嘆號</td><td><code>`</code> + <code>Shift</code>+<code>1</code></td><td><code>Ctrl</code> + <code>Shift</code>+<code>1</code></td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>k</code></td></tr>
+                <tr><td>‧</td><td>間隔號</td><td><code>`</code>+<code>.</code>+<code>↓</code>選擇</td><td><code>Ctrl</code>+<code>.</code>+<code>↓</code>選擇</td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>.</code></td></tr>
+                <tr><td>「『<br>［【《</td><td>前引號<br>夾注號</td><td><code>`</code>+<code>[</code>+<code>↓</code>選擇</td><td><code>Ctrl</code>+<code>[</code>+<code>↓</code>選擇</td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>=</code>,<code>0</code>,<code>o</code>,<code>t</code>,<code>u</code></td></tr>
+                <tr><td>」』<br>］》】</td><td>後引號<br>夾注號</td><td><code>`</code>+<code>]</code>+<code>↓</code>選擇</td><td><code>Ctrl</code>+<code>]</code>+<code>↓</code>選擇</td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按 <code>\</code>,<code>-</code>,<code>p</code>,<code>y</code>,<code>i</code></td></tr>
+                <tr><td>－…<br>→←</td><td>連接號<br>刪節號</td><td><code>`</code>+<code>-</code>+<code>↓</code>選擇</td><td>無</td><td><code>Ctrl</code>+<code>Alt</code>+<code>,</code> 再按滑鼠點選</td></tr>
+            </tbody>
+        </table>
+    </div>
+  </div>
+
+  <script>
+    // --- 設定區 ---
+    // vvv 請將您發佈的 Google Apps Script 網頁應用程式網址貼在這裡 vvv
+    const gasUrl = "https://script.google.com/macros/s/AKfycbwpAKvpJDY0_impz8n_1YiFeyrc2lKHUXywl_cJzf6gUxEAx-geMq3JCQ75nHWa9i321A/exec"; // <--- 範例網址，請務必替換成您自己的
+    // ^^^ 請將您發佈的 Google Apps Script 網頁應用程式網址貼在這裡 ^^^
+    // --- 結束設定區 ---
+
+    let timerStarted = false;
+    let timerInterval;
+    let startTime;
+    let endTime;
+    let questionBankData = []; // 用來儲存從GAS載入的題庫資料
+
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataParam = urlParams.get('data');
+      if (dataParam) {
+        document.getElementById("inputText").value = decodeURIComponent(dataParam);
+      }
+      
+      // 注音字體開關邏輯
+      const fontToggle = document.getElementById('fontToggle');
+      const fontParam = urlParams.get('f');
+      if (fontParam === 'o') {
+        document.body.classList.add('phonetic-font');
+        fontToggle.checked = true;
+      }
+
+      fontToggle.addEventListener('change', function() {
+        document.body.classList.toggle('phonetic-font', this.checked);
+      });
+    };
+
+    function submitText() {
+      const inputText = document.getElementById("inputText").value;
+      if (inputText.trim() === "") {
+        alert("請輸入參照文字後再提交。");
+        return;
+      }
+      updateUI(inputText);
+    }
+
+    function generateRandomText() {
+      const characters = "的一是在不了有和人這中大為上個國我以要他時來用們生到作地於出就分對成會可主發年動同工也能下過子說產種面而方後多定行學法所民得經十三之進著等部度家電力裡如水化高自二理起小物現實加量都兩體制機當使點從業本去把性好應開它合還因由其些然前外天政四日那社義事平形相全表間樣與關各重新線內數正心反你明看原又麼利比或但質氣第向道命此變條只沒結解問意建月公無系軍很情者最立代想已通並提直題黨程展五果料象員革位入常文總次品式活設及管特件長求老頭基資邊流路級少圖山統接知較將組見計別她手角期根論運農指幾九區強放決西被干做必戰先回則任取據處理達步";
+      let randomText = "";
+      for (let i = 0; i < 50; i++) {
+        randomText += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      updateUI(randomText);
+    }
+    
+    function updateUI(text) {
+      document.getElementById("inputText").value = text;
+      document.getElementById("inputText").parentNode.style.display = "none";
+      document.getElementById("submitButton").style.display = "none";
+      document.getElementById("generateButton").style.display = "none";
+      document.getElementById("openBankButton").style.display = "none";
+      document.getElementById("typingHelpButton").style.display = "none";
+      document.getElementById("resetButton").style.display = "inline-block";
+
+      const outputDiv = document.getElementById("output");
+      outputDiv.innerHTML = `
+        <table>
+          <tr><th>參照文字</th></tr>
+          <tr><td id="referenceText">${escapeHTML(text)}</td></tr>
+        </table>
+        <div class="input-container">
+          <label for="userInput" class="typing-instruction">請按上方參照文字輸入，以計算打字速度</label>
+          <textarea id="userInput" placeholder="在這裡輸入您的文字" oninput="compareText()" onkeydown="checkEnter(event)" onfocus="startTimerOnce()" oncopy="return false" onpaste="return false" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+        </div>
+        <div class="stats">
+            <div id="errorCount"></div>
+            <div id="typingSpeed"></div>
+            <div id="totalCharacters"></div>
+        </div>
+        <div class="button-group">
+            <button id="endButton" onclick="endInput()">結束輸入</button>
+            <button onclick="restartInput()">重新開始輸入</button>
+        </div>
+      `;
+      document.getElementById("timer").style.display = "block";
+      document.getElementById("userInput").focus();
+    }
+
+    function resetText() {
+      document.getElementById("inputText").parentNode.style.display = "block";
+      document.getElementById("inputText").value = "";
+      document.getElementById("output").innerHTML = "";
+      document.getElementById("timer").style.display = "none";
+      document.getElementById("timer").innerText = "計時器: 0:00";
+      clearInterval(timerInterval);
+      timerStarted = false;
+      document.getElementById("resetButton").style.display = "none";
+      document.getElementById("submitButton").style.display = "inline-block";
+      document.getElementById("generateButton").style.display = "inline-block";
+      document.getElementById("openBankButton").style.display = "inline-block";
+      document.getElementById("typingHelpButton").style.display = "inline-block";
+    }
+
+    function escapeHTML(text) {
+      return text.replace(/./g, (char) => `<span>${char}</span>`);
+    }
+
+    function startTimerOnce() {
+      if (!timerStarted) {
+        startInput();
+        timerStarted = true;
+      }
+    }
+
+    function startInput() {
+      startTime = new Date().getTime();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      const currentTime = new Date().getTime();
+      const elapsedTime = currentTime - startTime;
+      const minutes = Math.floor(elapsedTime / (1000 * 60));
+      const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+      document.getElementById("timer").innerText = "計時器: " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+
+    function compareText() {
+        const referenceSpans = document.querySelectorAll("#referenceText span");
+        const userInputText = document.getElementById("userInput").value;
+        referenceSpans.forEach((span, index) => {
+            const userChar = userInputText[index];
+            if (userChar == null) {
+                span.className = '';
+            } else if (userChar === span.textContent) {
+                span.className = 'correct';
+            } else {
+                span.className = 'incorrect';
+            }
+        });
+    }
+
+    function endInput() {
+      if (!timerStarted) return;
+      clearInterval(timerInterval);
+      timerStarted = false;
+      endTime = new Date().getTime();
+      
+      const referenceText = document.getElementById("inputText").value;
+      const userInputText = document.getElementById("userInput").value;
+      let errorCount = 0;
+      for(let i = 0; i < userInputText.length; i++) {
+          if (i >= referenceText.length || userInputText[i] !== referenceText[i]) {
+              errorCount++;
+          }
+      }
+      
+      document.getElementById("errorCount").innerHTML = `<strong>錯誤字數: ${errorCount}</strong>`;
+      const elapsedTimeInMinutes = (endTime - startTime) / (1000 * 60);
+      const typingSpeed = elapsedTimeInMinutes > 0 ? Math.round(userInputText.length / elapsedTimeInMinutes) : 0;
+      document.getElementById("typingSpeed").innerHTML = `<strong>打字速度: ${typingSpeed} 字/分鐘</strong>`;
+      document.getElementById("totalCharacters").innerHTML = `<strong>總共打了多少字: ${userInputText.length}</strong>`;
+      
+      document.getElementById("userInput").disabled = true;
+    }
+
+    function restartInput() {
+      clearInterval(timerInterval);
+      document.getElementById("timer").innerText = "計時器: 0:00";
+      const userInput = document.getElementById("userInput");
+      userInput.value = "";
+      userInput.disabled = false;
+      timerStarted = false;
+      document.getElementById("referenceText").innerHTML = escapeHTML(document.getElementById("inputText").value);
+      document.getElementById("errorCount").innerHTML = "";
+      document.getElementById("typingSpeed").innerHTML = "";
+      document.getElementById("totalCharacters").innerHTML = "";
+      userInput.focus();
+    }
+
+    function checkEnter(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        endInput();
+      }
+    }
+
+    // --- Modal Logic ---
+    function toggleHelpModal(show) {
+        document.getElementById('helpModal').style.display = show ? 'block' : 'none';
+    }
+
+    function toggleBankModal(show) {
+        document.getElementById('bankModal').style.display = show ? 'block' : 'none';
+    }
+
+    function toggleTypingHelpModal(show) {
+        document.getElementById('typingHelpModal').style.display = show ? 'block' : 'none';
+    }
+    
+    // --- JSONP Logic ---
+    // Global callback for JSONP response
+    function handleGasResponse(result) {
+        const list = document.getElementById('questionBankList');
+        const loadingMsg = document.getElementById('loadingMessage');
+        const errorMsg = document.getElementById('errorMessage');
+
+        try {
+            if (result.success) {
+                questionBankData = result.data;
+                if (questionBankData.length === 0) {
+                    list.innerHTML = '<li>找不到題庫資料，請確認您的Google試算表中有內容。</li>';
+                } else {
+                    questionBankData.forEach((bank, index) => {
+                        const li = document.createElement('li');
+                        li.textContent = bank.name;
+                        li.onclick = () => selectQuestion(index);
+                        list.appendChild(li);
+                    });
+                }
+            } else {
+                throw new Error(result.message || '從GAS取得資料失敗');
+            }
+        } catch (error) {
+            console.error('處理題庫資料失敗:', error);
+            errorMsg.textContent = `處理題庫資料失敗: ${error.message}。`;
+            errorMsg.style.display = 'block';
+        } finally {
+            loadingMsg.style.display = 'none';
+            // Clean up the script tag
+            const oldScript = document.getElementById('jsonp-script');
+            if (oldScript) {
+                oldScript.remove();
+            }
+        }
+    }
+
+    function openQuestionBank() {
+        toggleBankModal(true);
+        const list = document.getElementById('questionBankList');
+        const loadingMsg = document.getElementById('loadingMessage');
+        const errorMsg = document.getElementById('errorMessage');
+        list.innerHTML = '';
+        loadingMsg.style.display = 'block';
+        errorMsg.style.display = 'none';
+
+        if (gasUrl.includes("your_deployment_id") || gasUrl.includes("請用您自己的網址取代這裡")) {
+            errorMsg.innerHTML = '錯誤：請先在HTML原始碼中設定您自己的 Google Apps Script 網址。 <br>詳情請點擊右上角的 ℹ️ 按鈕查看說明。';
+            errorMsg.style.display = 'block';
+            loadingMsg.style.display = 'none';
+            return;
+        }
+
+        // Clean up any old script tags before making a new request
+        const oldScript = document.getElementById('jsonp-script');
+        if (oldScript) {
+            oldScript.remove();
+        }
+
+        const script = document.createElement('script');
+        script.id = 'jsonp-script';
+        // Add the callback parameter for JSONP
+        script.src = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'callback=handleGasResponse';
+        
+        // Handle script loading errors (e.g., network error, invalid URL, GAS not deployed correctly)
+        script.onerror = () => {
+            console.error('載入題庫腳本失敗');
+            errorMsg.textContent = `載入題庫失敗。請檢查您的GAS網址是否正確、已部署並授權任何人存取，並確認網路連線。`;
+            errorMsg.style.display = 'block';
+            loadingMsg.style.display = 'none';
+        };
+
+        document.body.appendChild(script);
+    }
+
+    function selectQuestion(index) {
+        const selectedText = questionBankData[index].text;
+        document.getElementById('inputText').value = selectedText;
+        toggleBankModal(false);
+        submitText();
+    }
+
+    // Close modal if user clicks outside of it
+    window.onclick = function(event) {
+        const helpModal = document.getElementById('helpModal');
+        const bankModal = document.getElementById('bankModal');
+        const typingHelpModal = document.getElementById('typingHelpModal');
+        if (event.target == helpModal) {
+            toggleHelpModal(false);
+        }
+        if (event.target == bankModal) {
+            toggleBankModal(false);
+        }
+        if (event.target == typingHelpModal) {
+            toggleTypingHelpModal(false);
+        }
+    }
+
+  </script>
+</body>
+</html>
