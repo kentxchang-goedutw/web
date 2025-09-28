@@ -2009,7 +2009,7 @@
                     // When going to 'waiting' mode, ensure the student responses container is cleared
                     // and shows the "waiting" message.
                     document.getElementById('student-responses-container').innerHTML = '<p class="text-gray-500 text-center col-span-full">正在等待學生作答...</p>';
-                } else { // For other interaction modes (true_false, multiple_choice, text_input, drawing, recording)
+                } else { // For other interaction modes (true_false, multiple_choice, text_input, drawing, recording, quick_answer)
                     listenToStudentSubmissions(mode); // Ensure this listener is active
                 }
 
@@ -2384,12 +2384,15 @@
 
                 // Special handling for quick answer mode
                 if (mode === 'quick_answer') {
+                    console.log('Teacher: Processing quick answer responses:', responses);
                     const quickAnswerWinners = responses.filter(student =>
                         student.answer && student.answer.includes('搶答成功')
                     );
+                    console.log('Teacher: Quick answer winners found:', quickAnswerWinners);
 
                     if (quickAnswerWinners.length > 0) {
                         const winner = quickAnswerWinners[0]; // First one to answer
+                        console.log('Teacher: Showing winner:', winner.name);
                         showQuickAnswerWinner(winner.name);
                     }
                 }
@@ -5374,7 +5377,9 @@
             try {
                 // Submit the quick answer to Firebase
                 const response = `搶答成功：${studentName}`;
-                await submitStudentResponse(response);
+                console.log('Submitting quick answer:', response);
+                await submitAnswer(response);
+                console.log('Quick answer submitted successfully');
 
                 // Show success message
                 document.getElementById('quick-answer-result').classList.remove('hidden');
@@ -5406,14 +5411,14 @@
         function listenToQuickAnswerUpdates() {
             if (currentRole !== 'student' || currentInteractionMode !== 'quick_answer') return;
 
-            const responsesRef = collection(db, 'artifacts', baseAppId, 'public', 'data', 'classrooms', classroomCode, 'responses');
+            const responsesRef = collection(db, 'artifacts', baseAppId, 'public', 'data', 'classrooms', classroomCode, 'studentResponses');
             onSnapshot(responsesRef, (snapshot) => {
                 if (snapshot.empty) return;
 
                 const responses = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.response && data.response.includes('搶答成功')) {
+                    if (data.answer && data.answer.includes('搶答成功')) {
                         responses.push(data);
                     }
                 });
@@ -5421,18 +5426,23 @@
                 // If someone already answered and it's not this student, lock the button
                 if (responses.length > 0 && !quickAnswerWinner) {
                     const winner = responses[0];
-                    if (winner.studentName !== studentName) {
-                        quickAnswerWinner = winner.studentName;
+                    if (winner.name !== studentName) {
+                        quickAnswerWinner = winner.name;
                         lockQuickAnswerButton();
-                        document.getElementById('quick-answer-status-text').textContent = `${winner.studentName} 搶答成功！`;
+                        document.getElementById('quick-answer-status-text').textContent = `${winner.name} 搶答成功！`;
                     }
                 }
             });
         }
 
         function showQuickAnswerWinner(winnerName) {
-            if (quickAnswerWinnerDisplayed) return; // Prevent showing multiple times
+            console.log('showQuickAnswerWinner called with:', winnerName);
+            if (quickAnswerWinnerDisplayed) {
+                console.log('Winner already displayed, skipping');
+                return; // Prevent showing multiple times
+            }
             quickAnswerWinnerDisplayed = true;
+            console.log('Displaying winner overlay');
 
             // Create a big overlay notification for the teacher
             const overlay = document.createElement('div');
