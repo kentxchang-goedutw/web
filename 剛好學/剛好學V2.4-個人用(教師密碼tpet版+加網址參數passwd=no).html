@@ -955,8 +955,18 @@
         }
         
         /* MODIFIED: MC Settings Modal for AI Question Generation */
+        #multiple-choice-settings-modal {
+            align-items: center; /* Center modal vertically */
+        }
+
         #multiple-choice-settings-modal-content {
             max-width: 800px; /* Wider modal for two columns */
+            max-height: 95vh; /* Increase max height */
+            height: auto; /* Allow dynamic height */
+            justify-content: flex-start; /* Align content to top */
+            align-items: stretch; /* Stretch to full width */
+            padding: 1.5rem; /* Increase padding */
+            margin-top: 0; /* Remove top margin */
         }
     </style>
 </head>
@@ -1011,7 +1021,7 @@
                 <p class="text-xs">App ID: <span id="app-id-display"></span> &nbsp;&bull;&nbsp; User ID: <span id="user-id-display"></span></p>
                 <div class="mt-2">
                     <a href="https://kentxchang.blogspot.tw" target="_blank" rel="noopener noreferrer" class="made-by-text !bg-white/50 !text-indigo-600 hover:!bg-white">
-                       Made by 阿剛老師V2.3.2
+                       Made by 阿剛老師V2.4
                     </a>
                 </div>
             </div>
@@ -1447,7 +1457,7 @@
                                 請輸入題目 (或由 AI 生成)
                             </label>
                             <p class="text-gray-600 text-xs">格式: 題目,正確答案(1-4或A-D),選項1,選項2,選項3,選項4 (每行一題)</p>
-                            <textarea id="custom-mc-questions-textarea" rows="10" class="w-full p-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 flex-grow" placeholder="例如：
+                            <textarea id="custom-mc-questions-textarea" rows="6" class="w-full p-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 flex-grow" placeholder="例如：
 台灣的首都在哪裡?,1,台北,台中,台南,高雄
 2+2=?,B,3,4,5,6"></textarea>
                             <p id="custom-mc-questions-status" class="text-red-500 text-sm mt-2 hidden">格式錯誤或題目為空，請檢查輸入。</p>
@@ -1457,7 +1467,7 @@
                             <h5 class="text-lg font-bold text-gray-800 text-center">🤖 AI 智能出題</h5>
                             <div>
                                 <label for="ai-mc-topic-textarea" class="block text-gray-700 text-sm font-bold mb-2">出題主題、範圍或要求:</label>
-                                <textarea id="ai-mc-topic-textarea" rows="5" class="w-full p-2 border rounded-md text-base focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="例如：
+                                <textarea id="ai-mc-topic-textarea" rows="3" class="w-full p-2 border rounded-md text-base focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="例如：
 - 關於台灣歷史的選擇題
 - 關於光合作用的國中程度是非題
 - 請出有關聖誕節的英文單字選擇題"></textarea>
@@ -1478,6 +1488,35 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+
+                <!-- 題庫管理區塊 -->
+                <div id="question-bank-management-section" class="hidden w-full mt-6 bg-blue-50 p-4 rounded-lg border">
+                    <h5 class="text-lg font-bold text-gray-800 text-center mb-4">📚 題庫管理</h5>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 題庫載入區 -->
+                        <div class="flex flex-col space-y-2">
+                            <label class="block text-gray-700 text-sm font-bold">從檔案載入題庫</label>
+                            <input type="file" id="question-bank-file-input" accept=".txt" class="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button id="load-question-bank-btn" class="btn bg-blue-600 hover:bg-blue-700 text-white text-sm h-8 px-3 py-1">載入題庫</button>
+                        </div>
+
+                        <!-- 題庫儲存區 -->
+                        <div class="flex flex-col space-y-2">
+                            <label class="block text-gray-700 text-sm font-bold">儲存目前題目為題庫</label>
+                            <input type="text" id="question-bank-name-input" placeholder="輸入題庫名稱" class="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button id="save-question-bank-btn" class="btn bg-green-600 hover:bg-green-700 text-white text-sm h-8 px-3 py-1">儲存題庫</button>
+                        </div>
+                    </div>
+
+                    <!-- 題庫列表 -->
+                    <div class="mt-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">已儲存的題庫</label>
+                        <div id="question-bank-list" class="space-y-2 max-h-32 overflow-y-auto border rounded-md p-2 bg-white">
+                            <div class="text-gray-500 text-sm italic text-center">目前沒有儲存的題庫</div>
+                        </div>
                     </div>
                 </div>
 
@@ -1547,6 +1586,7 @@
         let lastSelectedModalStudent = null; // NEW: To track the previously selected student in the modal for lottery.
 
         let interactionModeUnsubscribe = null;
+        let questionBanks = []; // Question Bank storage in memory (will be cleared when class ends)
         let studentResponsesUnsubscribe = null;
         let classroomPresenceUnsubscribe = null; // Unsubscribe function for classroom presence listener.
 
@@ -1884,6 +1924,130 @@
             setTimeout(() => {
                 msgBox.classList.add('hidden');
             }, 3000); // Auto-hide after 3 seconds.
+        }
+
+        /**
+         * Question Bank Management Functions
+         */
+        function updateQuestionBankList() {
+            const list = document.getElementById('question-bank-list');
+            if (questionBanks.length === 0) {
+                list.innerHTML = '<div class="text-gray-500 text-sm italic text-center">目前沒有儲存的題庫</div>';
+            } else {
+                list.innerHTML = questionBanks.map((bank, index) => `
+                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                        <span class="text-sm font-medium text-gray-700">${bank.name}</span>
+                        <div class="flex gap-2">
+                            <button onclick="loadQuestionBankToTextarea(${index})" class="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">載入</button>
+                            <button onclick="deleteQuestionBank(${index})" class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">刪除</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function loadQuestionBankFromFile() {
+            const fileInput = document.getElementById('question-bank-file-input');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('請選擇一個txt檔案', 'error');
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.txt')) {
+                showMessage('只能上傳txt格式的檔案', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const fileName = file.name.replace('.txt', '');
+
+                // Check if bank with same name exists
+                const existingIndex = questionBanks.findIndex(bank => bank.name === fileName);
+                if (existingIndex !== -1) {
+                    if (confirm(`題庫「${fileName}」已存在，是否要覆蓋？`)) {
+                        questionBanks[existingIndex] = { name: fileName, content: content };
+                    } else {
+                        return;
+                    }
+                } else {
+                    questionBanks.push({ name: fileName, content: content });
+                }
+
+                updateQuestionBankList();
+                showMessage(`題庫「${fileName}」載入成功`, 'success');
+                fileInput.value = ''; // Clear file input
+            };
+
+            reader.onerror = function() {
+                showMessage('讀取檔案時發生錯誤', 'error');
+            };
+
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function saveQuestionBankFromTextarea() {
+            const nameInput = document.getElementById('question-bank-name-input');
+            const textarea = document.getElementById('custom-mc-questions-textarea');
+            const name = nameInput.value.trim();
+            const content = textarea.value.trim();
+
+            if (!name) {
+                showMessage('請輸入題庫名稱', 'error');
+                return;
+            }
+
+            if (!content) {
+                showMessage('題目內容不能為空', 'error');
+                return;
+            }
+
+            // Check if bank with same name exists
+            const existingIndex = questionBanks.findIndex(bank => bank.name === name);
+            if (existingIndex !== -1) {
+                if (confirm(`題庫「${name}」已存在，是否要覆蓋？`)) {
+                    questionBanks[existingIndex] = { name: name, content: content };
+                } else {
+                    return;
+                }
+            } else {
+                questionBanks.push({ name: name, content: content });
+            }
+
+            updateQuestionBankList();
+            showMessage(`題庫「${name}」儲存成功`, 'success');
+            nameInput.value = ''; // Clear name input
+        }
+
+        function loadQuestionBankToTextarea(index) {
+            if (index >= 0 && index < questionBanks.length) {
+                const textarea = document.getElementById('custom-mc-questions-textarea');
+                textarea.value = questionBanks[index].content;
+                showMessage(`題庫「${questionBanks[index].name}」已載入到輸入框`, 'success');
+            }
+        }
+
+        function deleteQuestionBank(index) {
+            if (index >= 0 && index < questionBanks.length) {
+                const bankName = questionBanks[index].name;
+                if (confirm(`確定要刪除題庫「${bankName}」嗎？`)) {
+                    questionBanks.splice(index, 1);
+                    updateQuestionBankList();
+                    showMessage(`題庫「${bankName}」已刪除`, 'success');
+                }
+            }
+        }
+
+        // Make functions globally accessible for onclick handlers
+        window.loadQuestionBankToTextarea = loadQuestionBankToTextarea;
+        window.deleteQuestionBank = deleteQuestionBank;
+
+        function clearAllQuestionBanks() {
+            questionBanks = [];
+            updateQuestionBankList();
         }
 
         /**
@@ -3564,6 +3728,7 @@
          */
         async function endClassSession() {
             markClassEnded(); // Mark that class has been properly ended
+            clearAllQuestionBanks(); // Clear question banks from memory
             showMessage('正在結束課程並清空資料...', 'info');
 
             if (interactionModeUnsubscribe) interactionModeUnsubscribe();
@@ -3913,13 +4078,15 @@
                 if (customMultipleChoiceQuestions && customMultipleChoiceQuestions.length > 0) {
                     mcQuestionTypeCustom.checked = true;
                     customMcQuestionsSection.classList.remove('hidden');
+                    document.getElementById('question-bank-management-section').classList.remove('hidden');
                     // Reconstruct textarea content from customMultipleChoiceQuestions
-                    customMcQuestionsTextarea.value = customMultipleChoiceQuestions.map(q => 
+                    customMcQuestionsTextarea.value = customMultipleChoiceQuestions.map(q =>
                         `${q.questionText},${q.correctAnswer},${q.options.join(',')}`
                     ).join('\n');
                 } else {
                     mcQuestionTypeNone.checked = true;
                     customMcQuestionsSection.classList.add('hidden');
+                    document.getElementById('question-bank-management-section').classList.add('hidden');
                     customMcQuestionsTextarea.value = '';
                 }
                 customMcQuestionsStatus.classList.add('hidden'); // Hide status on open
@@ -4390,9 +4557,20 @@
             const aiMcBtnText = document.getElementById('ai-mc-btn-text');
             const aiMcBtnIcon = document.getElementById('ai-mc-btn-icon');
 
+            // Question Bank Management elements
+            const questionBankFileInput = document.getElementById('question-bank-file-input');
+            const loadQuestionBankBtn = document.getElementById('load-question-bank-btn');
+            const questionBankNameInput = document.getElementById('question-bank-name-input');
+            const saveQuestionBankBtn = document.getElementById('save-question-bank-btn');
+            const questionBankList = document.getElementById('question-bank-list');
+
 
             multipleChoiceSettingsModalCloseBtn.addEventListener('click', () => multipleChoiceSettingsModal.classList.add('hidden'));
             cancelMcSettingsBtn.addEventListener('click', () => multipleChoiceSettingsModal.classList.add('hidden'));
+
+            // Question Bank Management Event Listeners
+            loadQuestionBankBtn.addEventListener('click', loadQuestionBankFromFile);
+            saveQuestionBankBtn.addEventListener('click', saveQuestionBankFromTextarea);
 
             // Teacher Password Modal Event Listeners
             const teacherPasswordModal = document.getElementById('teacher-password-modal');
@@ -4429,7 +4607,9 @@
 
             mcQuestionTypeRadios.forEach(radio => {
                 radio.addEventListener('change', (e) => {
-                    customMcQuestionsSection.classList.toggle('hidden', e.target.value === 'none');
+                    const isCustomMode = e.target.value === 'custom';
+                    customMcQuestionsSection.classList.toggle('hidden', !isCustomMode);
+                    document.getElementById('question-bank-management-section').classList.toggle('hidden', !isCustomMode);
                     customMcQuestionsStatus.classList.add('hidden'); // Hide status when changing radio
                 });
             });
